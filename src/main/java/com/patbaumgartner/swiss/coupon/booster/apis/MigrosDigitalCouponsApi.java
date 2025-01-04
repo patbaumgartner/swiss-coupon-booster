@@ -2,16 +2,16 @@ package com.patbaumgartner.swiss.coupon.booster.apis;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-import java.util.ArrayList;
-import java.util.List;
-
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,6 +28,8 @@ import com.patbaumgartner.swiss.coupon.booster.settings.MigrosCumulusSettings;
 @Slf4j
 public class MigrosDigitalCouponsApi {
 
+	public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
+
 	private MigrosAccountSettings accountSettings;
 
 	private MigrosCumulusSettings cumulusSettings;
@@ -40,9 +42,12 @@ public class MigrosDigitalCouponsApi {
 			MigrosAccountSettings migrosAccountSettings, MigrosCumulusSettings migrosCumulusSettings) {
 		this.accountSettings = migrosAccountSettings;
 		this.cumulusSettings = migrosCumulusSettings;
+
 		this.objectMapper = objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-		this.restClient = restClientBuilder.requestFactory(new HttpComponentsClientHttpRequestFactory(
-				HttpClients.custom().setDefaultCookieStore(new BasicCookieStore()).setUserAgent("Mozilla/5.0").build()))
+
+		this.restClient = restClientBuilder
+			.requestFactory(
+					new HttpComponentsClientHttpRequestFactory(HttpClients.custom().setUserAgent(USER_AGENT).build()))
 			.build();
 	}
 
@@ -103,8 +108,11 @@ public class MigrosDigitalCouponsApi {
 		log.info("Successfully logged into Cumulus account.");
 	}
 
+	public record CumulusDigitalCoupon(String id, String name) {
+	}
+
 	@SneakyThrows
-	public List<String> collectCumulusDigitalCoupons() {
+	public List<CumulusDigitalCoupon> collectCumulusDigitalCoupons() {
 		// Step 3: Send GET request to collect Cumulus Digital Coupons
 
 		ResponseEntity<String> collectResponse = restClient.get()
@@ -118,7 +126,7 @@ public class MigrosDigitalCouponsApi {
 		}
 
 		// Step 3.1: Extract digital bons from the response
-		List<String> digitalCoupons = new ArrayList<>();
+		List<CumulusDigitalCoupon> digitalCoupons = new ArrayList<>();
 		Document document = Jsoup.parse(collectResponse.getBody());
 
 		// Select all <article> elements
@@ -137,7 +145,7 @@ public class MigrosDigitalCouponsApi {
 					String id = promotion.path("id").asText();
 					String name = promotion.path("name").asText();
 
-					digitalCoupons.add(id);
+					digitalCoupons.add(new CumulusDigitalCoupon(id, name));
 					log.info("Found digital coupon: {} - {}", id, name);
 				}
 			}
@@ -148,18 +156,22 @@ public class MigrosDigitalCouponsApi {
 		return digitalCoupons;
 	}
 
-	public void activateCumulusDigitalCoupon(String id) {
+	public void activateCumulusDigitalCoupons(List<CumulusDigitalCoupon> coupons) {
 		// Step 4: Send POST request to activate the digital coupon
 
-		ResponseEntity<String> activationResponse = restClient.post()
-			.uri(cumulusSettings.couponsActivationUrl(), id)
-			.accept(MediaType.APPLICATION_JSON)
-			.retrieve()
-			.toEntity(String.class);
+		coupons.forEach(coupon -> {
 
-		if (activationResponse.getStatusCode() != HttpStatus.OK) {
-			throw new MigrosDigitalCouponsApiException("Activation failed.");
-		}
+			ResponseEntity<String> activationResponse = restClient.post()
+				.uri(cumulusSettings.couponsActivationUrl(), coupon.id())
+				.accept(MediaType.APPLICATION_JSON)
+				.retrieve()
+				.toEntity(String.class);
+
+			if (activationResponse.getStatusCode() != HttpStatus.OK) {
+				throw new MigrosDigitalCouponsApiException("Activation failed.");
+			}
+
+		});
 	}
 
 }

@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.patbaumgartner.swiss.coupon.booster.apis.MigrosDigitalCouponsApi;
+import com.patbaumgartner.swiss.coupon.booster.apis.MigrosDigitalCouponsApi.CumulusDigitalCoupon;
 import com.patbaumgartner.swiss.coupon.booster.settings.MigrosAccountSettings;
 import com.patbaumgartner.swiss.coupon.booster.settings.MigrosCumulusSettings;
 
@@ -35,12 +35,14 @@ public class CumulusDigitalBonsActivationTask implements ActivationTask {
 			return;
 		}
 
-		MigrosDigitalCouponsApi migrosDigitalCouponsApi = new MigrosDigitalCouponsApi(restClientBuilder, objectMapper,
+		MigrosDigitalCouponsApi digitalCouponsApi = new MigrosDigitalCouponsApi(restClientBuilder, objectMapper,
 				migrosAccountSettings, migrosCumulusSettings);
-		migrosDigitalCouponsApi.loginMigrosAccount();
-		migrosDigitalCouponsApi.loginCumulus();
-		List<String> coupons = migrosDigitalCouponsApi.collectCumulusDigitalCoupons();
-		coupons.forEach(coupon -> migrosDigitalCouponsApi.activateCumulusDigitalCoupon(coupon));
+		digitalCouponsApi.loginMigrosAccount();
+		digitalCouponsApi.loginCumulus();
+
+		List<CumulusDigitalCoupon> allDigitalCoupons = digitalCouponsApi.collectCumulusDigitalCoupons();
+
+		digitalCouponsApi.activateCumulusDigitalCoupons(allDigitalCoupons);
 
 		log.info("Cumulus Digital Bons Activation Task activated.");
 	}

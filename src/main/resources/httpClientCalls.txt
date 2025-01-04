@@ -1,0 +1,19 @@
+ curl -vvv --http1.1 'https://www.supercard.ch/bin/coop/supercard/oidc/pwa/configs.json' \
+  -H 'accept: application/json' \
+  -H 'accept-encoding: gzip, x-gzip, deflate' \
+  -H 'accept-language: en-US,en;q=0.9,de-CH;q=0.8,de-DE;q=0.7,de;q=0.6' \
+  -H $'cookie: CMSSESSIONID=node0mlr30kyja1nm18l7udsq0zzzw3392138.node0' \
+  -H 'referer: https://www.supercard.ch/de/app-digitale-services/digitale-bons.html' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
+
+
+>> "GET /bin/coop/supercard/oidc/pwa/configs.json HTTP/1.1[\r][\n]"
+>> "Accept: application/json[\r][\n]"
+>> "Accept-Language: en-US,en;q=0.9,de-CH;q=0.8,de-DE;q=0.7,de;q=0.6[\r][\n]"
+>> "Referer: https://www.supercard.ch/de/app-digitale-services/digitale-bons.html[\r][\n]"
+>> "Cookie: CMSSESSIONID=node0mlr30kyja1nm18l7udsq0zzzw3392138.node0;[\r][\n]"
+>> "Accept-Encoding: gzip, x-gzip, deflate[\r][\n]"
+>> "Host: www.supercard.ch[\r][\n]"
+>> "Connection: keep-alive[\r][\n]"
+>> "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0[\r][\n]"
+>> "[\r][\n]"

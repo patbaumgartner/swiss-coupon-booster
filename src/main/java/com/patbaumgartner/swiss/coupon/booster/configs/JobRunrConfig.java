@@ -5,7 +5,6 @@ import org.jobrunr.storage.InMemoryStorageProvider;
 import org.jobrunr.storage.StorageProvider;
 import org.jobrunr.utils.mapper.jackson.JacksonJsonMapper;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

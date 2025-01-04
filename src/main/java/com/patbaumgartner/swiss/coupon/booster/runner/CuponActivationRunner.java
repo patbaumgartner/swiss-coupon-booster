@@ -2,11 +2,12 @@ package com.patbaumgartner.swiss.coupon.booster.runner;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jobrunr.jobs.annotations.Job;
-import org.jobrunr.jobs.annotations.Recurring;
 
 import java.util.List;
 
+
+import org.jobrunr.jobs.annotations.Job;
+import org.jobrunr.jobs.annotations.Recurring;
 
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,7 @@ public class CuponActivationRunner {
 	private final List<ActivationTask> activationTasks;
 
 	@Job(name = "Cupon Activation Job")
-	@Recurring(id = "cupon-activation-job", cron = "*/2 * * * *")
+	@Recurring(id = "cupon-activation-job", cron = "0 2 * * *")
 	public void recurringJob() {
 		log.info("The cupon activation Job has begun.");
 		try {
