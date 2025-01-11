@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -75,8 +74,8 @@ public class MigrosDigitalCouponsApi {
 		}
 
 		// Step 1.3: Authenticate using the CSRF token, username, and password
-		String body = "_csrf=" + csrfToken + "&username=" + accountSettings.username() + "&password=" +
-				accountSettings.password();
+		String body = "_csrf=" + csrfToken + "&username=" + accountSettings.username() + "&password="
+				+ accountSettings.password();
 
 		ResponseEntity<String> loginResponse = restClient.post()
 			.uri(accountSettings.loginUrl())
