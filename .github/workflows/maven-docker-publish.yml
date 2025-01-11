@@ -42,6 +42,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Build and push Docker base image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6.11.0
+        with:
+          push: true
+          tags: patbaumgartner/builder-jammy-base:chrome
+          file: Dockerfile.base-cnb
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -58,6 +66,7 @@ jobs:
           mvn spring-boot:build-image \
             --batch-mode --no-transfer-progress \
             -Dspring-boot.build-image.imageName=${{ steps.meta.outputs.tags }} \
+            -Dspring-boot.build-image.runImage=patbaumgartner/builder-jammy-base:chrome \
             -Dspring-boot.build-image.publish=true \
             -DCI_REGISTRY=https://index.docker.io/v1/ \
             -DCI_REGISTRY_USER=${{ secrets.DOCKER_USERNAME }} \

@@ -2,16 +2,16 @@ package com.patbaumgartner.swiss.coupon.booster.apis;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

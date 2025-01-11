@@ -2,12 +2,10 @@ package com.patbaumgartner.swiss.coupon.booster.runner;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-
-
 import org.jobrunr.jobs.annotations.Job;
 import org.jobrunr.jobs.annotations.Recurring;
+
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 

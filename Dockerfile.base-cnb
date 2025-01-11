@@ -1,0 +1,22 @@
+FROM paketobuildpacks/run-jammy-base:latest
+
+# Switch to root user to perform package installation
+USER root
+
+# Update package list and install required tools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       wget \
+       gpg \
+       dbus \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add Google Chrome repository and install Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Revert to the default non-root user
+USER cnb

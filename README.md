@@ -7,6 +7,23 @@ SwissCouponBooster is an application designed to streamline the activation of di
 ## Features
 - Activate Migros and Coop coupons with ease.
 
+## Running the Application
+
+To run the application, the following env variables are needed. Make sure you capture the `datadome` cookie from Supercard.ch first before you run it, it's needed to bypass the geolocation check.
+
+```bash
+# Migros Cummulus Account
+MIGROS_ACCOUNT_USERNAME=username
+MIGROS_ACCOUNT_PASSWORD=password
+
+# Coop Supercard Account
+COOP_SUPERCARD_USERNAME=username
+COOP_SUPERCARD_PASSWORD=pasword
+
+# Datadome Cookie
+COOP_SUPERCARD_DATADOME_COOKIE_VALUE=cookie-value
+```
+
 ## Contributing
 
 We welcome contributions to SwissCouponBooster! To get started:

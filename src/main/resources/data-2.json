@@ -1,0 +1,1991 @@
+{
+    "activeCountMax": 20,
+    "counts": {
+        "active": 0,
+        "favorite": 0,
+        "hidden": 0
+    },
+    "dc": [
+        {
+            "code": "2063699820241",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/Bubble_10Prozent_DE_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/Bubble_10Prozent_DE_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Ab CHF 75.-",
+            "textDescription": "auf das ganze JUMBO Sortiment ab einem Einkaufsbetrag von CHF 75.-",
+            "textDiscountAmount": "10%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "jumbo",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "jumbo"
+            ],
+            "isNew": false,
+            "isRecommendation": true,
+            "origin": "DEFAULT",
+            "priority": 30,
+            "productTypes": [
+                "14",
+                "16"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-03T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Jumbo Verkaufsstelle und online auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a>. Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons und Rabatten.",
+            "textCondition2": "Nicht gültig für: Raucherwaren, Lebensmittel, Tiernahrung, Depotgebühren, Gasfüllung, Geschenkkarten/eVoucher, Reka-Card, Vignetten, gebührenpflichtige Kehrichtsäcke, Gebührenmarken, Tchibo Sortiment, Tragtaschen, Telefonkarten, Gesprächsguthaben, Zeitungen/Zeitschriften, Baby-Anfangsmilch, Mietgeschäfte, Hauslieferdienst, Reparaturen, Ersatzteile, Dienst-/Serviceleistungen, Projektberatung, Spezial-Tageskarte.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "10% Rabatt auf das ganze JUMBO Sortiment ab einem Einkaufsbetrag von CHF 75.-"
+        },
+        {
+            "code": "2040000016937",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-01_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-01_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Inshape",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "vitality",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "vitality"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "linkProduct": {
+                "text": "Jetzt einkaufen",
+                "url": "https://www.coopvitality.ch/de/search?q=Inshape%3Asearch-score",
+                "options": [
+                    "IN_APP_BROWSER_SHOW_CLOSE_DIALOG"
+                ],
+                "type": "IN_APP_BROWSER",
+                "preLinkAction": "NONE"
+            },
+            "origin": "DEFAULT",
+            "priority": 283,
+            "productTypes": [
+                "12"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar ausschliesslich in Ihrer Coop Vitality Apotheke und unter <a href=https://www.coopvitality.ch target=\"_blank\">coopvitality.ch</a>. Online Promocode: Inshape-1-25",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nur einmal einlösbar und nicht kumulierbar mit anderen Bons/Rabatten.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf Inshape"
+        },
+        {
+            "code": "2063700860891",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-zg-25112024-07_DE_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-zg-25112024-07_DE_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Möbel & Matratzen",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "livique",
+            "campType": "ZWV",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-25T21:59:59Z",
+            "formatIds": [
+                "livique"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "linkProduct": {
+                "text": "Jetzt einkaufen",
+                "url": "https://www.livique.ch/de/",
+                "options": [
+                    "IN_APP_BROWSER_SHOW_CLOSE_DIALOG"
+                ],
+                "type": "IN_APP_BROWSER",
+                "preLinkAction": "NONE"
+            },
+            "origin": "DEFAULT",
+            "priority": 285,
+            "productTypes": [
+                "14"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 3,
+            "startDate": "2025-01-15T00:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Bon einmal einlösbar in allen Livique-Filialen und online auf <a href=https://www.livique.ch target=\"_blank\">livique.ch</a>.",
+            "textCondition2": "15% auf Novamobili. 10 % auf Atelier Suisse, Blanc d'Ivoire, Intertime, Willisau und Zumsteg. Ausgenommen Sortiment Schaffner und Swissplus, Dienstleistungen, Geschenkkarten Best Price- und bereits reduzierte Artikel. Nicht kumulierbar mit anderen Rabatten. Gültig nur bei Neuaufträgen. Supercard an der Kasse vorweisen oder mit der Supercard ID im Online Shop livique.ch anmelden. Rabatt wird im Online Shop automatisch im Warenkorb abgezogen.",
+            "textConditionRemainingUseCount": "Dieser Bon kann noch 3x eingelöst werden. Nach jedem Einlösen muss der Bon erneut aktiviert werden.",
+            "trackingName": "20% Rabatt auf Möbel & Matratzen"
+        },
+        {
+            "code": "2061981243181",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-06_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-06_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das vegane Tagesgericht",
+            "textDiscountAmount": "CHF 3.-",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "restaurant",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "restaurant"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 285,
+            "productTypes": [
+                "38"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Restaurant.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "CHF 3.- Rabatt auf das vegane Tagesgericht"
+        },
+        {
+            "code": "2063700927341",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-01_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-01_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Swiss Alpina 6x1.5L",
+            "textDiscountAmount": "50%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "05"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "50% Rabatt auf alle Swiss Alpina 6x1.5L"
+        },
+        {
+            "code": "2063700929321",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-03_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-03_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/20x_Supu_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle frischen, unverarbeiteten Kartoffeln (exkl. Prix Garantie)",
+            "textDiscountAmount": "20x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "03",
+                "36"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20x Superpunkte auf alle frischen, unverarbeiteten Kartoffeln (exkl. Prix Garantie)"
+        },
+        {
+            "code": "2063700929451",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-06_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-06_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/20x_Supu_DE.png"
+                }
+            ],
+            "logoProduct": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktLogos/Nur_Filiale_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Schnitttulpen",
+            "textDiscountAmount": "20x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "17"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20x Superpunkte auf alle Schnitttulpen"
+        },
+        {
+            "code": "2063756265091",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-02_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-02_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/20x_Supu_DE.png"
+                }
+            ],
+            "logoProduct": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktLogos/Nur_Filiale_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Kleinbrote (exkl. Gipfeli)",
+            "textDiscountAmount": "20x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "07"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20x Superpunkte auf alle Kleinbrote (exkl. Gipfeli)"
+        },
+        {
+            "code": "2063924927851",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-04_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-04_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/20x_Supu_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle tiefgekühlten Pizzen (exkl. Prix Garantie)",
+            "textDiscountAmount": "20x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "09"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20x Superpunkte auf alle tiefgekühlten Pizzen (exkl. Prix Garantie)"
+        },
+        {
+            "code": "2063924927981",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-05_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-13012025-05_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Kerzen (exkl. Prix Garantie)",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail",
+                "city",
+                "jumbo"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 400,
+            "productTypes": [
+                "14"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a>, in Ihrem Coop City Warenhaus, online auf <a href=\"https://www.coop-city.ch\" target=\"_blank\">coop-city.ch</a>, in Ihrer Jumbo Verkaufsstelle und online auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a>.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a>, <a href=\"https://www.coop-city.ch\" target=\"_blank\">coop-city.ch</a> oder auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf alle Kerzen (exkl. Prix Garantie)"
+        },
+        {
+            "code": "2063700863731",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-06_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-06_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "auf das ganze Oatly Drinks und Rahm Sortiment ab 2 Stück nach Wahl",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "02",
+                "37"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf das ganze Oatly Drinks und Rahm Sortiment ab 2 Stück nach Wahl"
+        },
+        {
+            "code": "2063700880691",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-04_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-04_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "auf das ganze Emmi Energy Milk High Protein Sortiment ab 2 Stück nach Wahl",
+            "textDiscountAmount": "50%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "02"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "50% Rabatt auf das ganze Emmi Energy Milk High Protein Sortiment ab 2 Stück nach Wahl"
+        },
+        {
+            "code": "2063759829771",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-02_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-02_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf das ganze Actimel und Activia Sortiment",
+            "textDiscountAmount": "30%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "02"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "30% Rabatt auf das ganze Actimel und Activia Sortiment"
+        },
+        {
+            "code": "2063924962111",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-05_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-05_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "auf HI-CHEW Kaubonbons Original Mix oder Exotic Fruits Mix, 100 g. ab zwei Stück nach Wahl",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "08"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf HI-CHEW Kaubonbons Original Mix oder Exotic Fruits Mix, 100 g. ab zwei Stück nach Wahl"
+        },
+        {
+            "code": "2061924861281",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-05_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-05_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf das Garden Gourmet Tiefkühl-Sortiment im Beutel",
+            "textDiscountAmount": "CHF 4.-",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-26T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "09"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "CHF 4.- Rabatt auf das Garden Gourmet Tiefkühl-Sortiment im Beutel"
+        },
+        {
+            "code": "2063924923051",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-04_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-04_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "auf alle nākd. Riegel Packungen ab 2 Stück nach Wahl",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "08"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf alle nākd. Riegel Packungen ab 2 Stück nach Wahl"
+        },
+        {
+            "code": "2063700865131",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-01012025-06_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-01012025-06_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "auf Alpro Joghurtalternativen",
+            "textDiscountAmount": "30%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "02"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-12-29T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "30% Rabatt auf Alpro Joghurtalternativen"
+        },
+        {
+            "code": "2063704358271",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-01012025-07_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-01012025-07_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Rivella Gelb 50cl",
+            "textDiscountAmount": "30%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "retail",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "retail"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 500,
+            "productTypes": [
+                "05"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-12-29T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrem Coop Supermarkt, online auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> oder in der Lebensmittelabteilung Ihres Coop City Warenhauses.",
+            "textCondition2": "Supercard an der Kasse vorweisen oder mit Ihrer Supercard ID auf <a href=\"https://www.coop.ch\" target=\"_blank\">coop.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "30% Rabatt auf Rivella Gelb 50cl"
+        },
+        {
+            "code": "2990000003171",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-03_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-13012025-03_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "ab 2 Stück",
+            "textDescription": "Marché Bio-Eistee nach Wahl",
+            "textDiscountAmount": "2 für 1",
+            "textDiscountUnit": "",
+            "formatIdMain": "marche",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-31T22:59:00Z",
+            "formatIds": [
+                "marche"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 600,
+            "productTypes": [
+                "05"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-12T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar ausschliesslich in den Marché Restaurants. Nicht gültig für: Shopartikel, Geschenkkarten und Raucherwaren.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Keine Barauszahlung der Bons. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "2 für 1  Marché Bio-Eistee nach Wahl"
+        },
+        {
+            "code": "7610813686563",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/5Rp_Ltr_DE_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/5Rp_Ltr_DE_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "Benzin/Diesel.",
+            "textDiscountAmount": "5 Rappen",
+            "textDiscountUnit": "pro Liter",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-29T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "31"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-08T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen Coop Pronto Shops mit Tankstelle und an Coop Tankstellen mit Durchfahrtskasse während den Kassenöffnungszeiten (exkl. Automaten). Jetzt CO₂ kompensieren und ein Klimaschutzprojekt unterstützen. Mehr Infos auf www.coop-pronto.ch/co2.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Mit diesem Bon erhalten Sie nach dem Tanken jeden Liter Benzin oder Diesel günstiger. Bon nicht mit Reka-Geld, anderen Bons oder Aktionen kumulierbar.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "5 Rappen pro Liter Benzin/Diesel."
+        },
+        {
+            "code": "2063700877561",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-03_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-03_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/5x_Supu_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Kaminholz 15kg",
+            "textDiscountAmount": "5x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "jumbo",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "jumbo"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "14"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Jumbo Verkaufsstelle und online auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a>.",
+            "textCondition2": "Supercard an der Kasse vorweisen odermit Ihrer Supercard ID auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "5x Superpunkte auf Kaminholz 15kg"
+        },
+        {
+            "code": "2063700879251",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-02_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-06012025-02_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/10x_Supu_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf das gesamte Handwerkzeug Sortiment",
+            "textDiscountAmount": "10x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "jumbo",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "jumbo"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "16"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Jumbo Verkaufsstelle und online auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a>.",
+            "textCondition2": "Supercard an der Kasse vorweisen odermit Ihrer Supercard ID auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "10x Superpunkte auf das gesamte Handwerkzeug Sortiment"
+        },
+        {
+            "code": "2063924926281",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-06012025-01_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-hfc-06012025-01_AD@3x.png"
+                }
+            ],
+            "imageRebate": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/20x_Supu_DE.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Schlitten und Bobs",
+            "textDiscountAmount": "20x",
+            "textDiscountUnit": "Superpunkte",
+            "formatIdMain": "jumbo",
+            "clubId": "hellofamily",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-22T22:59:00Z",
+            "formatIds": [
+                "jumbo"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "19"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-05T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Jumbo Verkaufsstelle und online auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a>.",
+            "textCondition2": "Supercard an der Kasse vorweisen odermit Ihrer Supercard ID auf <a href=\"https://www.jumbo.ch\" target=\"_blank\">jumbo.ch</a> einkaufen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20x Superpunkte auf alle Schlitten und Bobs"
+        },
+        {
+            "code": "7610813631747",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/5Rp_Ltr_DE_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/Bubbles/5Rp_Ltr_DE_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "pro Liter Benzin oder Diesel",
+            "textDiscountAmount": "5 Rappen",
+            "textDiscountUnit": "pro Liter",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-02T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "39",
+                "31"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-12-29T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen Coop Pronto Shops mit Tankstelle und an Coop Tankstellen mit Durchfahrtskasse während den Kassenöffnungszeiten (exkl. Automaten). Jetzt CO₂ kompensieren und ein Klimaschutzprojekt unterstützen. Mehr Infos auf www.coop-pronto.ch/co2",
+            "textCondition2": "Supercard an der Kasse vorweisen. Mit diesem Bon erhalten Sie nach dem Tanken jeden Liter Benzin oder Diesel günstiger. Bon nicht mit Reka-Geld, anderen Bons oder Aktionen kumulierbar.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "5 Rappen pro Liter pro Liter Benzin oder Diesel"
+        },
+        {
+            "code": "7610813814577",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-24_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-24_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das gesamte Alpro Sortiment",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "37"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf das gesamte Alpro Sortiment"
+        },
+        {
+            "code": "7610813814652",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-20_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-20_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das gesamte La Semeuse Sortiment",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "36"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf das gesamte La Semeuse Sortiment"
+        },
+        {
+            "code": "7610813814669",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-21_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-21_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das gesamte Podravka Sortiment",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "36"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf das gesamte Podravka Sortiment"
+        },
+        {
+            "code": "7610813814676",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-22_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-22_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf SalaMini SnackClassico oder Pfeffersalami",
+            "textDiscountAmount": "CHF 1.-",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "04"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "CHF 1.- Rabatt auf SalaMini SnackClassico oder Pfeffersalami"
+        },
+        {
+            "code": "7610813814683",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-23_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-23_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "beim Kauf einer Dr. Oetker Ristorante Pizza",
+            "textDiscountAmount": "CHF 1.50",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "09"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "CHF 1.50 Rabatt beim Kauf einer Dr. Oetker Ristorante Pizza"
+        },
+        {
+            "code": "7610813814706",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-25_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-25_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "beim Kauf eines Bäckerland Weizen- oder Mehrkorntoast 500g",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "07"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt beim Kauf eines Bäckerland Weizen- oder Mehrkorntoast 500g"
+        },
+        {
+            "code": "7610813814713",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-26_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-26_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das ganze Bibichoc Sortiment",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "08",
+                "20"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf das ganze Bibichoc Sortiment"
+        },
+        {
+            "code": "7610813814720",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-27_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-27_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf alle Brunos Salatsaucen",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "36"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf alle Brunos Salatsaucen"
+        },
+        {
+            "code": "7610813814737",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-28_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-28_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf alle Grether's Weichpastillien",
+            "textDiscountAmount": "20%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "08"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "20% Rabatt auf alle Grether's Weichpastillien"
+        },
+        {
+            "code": "7610813814744",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-29_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-29_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf alle Purina Produkte",
+            "textDiscountAmount": "25%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "21"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "25% Rabatt auf alle Purina Produkte"
+        },
+        {
+            "code": "7610813814751",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-31_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-31_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das gesamte Chiefs Sortiment",
+            "textDiscountAmount": "25%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "08"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "25% Rabatt auf das gesamte Chiefs Sortiment"
+        },
+        {
+            "code": "7610813814782",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-30_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-25112024-30_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "Nur für 1 Stück",
+            "textDescription": "auf das gesamte Michel 50cl Sortiment",
+            "textDiscountAmount": "25%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "pronto",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-03T22:59:00Z",
+            "formatIds": [
+                "pronto"
+            ],
+            "isNew": false,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 723,
+            "productTypes": [
+                "05"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2024-11-25T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in allen (ggf. grösseren) Coop Pronto Shops mit oder ohne Tankstelle.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "25% Rabatt auf das gesamte Michel 50cl Sortiment"
+        },
+        {
+            "code": "2069000121540",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-02_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-02_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Tintenpatronen und Toner",
+            "textDiscountAmount": "15%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "fust",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-01-26T22:59:00Z",
+            "formatIds": [
+                "fust"
+            ],
+            "isNew": true,
+            "isRecommendation": false,
+            "linkProduct": {
+                "text": "Jetzt einkaufen",
+                "url": "https://www.fust.ch/de/r/pc-tablet-handy/drucker-und-scanner/tintenpatronen-275.html",
+                "options": [
+                    "IN_APP_BROWSER_SHOW_CLOSE_DIALOG"
+                ],
+                "type": "IN_APP_BROWSER",
+                "preLinkAction": "NONE"
+            },
+            "origin": "DEFAULT",
+            "priority": 740,
+            "productTypes": [
+                "18"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-19T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Fust-Filiale und online auf <a href=\"https://www.fust.ch\" target=\"_blank\">fust.ch</a>.",
+            "textCondition2": "Ausgeschlossen sind Fust Küche Bad Bau, Dienstleistungen, Abos, Geschenkgutscheine oder Wertkarten. Supercard an der Kasse vorweisen oder mit Ihrer Supercard-Nummer <a href=\"https://www.fust.ch\" target=\"_blank\">online</a> einkaufen. Bon nur gültig auf direkt verfügbare Artikel. Nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "15% Rabatt auf alle Tintenpatronen und Toner"
+        },
+        {
+            "code": "2090100001333",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-17_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-17_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Actioncams Insta360",
+            "textDiscountAmount": "15%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "id",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-02T22:59:00Z",
+            "formatIds": [
+                "id"
+            ],
+            "isNew": true,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 740,
+            "productTypes": [
+                "18"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-19T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Interdiscount-Filiale nach Wahl. Artikel: 8516605, 9795894, 14061657, 14122917, 14163994, 14163996, 14163997, 14163998, 14163999, 14164000, 14164003, 14164004, 14175673, 14204293, 14204294",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nur einmal einlösbar. Nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat. Nur gültig auf direkt verfügbare Artikel in Ihrer Interdiscount Filiale.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "15% Rabatt auf Actioncams Insta360"
+        },
+        {
+            "code": "2090100001340",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-18_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-18_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf Ersatz-Aufsteckbürsten der Marke PHILIPS",
+            "textDiscountAmount": "15%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "id",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-02T22:59:00Z",
+            "formatIds": [
+                "id"
+            ],
+            "isNew": true,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 740,
+            "productTypes": [
+                "18"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-19T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Interdiscount-Filiale nach Wahl.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nur einmal einlösbar. Nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat. Nur gültig auf direkt verfügbare Artikel in Ihrer Interdiscount Filiale.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "15% Rabatt auf Ersatz-Aufsteckbürsten der Marke PHILIPS"
+        },
+        {
+            "code": "2090100001357",
+            "iconType": "NONE",
+            "imageMain": [
+                {
+                    "format": "DEFAULT",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-16_AH@2x.png"
+                },
+                {
+                    "format": "APP_DETAIL",
+                    "url": "https://contentimages.coop.ch/DigitalCouponing/ProduktBilder/dc-sc-23012025-16_AD@3x.png"
+                }
+            ],
+            "textConditionShort": "",
+            "textDescription": "auf alle Spielkonsolen-Games",
+            "textDiscountAmount": "10%",
+            "textDiscountUnit": "Rabatt",
+            "formatIdMain": "id",
+            "campType": "ZDC",
+            "displayStatus": "VISIBLE",
+            "endDate": "2025-02-02T22:59:00Z",
+            "formatIds": [
+                "id"
+            ],
+            "isNew": true,
+            "isRecommendation": false,
+            "origin": "DEFAULT",
+            "priority": 740,
+            "productTypes": [
+                "18"
+            ],
+            "redeemCount": 0,
+            "redeemCountMax": 1,
+            "startDate": "2025-01-19T23:01:00Z",
+            "status": "OPEN",
+            "textCondition1": "Einlösbar in Ihrer Interdiscount-Filiale nach Wahl.",
+            "textCondition2": "Supercard an der Kasse vorweisen. Bon nur einmal einlösbar. Nicht kumulierbar mit anderen Bons oder Aktionen. Solange Vorrat. Nur gültig auf direkt verfügbare Artikel in Ihrer Interdiscount Filiale.",
+            "textConditionRemainingUseCount": "Jeder Bon kann nur einmal eingelöst werden.",
+            "trackingName": "10% Rabatt auf alle Spielkonsolen-Games"
+        }
+    ],
+    "filterOptions": {
+        "clubs": [
+            {
+                "code": "hellofamily",
+                "name": "Hello Family",
+                "selected": false,
+                "countFiltered": 7
+            },
+            {
+                "code": "impoclub",
+                "name": "THE MEMBER CLUB",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "mondovino",
+                "name": "Mondovino Club",
+                "selected": false,
+                "countFiltered": 0
+            }
+        ],
+        "formats": [
+            {
+                "code": "retail",
+                "name": "Coop",
+                "selected": false,
+                "countFiltered": 14,
+                "countInitial": 14
+            },
+            {
+                "code": "city",
+                "name": "Coop City",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            },
+            {
+                "code": "jumbo",
+                "name": "Jumbo",
+                "selected": false,
+                "countFiltered": 5,
+                "countInitial": 5
+            },
+            {
+                "code": "pronto",
+                "name": "Coop Pronto",
+                "selected": false,
+                "countFiltered": 14,
+                "countInitial": 14
+            },
+            {
+                "code": "restaurant",
+                "name": "Coop Restaurant",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            },
+            {
+                "code": "vitality",
+                "name": "Coop Vitality",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            },
+            {
+                "code": "id",
+                "name": "Interdiscount",
+                "selected": false,
+                "countFiltered": 3,
+                "countInitial": 3
+            },
+            {
+                "code": "livique",
+                "name": "Livique",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            },
+            {
+                "code": "fust",
+                "name": "Dipl. Ing. Fust AG",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            },
+            {
+                "code": "marche",
+                "name": "Marché",
+                "selected": false,
+                "countFiltered": 1,
+                "countInitial": 1
+            }
+        ],
+        "productTypes": [
+            {
+                "code": "39",
+                "name": "Aktuelles Bonheft",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "20",
+                "name": "Baby, Kind",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "11",
+                "name": "Beauty",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "23",
+                "name": "Bijouterie, Bekleidung",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "01",
+                "name": "Bio, Nachhaltigkeit",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "17",
+                "name": "Blumen, Pflanzen",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "07",
+                "name": "Brot, Backwaren",
+                "selected": false,
+                "countFiltered": 2
+            },
+            {
+                "code": "12",
+                "name": "Drogerie",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "18",
+                "name": "Elektronik, Büro",
+                "selected": false,
+                "countFiltered": 4
+            },
+            {
+                "code": "09",
+                "name": "Fertiggerichte, Tiefkühlprodukte",
+                "selected": false,
+                "countFiltered": 3
+            },
+            {
+                "code": "04",
+                "name": "Fleisch, Fisch",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "19",
+                "name": "Freizeit, Sport",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "03",
+                "name": "Früchte, Gemüse",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "16",
+                "name": "Garten, Handwerk",
+                "selected": false,
+                "countFiltered": 2
+            },
+            {
+                "code": "06",
+                "name": "Getränke, alkoholisch",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "05",
+                "name": "Getränke, nicht alkoholisch",
+                "selected": false,
+                "countFiltered": 4
+            },
+            {
+                "code": "14",
+                "name": "Haushalt, Küche, Wohnen",
+                "selected": false,
+                "countFiltered": 4
+            },
+            {
+                "code": "02",
+                "name": "Milchprodukte, Eier",
+                "selected": false,
+                "countFiltered": 4
+            },
+            {
+                "code": "41",
+                "name": "Reisen, Ferien",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "08",
+                "name": "Snacks, Süsses",
+                "selected": false,
+                "countFiltered": 5
+            },
+            {
+                "code": "37",
+                "name": "Spezielle Ernährungsformen",
+                "selected": false,
+                "countFiltered": 2
+            },
+            {
+                "code": "40",
+                "name": "Super Bons",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "30",
+                "name": "Superpunkteangebote",
+                "selected": false,
+                "countFiltered": 0
+            },
+            {
+                "code": "38",
+                "name": "Take-Away, Menüs",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "21",
+                "name": "Tierwelt",
+                "selected": false,
+                "countFiltered": 1
+            },
+            {
+                "code": "31",
+                "name": "Treibstoff, Fahrzeugbedarf",
+                "selected": false,
+                "countFiltered": 2
+            },
+            {
+                "code": "36",
+                "name": "Vorräte",
+                "selected": false,
+                "countFiltered": 4
+            }
+        ]
+    },
+    "pagination": {
+        "currentPage": 0,
+        "pageSize": 9999,
+        "totalPages": 1,
+        "sort": "RELEVANCE"
+    },
+    "sortOptions": [
+        {
+            "code": "RELEVANCE",
+            "name": "Relevanz",
+            "selected": true
+        },
+        {
+            "code": "NEWEST",
+            "name": "Neuste Bons",
+            "selected": false
+        },
+        {
+            "code": "END_DATE_ASC",
+            "name": "Gültigkeitsdatum aufsteigend",
+            "selected": false
+        },
+        {
+            "code": "END_DATE_DESC",
+            "name": "Gültigkeitsdatum absteigend",
+            "selected": false
+        }
+    ]
+}
