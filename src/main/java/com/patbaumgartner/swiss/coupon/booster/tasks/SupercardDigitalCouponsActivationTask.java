@@ -47,24 +47,27 @@ public class SupercardDigitalCouponsActivationTask implements ActivationTask {
 		// Fetch all available bons and filter them by status
 		List<SupercardDigitalBon> allDigitalBons = coopDigitalBonsApi.collectSupercardDigitalBons();
 
+		// De-Activate all ACTIVE digital bons
 		List<SupercardDigitalBon> activeDigitalBons = allDigitalBons.stream()
 			.filter(item -> "ACTIVE".equals(item.status()))
 			.toList();
 
-		// De-Activate all ACTIVE digital bons
 		coopDigitalBonsApi.deactivateSupercardDigitalBons(activeDigitalBons);
+
+		// Activate all OPEN digital bons
+		Comparator<SupercardDigitalBon> compareByAttributes = Comparator.comparing(SupercardDigitalBon::endDate)
+			// .thenComparing(SupercardDigitalBon::hasLogoProduct).reversed()
+			.thenComparing(SupercardDigitalBon::isRecommendation)
+			.reversed();
 
 		List<SupercardDigitalBon> inactiveDigitalBons = allDigitalBons.stream()
 			.filter(item -> "OPEN".equals(item.status()))
 			.filter(item -> "retail".equals(item.shop()))
 			.filter(this::filterProductTypes)
-			.sorted(Comparator.comparing(SupercardDigitalBon::endDate))
-			.sorted(Comparator.comparing(SupercardDigitalBon::isRecommendation).reversed())
-			.sorted(Comparator.comparing(SupercardDigitalBon::hasLogoProduct).reversed())
+			.sorted(compareByAttributes)
 			.limit(20)
 			.toList();
 
-		// Activate all OPEN digital bons
 		coopDigitalBonsApi.activateSupercardDigitalBons(inactiveDigitalBons);
 		log.info("Supercard Digital Bons activated.");
 	}
