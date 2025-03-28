@@ -10,7 +10,6 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 
 import org.springframework.http.HttpStatus;
@@ -22,6 +21,7 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.patbaumgartner.swiss.coupon.booster.apis.MigrosDigitalCoupons.Available;
 import com.patbaumgartner.swiss.coupon.booster.settings.MigrosAccountSettings;
 import com.patbaumgartner.swiss.coupon.booster.settings.MigrosCumulusSettings;
 
@@ -46,9 +46,10 @@ public class MigrosDigitalCouponsApi {
 		this.objectMapper = objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
 		this.restClient = restClientBuilder
-			.requestFactory(
-					new HttpComponentsClientHttpRequestFactory(HttpClients.custom().setUserAgent(USER_AGENT).build()))
-			.build();
+				.requestFactory(
+						new HttpComponentsClientHttpRequestFactory(
+								HttpClients.custom().setUserAgent(USER_AGENT).build()))
+				.build();
 	}
 
 	public void loginMigrosAccount() {
@@ -56,10 +57,10 @@ public class MigrosDigitalCouponsApi {
 
 		// Step 1.1: Get CSRF token by sending a GET request
 		String responseBody = restClient.get()
-			.uri(accountSettings.loginUrl())
-			.accept(MediaType.TEXT_HTML)
-			.retrieve()
-			.body(String.class);
+				.uri(accountSettings.loginUrl())
+				.accept(MediaType.TEXT_HTML)
+				.retrieve()
+				.body(String.class);
 
 		// Step 1.2: Extract CSRF token
 		Document document = Jsoup.parse(responseBody);
@@ -69,8 +70,7 @@ public class MigrosDigitalCouponsApi {
 		if (!metaElements.isEmpty()) {
 			Element metaElement = metaElements.first();
 			csrfToken = metaElement.attr("content");
-		}
-		else {
+		} else {
 			throw new MigrosDigitalCouponsApiException("CSRF token not found.");
 		}
 
@@ -79,11 +79,11 @@ public class MigrosDigitalCouponsApi {
 				accountSettings.password();
 
 		ResponseEntity<String> loginResponse = restClient.post()
-			.uri(accountSettings.loginUrl())
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(body)
-			.retrieve()
-			.toEntity(String.class);
+				.uri(accountSettings.loginUrl())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(body)
+				.retrieve()
+				.toEntity(String.class);
 
 		if (loginResponse.getStatusCode() != HttpStatus.OK) {
 			throw new MigrosDigitalCouponsApiException("Authentication failed. Please check your credentials.");
@@ -96,10 +96,10 @@ public class MigrosDigitalCouponsApi {
 	public void loginCumulus() {
 		// Step 2: Send GET request to login to Cumulus after successful authentication
 		ResponseEntity<String> cumulusResponse = restClient.get()
-			.uri(cumulusSettings.loginUrl())
-			.accept(MediaType.TEXT_HTML)
-			.retrieve()
-			.toEntity(String.class);
+				.uri(cumulusSettings.loginUrl())
+				.accept(MediaType.TEXT_HTML)
+				.retrieve()
+				.toEntity(String.class);
 
 		if (cumulusResponse.getStatusCode() != HttpStatus.OK) {
 			throw new MigrosDigitalCouponsApiException("Cumulus login failed.");
@@ -115,40 +115,19 @@ public class MigrosDigitalCouponsApi {
 	public List<CumulusDigitalCoupon> collectCumulusDigitalCoupons() {
 		// Step 3: Send GET request to collect Cumulus Digital Coupons
 
-		ResponseEntity<String> collectResponse = restClient.get()
-			.uri(cumulusSettings.couponsUrl())
-			.accept(MediaType.TEXT_HTML)
-			.retrieve()
-			.toEntity(String.class);
+		ResponseEntity<MigrosDigitalCoupons> collectResponse = restClient.get()
+				.uri(cumulusSettings.couponsUrl())
+				.accept(MediaType.APPLICATION_JSON)
+				.retrieve()
+				.toEntity(MigrosDigitalCoupons.class);
 
 		if (collectResponse.getStatusCode() != HttpStatus.OK) {
 			throw new MigrosDigitalCouponsApiException("Digital coupons collection failed.");
 		}
 
-		// Step 3.1: Extract digital bons from the response
 		List<CumulusDigitalCoupon> digitalCoupons = new ArrayList<>();
-		Document document = Jsoup.parse(collectResponse.getBody());
-
-		// Select all <article> elements
-		for (Element article : document.select("article")) {
-			// Extract the value of the data-setup attribute
-			String dataSetup = article.attr("data-setup");
-
-			// Parse the JSON part of the data-setup using Jackson
-			JsonNode rootNode = objectMapper.readTree(dataSetup);
-			JsonNode dataNode = rootNode.path("data");
-			JsonNode promotionsNode = dataNode.path("promotions");
-
-			// If there are promotions in the array, extract the details
-			if (promotionsNode.isArray()) {
-				for (JsonNode promotion : promotionsNode) {
-					String id = promotion.path("id").asText();
-					String name = promotion.path("name").asText();
-
-					digitalCoupons.add(new CumulusDigitalCoupon(id, name));
-					log.info("Found digital coupon: {} - {}", id, name);
-				}
-			}
+		for (Available available : collectResponse.getBody().getAvailable()) {
+			digitalCoupons.add(new CumulusDigitalCoupon(available.getId(), available.getName()));
 		}
 
 		log.info("Successfully collected {} ditigal coupons.", digitalCoupons.size());
@@ -162,10 +141,10 @@ public class MigrosDigitalCouponsApi {
 		coupons.forEach(coupon -> {
 
 			ResponseEntity<String> activationResponse = restClient.post()
-				.uri(cumulusSettings.couponsActivationUrl(), coupon.id())
-				.accept(MediaType.APPLICATION_JSON)
-				.retrieve()
-				.toEntity(String.class);
+					.uri(cumulusSettings.couponsActivationUrl(), coupon.id())
+					.accept(MediaType.APPLICATION_JSON)
+					.retrieve()
+					.toEntity(String.class);
 
 			if (activationResponse.getStatusCode() != HttpStatus.OK) {
 				throw new MigrosDigitalCouponsApiException("Activation failed.");
