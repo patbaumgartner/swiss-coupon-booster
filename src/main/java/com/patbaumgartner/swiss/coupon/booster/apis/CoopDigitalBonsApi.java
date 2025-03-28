@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -186,8 +185,8 @@ public class CoopDigitalBonsApi {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (configResponse.getStatusCode() != HttpStatus.OK ||
-				configResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
+		if (configResponse.getStatusCode() != HttpStatus.OK
+				|| configResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
 			throw new CoopDigitalBonsApiException("JWT token extraction failed.");
 		}
 
@@ -211,8 +210,8 @@ public class CoopDigitalBonsApi {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (collectionResponse.getStatusCode() != HttpStatus.OK ||
-				collectionResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
+		if (collectionResponse.getStatusCode() != HttpStatus.OK
+				|| collectionResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
 			throw new CoopDigitalBonsApiException("Digital bons activation failed.");
 		}
 
@@ -268,8 +267,8 @@ public class CoopDigitalBonsApi {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (activationResponse.getStatusCode() != HttpStatus.OK ||
-				activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
+		if (activationResponse.getStatusCode() != HttpStatus.OK
+				|| activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
 			throw new CoopDigitalBonsApiException("Digital bons de-activation failed.");
 		}
 	}
@@ -289,8 +288,8 @@ public class CoopDigitalBonsApi {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (activationResponse.getStatusCode() != HttpStatus.OK ||
-				activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
+		if (activationResponse.getStatusCode() != HttpStatus.OK
+				|| activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
 			throw new CoopDigitalBonsApiException("Digital bons activation failed.");
 		}
 	}
