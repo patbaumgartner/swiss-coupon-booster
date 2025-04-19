@@ -25,10 +25,6 @@
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <tidy-maven-plugin.version>1.4.0</tidy-maven-plugin.version>
     <selenium.version>4.27.0</selenium.version>
-    <rewrite-maven-plugin.version>6.6.1</rewrite-maven-plugin.version>
-    <rewrite-recommendations.version>1.15.0</rewrite-recommendations.version>
-    <rewrite-spring.version>6.5.1</rewrite-spring.version>
-    <rewrite-testing-frameworks.version>3.6.1</rewrite-testing-frameworks.version>
   </properties>
 
   <dependencies>
@@ -113,45 +109,6 @@
           <execution>
             <goals>
               <goal>apply</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.openrewrite.maven</groupId>
-        <artifactId>rewrite-maven-plugin</artifactId>
-        <version>${rewrite-maven-plugin.version}</version>
-        <configuration>
-          <exportDatatables>true</exportDatatables>
-          <activeRecipes>
-            <recipe>org.openrewrite.recipes.OpenRewriteBestPractices</recipe>
-            <recipe>org.openrewrite.maven.BestPractices</recipe>
-            <recipe>org.openrewrite.java.logging.slf4j.Slf4jBestPractices</recipe>
-            <recipe>org.openrewrite.java.testing.junit5.JUnit5BestPractices</recipe>
-            <recipe>org.openrewrite.java.spring.boot3.SpringBoot33BestPractices</recipe>
-          </activeRecipes>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.openrewrite.recipe</groupId>
-            <artifactId>rewrite-recommendations</artifactId>
-            <version>${rewrite-recommendations.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.openrewrite.recipe</groupId>
-            <artifactId>rewrite-spring</artifactId>
-            <version>${rewrite-spring.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.openrewrite.recipe</groupId>
-            <artifactId>rewrite-testing-frameworks</artifactId>
-            <version>${rewrite-testing-frameworks.version}</version>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <goals>
-              <goal>run</goal>
             </goals>
           </execution>
         </executions>
