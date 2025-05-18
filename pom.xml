@@ -21,7 +21,7 @@
     <java.version>21</java.version>
     <jobrunr.version>7.5.1</jobrunr.version>
     <jsoup.version>1.20.1</jsoup.version>
-    <spring-javaformat-maven-plugin.version>0.0.43</spring-javaformat-maven-plugin.version>
+    <spring-javaformat-maven-plugin.version>0.0.44</spring-javaformat-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <tidy-maven-plugin.version>1.4.0</tidy-maven-plugin.version>
     <selenium.version>4.27.0</selenium.version>
