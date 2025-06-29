@@ -163,9 +163,7 @@
             </publishRegistry>
           </docker>
           <image>
-            <builder>paketobuildpacks/builder-jammy-base:latest</builder>
             <env>
-              <BP_SPRING_AOT_ENABLED>true</BP_SPRING_AOT_ENABLED>
               <BP_JVM_CDS_ENABLED>true</BP_JVM_CDS_ENABLED>
             </env>
           </image>
@@ -183,12 +181,6 @@
                 <java.target>${java.version}</java.target>
               </additionalProperties>
             </configuration>
-          </execution>
-          <execution>
-            <id>process-aot</id>
-            <goals>
-              <goal>process-aot</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>

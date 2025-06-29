@@ -1,4 +1,4 @@
-FROM paketobuildpacks/run-jammy-base:latest
+FROM paketobuildpacks/run-noble-base:latest
 
 # Switch to root user to perform package installation
 USER root
