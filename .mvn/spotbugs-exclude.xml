@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter xmlns="https://github.com/spotbugs/filter/3.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 
+                https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Exclude test classes from certain performance checks -->
+    <Match>
+        <Package name="~.*\.test.*"/>
+        <Bug pattern="DM_DEFAULT_ENCODING"/>
+    </Match>
+
+    <!-- Records don't need equals/hashCode warnings -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.model.*"/>
+        <Bug pattern="EQ_UNUSUAL"/>
+    </Match>
+
+    <!-- Suppress CRLF injection warnings for controlled logging -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.config.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.util.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.coop.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!-- Allow unicode operations for business requirements -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.util.*"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.service.*"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.coop\.service.*"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <!-- Exclude internal representation exposure for records with defensive copying -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.coop.properties.SupercardProperties$CouponFilter"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Exclude null return warning for record toString with null safety -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.util.proxy.ProxyAddress"/>
+        <Method name="toString"/>
+        <Bug pattern="NP_TOSTRING_COULD_RETURN_NULL"/>
+    </Match>
+</FindBugsFilter>

@@ -1,0 +1,8 @@
+coop:
+  user:
+    email: "dummy@example.com"
+    password: "dummy-password"
+migros:
+  user:
+    email: "dummy@example.com"
+    password: "dummy-password"
