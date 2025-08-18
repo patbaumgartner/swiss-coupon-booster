@@ -1,0 +1,24 @@
+# Test profile configuration
+logging:
+  level:
+    com.patbaumgartner: WARN
+    com.microsoft.playwright: WARN
+    org.springframework: WARN
+    root: WARN
+
+# Disable actual browser automation in tests
+migros:
+  login:
+    enabled: false
+
+  user:
+    email: "test@example.com"
+    password: "test-password"
+
+  playwright:
+    headless: true
+    timeout-ms: 5000
+    typing-delay-ms: 0
+    slow-mo-ms: 0
+
+

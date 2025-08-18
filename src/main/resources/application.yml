@@ -1,0 +1,64 @@
+application:
+  version: '@project.version@'
+
+spring:
+  application:
+    name: coupon-booster
+  config:
+    import: 
+      - "optional:file:../.env[.properties]"
+      - "optional:file:.env[.properties]"
+  main:
+    web-application-type: none
+    banner-mode: console
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  level:
+    org.springframework: INFO
+    com.microsoft.playwright: DEBUG
+    com.patbaumgartner: DEBUG
+    root: INFO
+
+migros:
+  user:
+    email: "${MIGROS_USER_EMAIL:}"
+    password: "${MIGROS_USER_PASSWORD:}"
+
+  playwright:
+    login-url: "https://login.migros.ch/"
+    password-url: "https://login.migros.ch/login/password"
+    typing-delay-ms: 50
+    slow-mo-ms: 500
+    headless: true
+    chrome-args:
+      - "--no-sandbox"
+      - "--disable-web-security"
+      - "--disable-features=VizDisplayCompositor"
+      - "--disable-blink-features=WebAuthenticationAPI"
+    timeout-ms: 15000
+
+  selectors:
+    email-input: "#input-email"
+    password-input: "#input-password"
+    submit-button: "#button-submit"
+    password-login-link: "#link-login-option-PASSWORD"
+    cookie-accept-button: "button:has-text('Accept'), button:has-text('Akzeptieren')"
+
+cumulus:
+  urls:
+    base-url: "https://account.migros.ch"
+    coupons-endpoint: "${cumulus.urls.base-url}/ma/api/user/cumulus/coupon"
+    coupons-referer: "${cumulus.urls.base-url}/cumulus/dashboard"
+    activation-endpoint: "${cumulus.urls.base-url}/ma/api/user/cumulus/coupon/activation"
+
+  api:
+    request-delay: "PT0.5S"
+    max-retries: 3
+    timeout: "PT30S"
+
+  browser:
+    user-agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+    language: "en-US,en;q=0.9,de-CH;q=0.8,de-DE;q=0.7,de;q=0.6"

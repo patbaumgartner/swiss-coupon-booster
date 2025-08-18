@@ -1,0 +1,396 @@
+name: Release Pipeline
+
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+      pre_release:
+        description: 'Is this a pre-release?'
+        type: boolean
+        required: false
+        default: false
+      skip_tests:
+        description: 'Skip test execution (not recommended)'
+        type: boolean
+        required: false
+        default: false
+
+env:
+  JAVA_VERSION: 21
+  MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
+  PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+      is_prerelease: ${{ steps.set-version.outputs.is_prerelease }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set release version and metadata
+      id: set-version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+          IS_PRERELEASE="${{ github.event.inputs.pre_release }}"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${VERSION#refs/tags/}"
+          IS_PRERELEASE="${{ github.event.release.prerelease }}"
+        else
+          echo "Unknown event type: ${{ github.event_name }}"
+          exit 1
+        fi
+
+        # Validate version format
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+          echo "Invalid version format: $VERSION"
+          echo "Expected format: X.Y.Z or X.Y.Z-suffix"
+          exit 1
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+        echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
+        echo "📋 Release Configuration:"
+        echo "- Version: $VERSION"
+        echo "- Pre-release: $IS_PRERELEASE"
+        echo "- Event: ${{ github.event_name }}"
+
+  build-and-test:
+    name: Build and Test Release
+    runs-on: ubuntu-latest
+    needs: validate-release
+    timeout-minutes: 45
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        key: playwright-browsers-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          playwright-browsers-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+
+    - name: Install Playwright browsers
+      run: |
+        mvn exec:java -e -ntp -Dexec.mainClass="com.microsoft.playwright.CLI" -Dexec.args="install --with-deps" || {
+          echo "Playwright installation failed, retrying..."
+          sleep 5
+          mvn exec:java -e -ntp -Dexec.mainClass="com.microsoft.playwright.CLI" -Dexec.args="install --with-deps"
+        }
+
+    - name: Set project version
+      run: |
+        mvn versions:set -DnewVersion=${{ needs.validate-release.outputs.version }} -DgenerateBackupPoms=false -ntp
+        echo "Updated project version to ${{ needs.validate-release.outputs.version }}"
+
+    - name: Run full test suite
+      if: ${{ github.event.inputs.skip_tests != 'true' }}
+      run: |
+        echo "🧪 Running comprehensive test suite..."
+        xvfb-run -a mvn clean verify -Dspring.profiles.active=test -ntp
+      env:
+        SPRING_PROFILES_ACTIVE: test
+        MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
+        PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+
+    - name: Skip tests (if requested)
+      if: ${{ github.event.inputs.skip_tests == 'true' }}
+      run: |
+        echo "⚠️  WARNING: Tests are being skipped as requested"
+        echo "This is not recommended for production releases"
+
+    - name: Build release artifacts
+      run: |
+        echo "🏗️  Building release artifacts..."
+        mvn clean package -DskipTests -ntp
+
+        # Verify JAR was created
+        if [ ! -f target/migros-coupon-booster-*.jar ]; then
+          echo "❌ JAR file not found!"
+          exit 1
+        fi
+
+        echo "✅ Release artifacts built successfully"
+      env:
+        MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
+
+    - name: Generate security reports
+      run: |
+        echo "🔒 Generating security and compliance reports..."
+        mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -ntp
+        mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=10 -ntp || echo "Dependency check completed with warnings"
+      continue-on-error: true
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifacts-${{ needs.validate-release.outputs.version }}
+        path: |
+          target/*.jar
+          target/bom.xml
+          target/dependency-check-report.*
+        retention-days: 90
+
+  create-release-package:
+    name: Create Release Package
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-and-test]
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-artifacts-${{ needs.validate-release.outputs.version }}
+        path: artifacts/
+
+    - name: Create comprehensive release package
+      run: |
+        VERSION="${{ needs.validate-release.outputs.version }}"
+        PACKAGE_NAME="migros-coupon-booster-${VERSION}"
+
+        echo "📦 Creating release package: ${PACKAGE_NAME}"
+
+        # Create release directory structure
+        mkdir -p release/{bin,config,docs,security}
+
+        # Copy application JAR
+        cp artifacts/*.jar release/bin/
+
+        # Copy documentation
+        cp README.md release/docs/
+        cp LICENSE release/docs/ 2>/dev/null || echo "License file not found"
+
+        # Copy security reports
+        cp artifacts/bom.xml release/security/ 2>/dev/null || echo "SBOM not found"
+        cp artifacts/dependency-check-report.* release/security/ 2>/dev/null || echo "Dependency check report not found"
+
+        # Create startup scripts
+        cat > release/bin/start.sh << 'EOF'
+        #!/bin/bash
+        set -e
+
+        # Migros Coupon Booster Startup Script
+        echo "Starting Migros Coupon Booster..."
+
+        # Set JVM options
+        JVM_OPTS="${JVM_OPTS:--Xmx1024m -Xms512m}"
+
+        # Find JAR file
+        JAR_FILE=$(find "$(dirname "$0")" -name "migros-coupon-booster-*.jar" | head -1)
+
+        if [ -z "$JAR_FILE" ]; then
+          echo "Error: JAR file not found!"
+          exit 1
+        fi
+
+        echo "Starting application: $JAR_FILE"
+        java $JVM_OPTS -jar "$JAR_FILE" "$@"
+        EOF
+
+        cat > release/bin/start.bat << 'EOF'
+        @echo off
+        title Migros Coupon Booster
+
+        echo Starting Migros Coupon Booster...
+
+        if "%JVM_OPTS%"=="" set JVM_OPTS=-Xmx1024m -Xms512m
+
+        for %%f in ("%~dp0migros-coupon-booster-*.jar") do (
+          set JAR_FILE=%%f
+          goto :found
+        )
+
+        echo Error: JAR file not found!
+        exit /b 1
+
+        :found
+        echo Starting application: %JAR_FILE%
+        java %JVM_OPTS% -jar "%JAR_FILE%" %*
+        EOF
+
+        chmod +x release/bin/start.sh
+
+        # Create configuration templates
+        cat > release/config/application.properties.template << 'EOF'
+        # Migros Coupon Booster Configuration Template
+        # Copy this file to application.properties and customize as needed
+
+        # Server Configuration
+        server.port=8080
+
+        # Logging Configuration  
+        logging.level.com.patbaumgartner.migroscouponbooster=INFO
+        logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+
+        # Playwright Configuration
+        # Add your Migros credentials and configuration here
+        EOF
+
+        # Create version info
+        cat > release/VERSION << EOF
+        Version: ${VERSION}
+        Build Date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        Git Commit: ${GITHUB_SHA:0:7}
+        Java Version: ${{ env.JAVA_VERSION }}
+        EOF
+
+        # Create installation guide
+        cat > release/docs/INSTALL.md << 'EOF'
+        # Installation Guide
+
+        ## Prerequisites
+        - Java 21 or higher
+        - Network access for Playwright browser downloads
+
+        ## Quick Start
+        1. Extract the release package
+        2. Copy `config/application.properties.template` to `config/application.properties`
+        3. Edit the configuration file with your settings
+        4. Run `bin/start.sh` (Linux/Mac) or `bin/start.bat` (Windows)
+
+        ## Configuration
+        Edit `config/application.properties` to customize the application behavior.
+
+        ## Security
+        Review the files in the `security/` directory for dependency information and vulnerability reports.
+        EOF
+
+        # Create archives
+        tar -czf ${PACKAGE_NAME}.tar.gz -C release .
+        (cd release && zip -r ../${PACKAGE_NAME}.zip .)
+
+        # Generate checksums
+        sha256sum ${PACKAGE_NAME}.tar.gz > ${PACKAGE_NAME}.tar.gz.sha256
+        sha256sum ${PACKAGE_NAME}.zip > ${PACKAGE_NAME}.zip.sha256
+
+        echo "✅ Release package created successfully"
+        ls -la ${PACKAGE_NAME}.*
+
+    - name: Upload release packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-packages-${{ needs.validate-release.outputs.version }}
+        path: |
+          migros-coupon-booster-*.tar.gz
+          migros-coupon-booster-*.zip
+          *.sha256
+        retention-days: 90
+
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-and-test, create-release-package]
+    if: github.event_name == 'release'
+    timeout-minutes: 10
+
+    steps:
+    - name: Download release packages
+      uses: actions/download-artifact@v4
+      with:
+        name: release-packages-${{ needs.validate-release.outputs.version }}
+
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          migros-coupon-booster-*.tar.gz
+          migros-coupon-booster-*.zip
+          *.sha256
+        tag_name: ${{ github.ref }}
+        prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+        generate_release_notes: true
+        body: |
+          ## Migros Coupon Booster Release ${{ needs.validate-release.outputs.version }}
+
+          ### 📦 Downloads
+          - **Linux/macOS**: Download the `.tar.gz` file
+          - **Windows**: Download the `.zip` file
+          - **Checksums**: Use `.sha256` files to verify integrity
+
+          ### 🚀 Quick Start
+          1. Download and extract the appropriate package for your platform
+          2. Follow the instructions in `docs/INSTALL.md`
+          3. Configure your settings in `config/application.properties`
+          4. Run the startup script for your platform
+
+          ### 🔒 Security
+          Check the `security/` directory in the package for:
+          - Software Bill of Materials (SBOM)
+          - Dependency vulnerability reports
+
+          For detailed release notes, see the [CHANGELOG](./CHANGELOG.md).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  workflow-summary:
+    name: Release Summary
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-and-test, create-release-package, publish-release]
+    if: always()
+
+    steps:
+    - name: Generate release summary
+      run: |
+        echo "## 🎉 Release Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: ${{ needs.validate-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release**: ${{ needs.validate-release.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Pipeline Status" >> $GITHUB_STEP_SUMMARY
+        echo "- **Validation**: ${{ needs.validate-release.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build & Test**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package Creation**: ${{ needs.create-release-package.result }}" >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ github.event_name }}" = "release" ]; then
+          echo "- **Publication**: ${{ needs.publish-release.result }}" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❌ **Release failed** - Check the build and test results" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        elif [ "${{ github.event_name }}" = "release" ] && [[ "${{ needs.publish-release.result }}" == "success" ]]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Release published successfully**" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Release package created successfully**" >> $GITHUB_STEP_SUMMARY
+        fi
