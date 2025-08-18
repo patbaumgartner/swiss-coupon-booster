@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter xmlns="https://github.com/spotbugs/filter/3.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 
+                https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Exclude main application class from certain checks -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.CouponBoosterApplication"/>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    </Match>
+
+    <!-- Exclude configuration properties from serialization warnings -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.properties.*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- Exclude test classes from certain performance checks -->
+    <Match>
+        <Package name="~.*\.test.*"/>
+        <Bug pattern="DM_DEFAULT_ENCODING"/>
+    </Match>
+
+    <!-- Records don't need equals/hashCode warnings -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.model.*"/>
+        <Bug pattern="EQ_UNUSUAL"/>
+    </Match>
+
+    <!-- Suppress CRLF injection warnings for controlled logging -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.config.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.util.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.coop.*"/>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    <!-- Suppress exposure rep warnings for records with immutable usage -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.model.AuthenticationResult"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.model.AuthenticationResult"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.migros.model.CouponActivationResult"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.migros.model.CouponActivationResult"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.migros.properties.MigrosPlaywrightProperties"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.migros.properties.MigrosPlaywrightProperties"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Allow System.exit in runner classes for command line applications -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.migros.runner.MigrosCouponBoosterRunner"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <!-- Allow runtime exceptions for business logic -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.coop\.service.*"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.service.*"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+
+    <!-- Allow unicode operations for business requirements -->
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.migros\.service.*"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <Match>
+        <Package name="~com\.patbaumgartner\.couponbooster\.coop\.service.*"/>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+</FindBugsFilter>

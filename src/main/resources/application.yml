@@ -1,0 +1,99 @@
+application:
+  version: '@project.version@'
+
+spring:
+  application:
+    name: coupon-booster
+  config:
+    import: 
+      - "optional:file:../.env[.properties]"
+      - "optional:file:.env[.properties]"
+  main:
+    web-application-type: none
+    banner-mode: console
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  level:
+    org.springframework: INFO
+    com.microsoft.playwright: INFO
+    com.patbaumgartner: DEBUG
+    root: INFO
+
+two-captcha:
+  api-key: "${TWO_CAPTCHA_API_KEY:}"
+  website-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
+
+coop:
+  login:
+    enabled: true
+
+  user:
+    email: "${COOP_USER_EMAIL:}"
+    password: "${COOP_USER_PASSWORD:}"
+
+  playwright:
+    login-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
+    datadome-cookie-value: "${COOP_DATADOME_COOKIE_VALUE:}"
+    typing-delay-ms: 50
+    slow-mo-ms: 500
+    headless: false
+    timeout-ms: 15000
+
+  selectors:
+    cookie-accept-button: "[data-testid=\"uc-accept-all-button\"]"
+    login-link: "#a-accountLogin-desktop"
+    username-input: "#username"
+    password-input: "#password"
+    submit-button: "#btnSubmit"
+
+supercard:
+  urls:
+    base-url: "https://www.supercard.ch"
+    config-url: "https://www.supercard.ch/bin/coop/supercard/oidc/pwa/configs.json"
+    config-url-referer: "https://www.supercard.ch/de/app-digitale-services/digitale-bons.html"
+    coupons-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc?pageSize=9999&language=de"
+    coupons-activation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/activate?language=de"
+    coupons-deactivation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/deactivate?language=de"
+
+migros:
+  login:
+    enabled: false
+
+  user:
+    email: "${MIGROS_USER_EMAIL:}"
+    password: "${MIGROS_USER_PASSWORD:}"
+
+  playwright:
+    login-url: "https://login.migros.ch/"
+    password-url: "https://login.migros.ch/login/password"
+    typing-delay-ms: 50
+    slow-mo-ms: 500
+    headless: false
+    chrome-args:
+      - "--no-sandbox"
+      - "--disable-web-security"
+      - "--disable-features=VizDisplayCompositor,WebAuthenticationAPI"
+      - "--disable-blink-features=WebAuthenticationAPI"
+    timeout-ms: 15000
+
+  selectors:
+    email-input: "#input-email"
+    password-input: "#input-password"
+    submit-button: "#button-submit"
+    password-login-link: "#link-login-option-PASSWORD"
+    cookie-accept-button: "button:has-text('Accept'), button:has-text('Akzeptieren')"
+
+cumulus:
+  urls:
+    base-url: "https://account.migros.ch"
+    coupons-endpoint: "${cumulus.urls.base-url}/ma/api/user/cumulus/coupon"
+    coupons-referer: "${cumulus.urls.base-url}/cumulus/dashboard"
+    activation-endpoint: "${cumulus.urls.base-url}/ma/api/user/cumulus/coupon/activation"
+
+  api:
+    request-delay: "PT0.5S"
+    max-retries: 3
+    timeout: "PT30S"

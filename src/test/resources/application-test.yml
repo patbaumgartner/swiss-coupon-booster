@@ -1,0 +1,39 @@
+# Test profile configuration
+logging:
+  level:
+    com.patbaumgartner: WARN
+    com.microsoft.playwright: WARN
+    org.springframework: WARN
+    root: WARN
+
+two-captcha:
+  api-key: "two-captcha-api-key"
+  website-url: "https://www.supercard.ch"
+
+# Disable actual browser automation in tests
+migros:
+  login:
+    enabled: false
+
+  user:
+    email: "test@example.com"
+    password: "test-password"
+
+  playwright:
+    headless: true
+    timeout-ms: 5000
+    typing-delay-ms: 0
+    slow-mo-ms: 0
+
+coop:
+  login:
+    enabled: false
+
+  user:
+    email: "test@example.com"
+    password: "test-password"
+
+  playwright:
+    datadome-cookie-value: "dummy-cookie-value"
+
+
