@@ -11,11 +11,11 @@
   </parent>
 
   <groupId>com.patbaumgartner</groupId>
-  <artifactId>migros-coupon-booster</artifactId>
+  <artifactId>coupon-booster</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
-  <name>migros-coupon-booster</name>
-  <description>migros-coupon-booster</description>
+  <name>coupon-booster</name>
+  <description>coupon-booster</description>
 
   <properties>
     <!--
@@ -76,6 +76,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -303,16 +307,16 @@
         <version>${pitest.version}</version>
         <configuration>
           <targetClasses>
-            <param>com.patbaumgartner.migroscouponbooster.*</param>
+            <param>com.patbaumgartner.couponbooster.*</param>
           </targetClasses>
           <targetTests>
-            <param>com.patbaumgartner.migroscouponbooster.*</param>
+            <param>com.patbaumgartner.couponbooster.*</param>
           </targetTests>
           <mutationThreshold>${pitest.mutation.threshold}</mutationThreshold>
           <coverageThreshold>${pitest.coverage.threshold}</coverageThreshold>
           <excludedClasses>
-            <param>com.patbaumgartner.migroscouponbooster.CouponBoosterApplication</param>
-            <param>com.patbaumgartner.migroscouponbooster.config.*</param>
+            <param>com.patbaumgartner.couponbooster.CouponBoosterApplication</param>
+            <param>com.patbaumgartner.couponbooster.config.*</param>
           </excludedClasses>
           <outputFormats>
             <outputFormat>HTML</outputFormat>

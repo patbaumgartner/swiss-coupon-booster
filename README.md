@@ -1,6 +1,6 @@
-# Migros Cumulus Coupon Booster
+# Swiss Coupon Booster
 
-An automated Spring Boot application that helps activate available coupons on the Migros Cumulus platform using web automation technology.
+A Spring Boot application that helps activate available coupons from Migros Cumulus and Coop SuperCard using web automation technology.
 
 ## Features
 
@@ -17,3 +17,4 @@ An automated Spring Boot application that helps activate available coupons on th
 - **Maven 3.6+**
 - **Internet connection** for Migros platform access
 - Valid Migros account credentials
+- Valid Coop account credentials
