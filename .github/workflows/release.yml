@@ -116,34 +116,21 @@ jobs:
         mvn versions:set -DnewVersion=${{ needs.validate-release.outputs.version }} -DgenerateBackupPoms=false -ntp
         echo "Updated project version to ${{ needs.validate-release.outputs.version }}"
 
-    - name: Run full test suite
+    - name: Build and Test
       if: ${{ github.event.inputs.skip_tests != 'true' }}
       run: |
-        echo "🧪 Running comprehensive test suite..."
+        echo "🧪 Building and running comprehensive test suite..."
         xvfb-run -a mvn clean verify -Dspring.profiles.active=test -ntp
       env:
         SPRING_PROFILES_ACTIVE: test
         MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
         PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
-    - name: Skip tests (if requested)
+    - name: Build without Tests
       if: ${{ github.event.inputs.skip_tests == 'true' }}
       run: |
-        echo "⚠️  WARNING: Tests are being skipped as requested"
-        echo "This is not recommended for production releases"
-
-    - name: Build release artifacts
-      run: |
-        echo "🏗️  Building release artifacts..."
+        echo "⚠️  WARNING: Building without running tests as requested."
         mvn clean package -DskipTests -ntp
-
-        # Verify JAR was created
-        if [ ! -f target/migros-coupon-booster-*.jar ]; then
-          echo "❌ JAR file not found!"
-          exit 1
-        fi
-
-        echo "✅ Release artifacts built successfully"
       env:
         MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 

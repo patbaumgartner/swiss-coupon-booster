@@ -35,15 +35,16 @@ import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
- * Service for managing Coop SuperCard digital coupons (bons) through API integration.
- * Handles authentication, coupon retrieval, activation, and deactivation of digital offers.
- * Uses JWT tokens for API authentication and manages coupon lifecycle operations.
- */
-/**
- * Service for managing SuperCard digital coupons through the Coop API. Handles
- * authentication, coupon retrieval, activation, and deactivation operations. This service
- * interacts with the Coop SuperCard web API to automatically manage available digital
- * coupons for users.
+ * Service for managing Coop SuperCard digital coupons (bons) through the Coop API.
+ * <p>
+ * This service handles the entire lifecycle of coupon management, including:
+ * <ul>
+ * <li>Extracting a JWT token using browser session cookies.</li>
+ * <li>Fetching all available digital coupons.</li>
+ * <li>Deactivating currently active coupons to free up slots.</li>
+ * <li>Activating new, eligible coupons based on a predefined filter.</li>
+ * </ul>
+ * It interacts directly with the Coop SuperCard web API.
  */
 @Service
 public class SupercardCouponService implements CouponService {
@@ -57,18 +58,11 @@ public class SupercardCouponService implements CouponService {
 	private final RestClient apiClient;
 
 	/**
-	 * Creates a new SuperCard coupon service with the given configuration.
-	 * @param restClientBuilder builder for creating HTTP client instances
-	 * @param objectMapper JSON object mapper for API request/response processing
-	 * @param supercardProperties configuration properties for SuperCard API endpoints
-	 */
-	/**
-	 * Creates a new SuperCard coupon service with configured HTTP client and JSON
-	 * processing.
-	 * @param restClientBuilder builder for creating REST client with custom configuration
-	 * @param objectMapper Jackson object mapper for JSON serialization/deserialization
-	 * @param supercardProperties configuration properties for API endpoints and browser
-	 * settings
+	 * Creates a new SuperCard coupon service.
+	 * @param restClientBuilder Builder for creating the {@link RestClient} instance.
+	 * @param objectMapper Jackson object mapper for JSON serialization/deserialization.
+	 * @param supercardProperties Configuration properties for SuperCard API endpoints and
+	 * browser settings.
 	 */
 	public SupercardCouponService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
 			SupercardProperties supercardProperties) {
@@ -155,6 +149,16 @@ public class SupercardCouponService implements CouponService {
 
 	}
 
+	/**
+	 * Extracts the JWT (JSON Web Token) from the Supercard configuration endpoint.
+	 * <p>
+	 * This token is required for all subsequent API calls to manage coupons.
+	 * @param sessionCookies The list of browser cookies from an authenticated session.
+	 * @return The extracted JWT token as a String.
+	 * @throws JsonProcessingException if the API response cannot be parsed.
+	 * @throws CouponBoosterException if the API call fails or returns an
+	 * unexpected status.
+	 */
 	public String extractJwtToken(List<Cookie> sessionCookies) throws JsonProcessingException {
 		String cookieHeader = buildCookieHeader(sessionCookies);
 
@@ -178,18 +182,27 @@ public class SupercardCouponService implements CouponService {
 		return jwtToken.asText();
 	}
 
+	/**
+	 * Builds a semicolon-separated cookie header string from a list of cookies.
+	 */
 	private String buildCookieHeader(final List<Cookie> sessionCookies) {
 		return sessionCookies.stream()
 			.map(cookie -> cookie.name + "=" + cookie.value)
 			.collect(Collectors.joining("; "));
 	}
 
+	/**
+	 * Filters a list of cookies to retain only those relevant for the target domain.
+	 */
 	private List<Cookie> filterDomainSpecificCookies(final List<Cookie> allCookies, final String targetDomain) {
 		return allCookies.stream()
 			.filter(cookie -> cookie.domain.startsWith(".") || cookie.domain.startsWith(targetDomain))
 			.toList();
 	}
 
+	/**
+	 * Fetches the complete list of digital coupons from the Supercard API.
+	 */
 	private List<DigitalCoupon> fetchDigitalCoupons(String webapiBearerToken) throws JsonProcessingException {
 
 		ResponseEntity<String> collectionResponse = apiClient.get()
@@ -286,6 +299,11 @@ public class SupercardCouponService implements CouponService {
 
 		List<String> couponCodes = activeCoupons.stream().map(DigitalCoupon::code).toList();
 
+		if (couponCodes.isEmpty()) {
+			log.info("No active coupons to deactivate.");
+			return;
+		}
+
 		ResponseEntity<String> activationResponse = apiClient.put()
 			.uri(supercardProperties.urls().couponsDeactivationUrl())
 			.accept(APPLICATION_JSON)
@@ -306,6 +324,11 @@ public class SupercardCouponService implements CouponService {
 			throws JsonProcessingException {
 
 		List<String> couponCodes = inactiveCoupons.stream().map(DigitalCoupon::code).toList();
+
+		if (couponCodes.isEmpty()) {
+			log.info("No inactive coupons to activate.");
+			return;
+		}
 
 		ResponseEntity<String> activationResponse = apiClient.put()
 			.uri(supercardProperties.urls().couponsActivationUrl())
@@ -338,9 +361,16 @@ public class SupercardCouponService implements CouponService {
 		}
 	}
 
+	/**
+	 * Represents the payload for activating or deactivating a collection of digital
+	 * coupons.
+	 */
 	private record DigitalCouponCollection(List<String> codes) {
 	}
 
+	/**
+	 * Represents a single digital coupon (bon) from the Supercard API.
+	 */
 	private record DigitalCoupon(String code, String status, String shop, boolean isNew, boolean isRecommendation,
 			boolean hasLogoProduct, List<String> productTypes, LocalDateTime endDate, String textDescription,
 			String textDiscountAmount) {
