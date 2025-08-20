@@ -236,7 +236,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <argLine>-Xmx1024m</argLine>
+          <!--suppress UnresolvedMavenProperty -->
+          <argLine>@{jacocoArgLine} -Xmx1024m</argLine>
           <includes>
             <include>**/*Test.java</include>
             <include>**/*Tests.java</include>

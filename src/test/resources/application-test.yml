@@ -21,4 +21,15 @@ migros:
     typing-delay-ms: 0
     slow-mo-ms: 0
 
+coop:
+  login:
+    enabled: false
+
+  user:
+    email: "test@example.com"
+    password: "test-password"
+
+  playwright:
+    datadome-cookie-value: "dummy-cookie-value"
+
 
