@@ -23,8 +23,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.CookieNames.AUTHENTICATION_DOMAIN;
-import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.CookieNames.CSRF_COOKIE;
+import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.Cookies.AUTHENTICATION_DOMAIN;
+import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.Cookies.CSRF_COOKIE_NAME;
 import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.HttpHeaders.CSRF_TOKEN_HEADER;
 import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -207,12 +207,12 @@ public final class CumulusCouponService implements CouponService {
 
 	private String extractCsrfToken(final List<Cookie> sessionCookies) {
 		return sessionCookies.stream()
-			.filter(cookie -> CSRF_COOKIE.equals(cookie.name))
+			.filter(cookie -> CSRF_COOKIE_NAME.equals(cookie.name))
 			.map(cookie -> cookie.value)
 			.filter(value -> value != null && !value.isBlank())
 			.findFirst()
 			.orElseThrow(() -> new CouponBoosterException(
-					"CSRF token '%s' not found or empty in session cookies".formatted(CSRF_COOKIE)));
+					"CSRF token '%s' not found or empty in session cookies".formatted(CSRF_COOKIE_NAME)));
 	}
 
 	private String buildCookieHeader(final List<Cookie> sessionCookies) {

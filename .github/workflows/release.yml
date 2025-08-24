@@ -179,7 +179,7 @@ jobs:
     - name: Create comprehensive release package
       run: |
         VERSION="${{ needs.validate-release.outputs.version }}"
-        PACKAGE_NAME="migros-coupon-booster-${VERSION}"
+        PACKAGE_NAME="swiss-coupon-booster-${VERSION}"
 
         echo "📦 Creating release package: ${PACKAGE_NAME}"
 
@@ -209,7 +209,7 @@ jobs:
         JVM_OPTS="${JVM_OPTS:--Xmx1024m -Xms512m}"
 
         # Find JAR file
-        JAR_FILE=$(find "$(dirname "$0")" -name "migros-coupon-booster-*.jar" | head -1)
+        JAR_FILE=$(find "$(dirname "$0")" -name "swiss-coupon-booster-*.jar" | head -1)
 
         if [ -z "$JAR_FILE" ]; then
           echo "Error: JAR file not found!"
@@ -228,7 +228,7 @@ jobs:
 
         if "%JVM_OPTS%"=="" set JVM_OPTS=-Xmx1024m -Xms512m
 
-        for %%f in ("%~dp0migros-coupon-booster-*.jar") do (
+        for %%f in ("%~dp0swiss-coupon-booster-*.jar") do (
           set JAR_FILE=%%f
           goto :found
         )
@@ -304,8 +304,8 @@ jobs:
       with:
         name: release-packages-${{ needs.validate-release.outputs.version }}
         path: |
-          migros-coupon-booster-*.tar.gz
-          migros-coupon-booster-*.zip
+          swiss-coupon-booster-*.tar.gz
+          swiss-coupon-booster-*.zip
           *.sha256
         retention-days: 90
 
@@ -328,8 +328,8 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          migros-coupon-booster-*.tar.gz
-          migros-coupon-booster-*.zip
+          swiss-coupon-booster-*.tar.gz
+          swiss-coupon-booster-*.zip
           *.sha256
         tag_name: ${{ github.ref }}
         prerelease: ${{ needs.validate-release.outputs.is_prerelease }}

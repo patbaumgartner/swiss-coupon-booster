@@ -24,7 +24,10 @@ logging:
 
 two-captcha:
   api-key: "${TWO_CAPTCHA_API_KEY:}"
-  website-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
+
+proxy:
+  enabled: ${PORXY_ENABLED:true}
+  list-url: "https://proxy.webshare.io/api/v2/proxy/list/download/qlnkscljhsydwjnpccskhyygcgogbztvwgqbmkvl/-/any/username/direct/-/"
 
 coop:
   login:

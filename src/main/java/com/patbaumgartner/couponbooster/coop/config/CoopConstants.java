@@ -33,6 +33,9 @@ public interface CoopConstants {
 		 */
 		String DATADOME_COOKIE = "datadome";
 
+		/**
+		 * Wildcard Domain for authentication cookies.
+		 */
 		String WILDCARD_COOKIE_DOMAIN = ".supercard.ch";
 
 		/**
@@ -50,7 +53,7 @@ public interface CoopConstants {
 		/**
 		 * The URL for DataDome captcha service.
 		 */
-		String CAPTCHA_DELIVERY_URL = "geo.captcha-delivery.com/captcha";
+		String CAPTCHA_DELIVERY_URL = "https://geo.captcha-delivery.com/captcha/**";
 
 	}
 

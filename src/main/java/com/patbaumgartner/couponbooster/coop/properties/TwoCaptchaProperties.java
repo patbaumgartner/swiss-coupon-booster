@@ -6,6 +6,5 @@ import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties(prefix = "twocaptcha")
 @Validated
-public record TwoCaptchaProperties(@NotBlank(message = "API_KEY is required") String apiKey,
-		@NotBlank(message = "Website url is required") String websiteUrl) {
+public record TwoCaptchaProperties(@NotBlank(message = "API_KEY is required") String apiKey) {
 }
