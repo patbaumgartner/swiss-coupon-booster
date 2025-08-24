@@ -1,9 +1,6 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
-import com.microsoft.playwright.TimeoutError;
+import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.Cookie;
 import com.microsoft.playwright.options.LoadState;
 import com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties;
@@ -85,7 +82,6 @@ public class CoopAuthenticationService implements AuthenticationService {
 				// Extract user-agent and browser language
 				String userAgent = page.evaluate("() => navigator.userAgent").toString();
 				String browserLanguage = page.evaluate("() => navigator.language").toString();
-				page.evaluate("() => { try { localStorage.clear(); sessionStorage.clear(); } catch(e){} }");
 
 				if (log.isDebugEnabled()) {
 					log.debug("Browser user-agent: {}", userAgent);
@@ -93,20 +89,22 @@ public class CoopAuthenticationService implements AuthenticationService {
 				}
 
 				// Listen for requests and fetch cookie from 2captcha
-				page.onRequest(request -> {
+				page.route("anc" + CAPTCHA_DELIVERY_URL, route -> {
+					Request request = route.request();
 					String url = request.url();
-					if (url.contains(CAPTCHA_DELIVERY_URL)) {
-						String datadomeCookie = datadomeCaptchaResolver.resolveCaptchaAndExtractCookie(url, userAgent);
 
-						context.addCookies(Collections
-							.singletonList(new Cookie(DATADOME_COOKIE, datadomeCookie).setDomain(WILDCARD_COOKIE_DOMAIN)
-								.setPath("/") // usually "/"
-								.setHttpOnly(false)
-								.setSecure(true)));
-					}
+					var parsedCookie = datadomeCaptchaResolver.resolveCaptcha(url, page.url(), userAgent);
+
+					context.addCookies(Collections.singletonList(
+							new Cookie(parsedCookie.name(), parsedCookie.value()).setDomain(parsedCookie.domain())
+								.setPath(parsedCookie.path())
+								.setHttpOnly(parsedCookie.httpOnly())
+								.setSecure(parsedCookie.secure())));
+
+					page.navigate(browserConfiguration.loginUrl());
 				});
 
-				// Add the DataDome cookie before navigation
+				// Add the DataDome cookie from the configuration - for development
 				if (context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
 					context.addCookies(Collections
 						.singletonList(new Cookie(DATADOME_COOKIE, browserConfiguration.datadomeCookieValue())

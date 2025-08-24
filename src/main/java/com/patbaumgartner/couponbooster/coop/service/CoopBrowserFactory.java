@@ -3,7 +3,11 @@ package com.patbaumgartner.couponbooster.coop.service;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.Proxy;
 import com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties;
+import com.patbaumgartner.couponbooster.util.proxy.ProxyAddress;
+import com.patbaumgartner.couponbooster.util.proxy.ProxyProperties;
+import com.patbaumgartner.couponbooster.util.proxy.ProxyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,12 +24,19 @@ public class CoopBrowserFactory {
 
 	private final CoopPlaywrightProperties browserConfiguration;
 
+	private final ProxyProperties proxyProperties;
+
+	private final ProxyResolver proxyResolver;
+
 	/**
 	 * Creates a new browser factory with the given configuration.
 	 * @param browserConfiguration the Playwright configuration properties
 	 */
-	public CoopBrowserFactory(CoopPlaywrightProperties browserConfiguration) {
+	public CoopBrowserFactory(CoopPlaywrightProperties browserConfiguration, ProxyProperties proxyProperties,
+			ProxyResolver proxyResolver) {
+		this.proxyProperties = proxyProperties;
 		this.browserConfiguration = browserConfiguration;
+		this.proxyResolver = proxyResolver;
 	}
 
 	/**
@@ -39,10 +50,24 @@ public class CoopBrowserFactory {
 					browserConfiguration.slowMoMs());
 		}
 
-		return playwrightInstance.chromium()
-			.launch(new BrowserType.LaunchOptions().setHeadless(browserConfiguration.headless())
-				.setSlowMo(browserConfiguration.slowMoMs())
-				.setTimeout(browserConfiguration.timeoutMs()));
+		BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions();
+		launchOptions.setHeadless(browserConfiguration.headless())
+			.setSlowMo(browserConfiguration.slowMoMs())
+			.setTimeout(browserConfiguration.timeoutMs());
+
+		if (proxyProperties.enabled()) {
+
+			ProxyAddress proxy = proxyResolver.getCurrentProxy();
+			if (log.isDebugEnabled()) {
+				log.debug("Setting proxy to browser with: {}", proxy);
+			}
+
+			launchOptions
+				.setProxy(new Proxy("http://" + proxy.host() + ":" + proxy.port()).setUsername(proxy.username())
+					.setPassword(proxy.password()));
+		}
+
+		return playwrightInstance.chromium().launch(launchOptions);
 	}
 
 }

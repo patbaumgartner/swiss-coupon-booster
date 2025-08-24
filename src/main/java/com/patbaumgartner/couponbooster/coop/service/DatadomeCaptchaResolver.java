@@ -1,6 +1,9 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
 import com.patbaumgartner.couponbooster.coop.properties.TwoCaptchaProperties;
+import com.patbaumgartner.couponbooster.util.cookie.CookieParser;
+import com.patbaumgartner.couponbooster.util.cookie.ParsedCookie;
+import com.patbaumgartner.couponbooster.util.proxy.ProxyResolver;
 import com.twocaptcha.TwoCaptcha;
 import com.twocaptcha.captcha.DataDome;
 import org.slf4j.Logger;
@@ -12,21 +15,21 @@ public class DatadomeCaptchaResolver {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatadomeCaptchaResolver.class);
 
-	private final TwoCaptchaProperties twoCaptchaProperties;
+	private final ProxyResolver proxyResolver;
 
 	private final TwoCaptcha solver;
 
-	public DatadomeCaptchaResolver(TwoCaptchaProperties twoCaptchaProperties) {
-		this.twoCaptchaProperties = twoCaptchaProperties;
+	public DatadomeCaptchaResolver(TwoCaptchaProperties twoCaptchaProperties, ProxyResolver proxyResolver) {
+		this.proxyResolver = proxyResolver;
 		solver = new TwoCaptcha(twoCaptchaProperties.apiKey());
 	}
 
-	public String resolveCaptchaAndExtractCookie(String captchaUrl, String userAgent) {
+	public ParsedCookie resolveCaptcha(String captchaUrl, String pageUrl, String userAgent) {
 		DataDome captcha = new DataDome();
 		captcha.setCaptchaUrl(captchaUrl);
-		captcha.setUrl(twoCaptchaProperties.websiteUrl());
+		captcha.setUrl(pageUrl);
 		captcha.setUserAgent(userAgent);
-		captcha.setProxy("HTTP", "212.51.157.178:8080");
+		captcha.setProxy("HTTP, ", proxyResolver.getCurrentProxy().toString());
 
 		try {
 			solver.solve(captcha);
@@ -36,7 +39,7 @@ public class DatadomeCaptchaResolver {
 			logger.error("Error occurred while solving captcha: {}", e.getMessage(), e);
 		}
 
-		return captcha.getCode();
+		return CookieParser.parse(captcha.getCode());
 	}
 
 }

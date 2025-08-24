@@ -41,13 +41,4 @@ public record CoopPlaywrightProperties(
 		@Min(value = 1000, message = "Timeout must be at least 1000ms") @Max(value = 300000,
 				message = "Timeout cannot exceed 300000ms (5 minutes)") int timeoutMs) {
 
-	public CoopPlaywrightProperties(String loginUrl, String datadomeCookieValue, int typingDelayMs, int slowMoMs,
-			boolean headless, int timeoutMs) {
-		this.loginUrl = loginUrl;
-		this.datadomeCookieValue = datadomeCookieValue;
-		this.typingDelayMs = typingDelayMs;
-		this.slowMoMs = slowMoMs;
-		this.headless = headless;
-		this.timeoutMs = timeoutMs;
-	}
 }
