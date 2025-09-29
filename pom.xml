@@ -43,8 +43,8 @@
     <!-- Maven Core Plugins -->
     <exec-maven-plugin.version>3.6.1</exec-maven-plugin.version>
     <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
-    <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
-    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
+    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
 
     <!-- Code Quality & Coverage Plugins -->
     <jacoco.version>0.8.14</jacoco.version>
@@ -56,8 +56,9 @@
     <spring-javaformat.version>0.0.47</spring-javaformat.version>
 
     <!-- Security & Dependency Management Plugins -->
+<<<<<<< HEAD
     <dependency-check.version>12.1.7</dependency-check.version>
-    <versions-maven-plugin.version>2.19.0</versions-maven-plugin.version>
+    <versions-maven-plugin.version>2.19.1</versions-maven-plugin.version>
 
     <!-- OpenRewrite Plugins -->
     <rewrite-logging-frameworks.version>3.16.0</rewrite-logging-frameworks.version>
