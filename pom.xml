@@ -56,7 +56,7 @@
     <spring-javaformat.version>0.0.47</spring-javaformat.version>
 
     <!-- Security & Dependency Management Plugins -->
-    <dependency-check.version>12.1.6</dependency-check.version>
+    <dependency-check.version>12.1.7</dependency-check.version>
     <versions-maven-plugin.version>2.19.0</versions-maven-plugin.version>
 
     <!-- OpenRewrite Plugins -->
