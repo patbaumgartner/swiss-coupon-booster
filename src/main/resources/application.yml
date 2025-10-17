@@ -1,11 +1,11 @@
 application:
-  version: '@project.version@'
+  version: "@project.version@"
 
 spring:
   application:
     name: coupon-booster
   config:
-    import: 
+    import:
       - "optional:file:../.env[.properties]"
       - "optional:file:.env[.properties]"
   main:
@@ -26,12 +26,12 @@ two-captcha:
   api-key: "${TWO_CAPTCHA_API_KEY:}"
 
 proxy:
-  enabled: ${PORXY_ENABLED:false}
+  enabled: ${PROXY_ENABLED:false}
   list-url: "https://proxy.webshare.io/api/v2/proxy/list/download/qlnkscljhsydwjnpccskhyygcgogbztvwgqbmkvl/-/any/username/direct/-/"
 
 coop:
   login:
-    enabled: true
+    enabled: false
 
   user:
     email: "${COOP_USER_EMAIL:}"
@@ -46,7 +46,7 @@ coop:
     timeout-ms: 15000
 
   selectors:
-    cookie-accept-button: "[data-testid=\"uc-accept-all-button\"]"
+    cookie-accept-button: '[data-testid="uc-accept-all-button"]'
     login-link: "#a-accountLogin-desktop"
     username-input: "#username"
     password-input: "#password"
@@ -78,7 +78,7 @@ supercard:
 
 migros:
   login:
-    enabled: false
+    enabled: true
 
   user:
     email: "${MIGROS_USER_EMAIL:}"
