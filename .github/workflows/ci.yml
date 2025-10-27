@@ -100,7 +100,7 @@ jobs:
         fail-on-error: true
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: build-artifacts-java-${{ matrix.java-version }}
@@ -164,7 +164,7 @@ jobs:
       run: mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -ntp
 
     - name: Upload SBOM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: software-bill-of-materials
         path: target/bom.xml
