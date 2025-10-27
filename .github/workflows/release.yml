@@ -151,7 +151,7 @@ jobs:
         MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: release-artifacts-${{ needs.validate-release.outputs.version }}
         path: |
@@ -300,7 +300,7 @@ jobs:
         ls -la ${PACKAGE_NAME}.*
 
     - name: Upload release packages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: release-packages-${{ needs.validate-release.outputs.version }}
         path: |
