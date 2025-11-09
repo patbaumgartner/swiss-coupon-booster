@@ -31,7 +31,7 @@ proxy:
 
 coop:
   login:
-    enabled: false
+    enabled: true
 
   user:
     email: "${COOP_USER_EMAIL:}"
@@ -39,11 +39,30 @@ coop:
 
   playwright:
     login-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
+    # DataDome cookie is now OPTIONAL - leave empty to rely on stealth measures
+    # Only set this if you're experiencing detection issues
     datadome-cookie-value: "${COOP_DATADOME_COOKIE_VALUE:}"
-    typing-delay-ms: 50
-    slow-mo-ms: 500
+    typing-delay-ms: 100
+    slow-mo-ms: 1000
     headless: false
-    timeout-ms: 15000
+    chrome-args:
+      # CRITICAL for hiding automation
+      - "--disable-blink-features=AutomationControlled"
+      # Better approach - don't disable security completely
+      - "--disable-features=IsolateOrigins,site-per-process,VizDisplayCompositor"
+      - "--disable-site-isolation-trials"
+      - "--disable-dev-shm-usage"
+      - "--no-first-run"
+      - "--no-default-browser-check"
+      - "--disable-infobars"
+      - "--window-size=1920,1080"
+      # Exclude automation switches that can leak
+      - "--exclude-switches=enable-automation"
+      - "--disable-blink-features=AutomationControlled"
+      # Add realistic window position
+      - "--window-position=0,0"
+      # Use default user agent (don't override via args - let context handle it)
+    timeout-ms: 20000
 
   selectors:
     cookie-accept-button: '[data-testid="uc-accept-all-button"]'

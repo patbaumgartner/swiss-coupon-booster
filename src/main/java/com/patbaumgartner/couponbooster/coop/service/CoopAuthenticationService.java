@@ -63,18 +63,23 @@ public class CoopAuthenticationService implements AuthenticationService {
 
 	private final CoopBrowserFactory browserCreator;
 
+	private final DatadomeStealthInjector stealthInjector;
+
 	/**
 	 * Constructs a new {@code CoopAuthenticationService} with the specified dependencies.
 	 * @param datadomeCaptchaResolver the resolver for handling Datadome CAPTCHA
 	 * challenges
+	 * @param proxyProperties the proxy configuration properties
 	 * @param userCredentials the user's login credentials (email and password)
 	 * @param browserConfiguration the configuration for the Playwright browser instance
 	 * @param elementSelectors the CSS selectors for locating elements on the page
 	 * @param browserCreator the factory for creating Playwright browser instances
+	 * @param stealthInjector the injector for DataDome stealth scripts
 	 */
 	public CoopAuthenticationService(DatadomeCaptchaResolver datadomeCaptchaResolver, ProxyProperties proxyProperties,
 			CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
-			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator) {
+			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
+			DatadomeStealthInjector stealthInjector) {
 		this.datadomeCaptchaResolver = Objects.requireNonNull(datadomeCaptchaResolver,
 				"Datadome captcha resolver cannot be null");
 		this.proxyProperties = Objects.requireNonNull(proxyProperties, "Proxy properties cannot be null");
@@ -83,6 +88,7 @@ public class CoopAuthenticationService implements AuthenticationService {
 				"Browser configuration cannot be null");
 		this.elementSelectors = Objects.requireNonNull(elementSelectors, "Element selectors cannot be null");
 		this.browserCreator = Objects.requireNonNull(browserCreator, "Browser factory cannot be null");
+		this.stealthInjector = Objects.requireNonNull(stealthInjector, "Stealth injector cannot be null");
 	}
 
 	/**
@@ -108,7 +114,14 @@ public class CoopAuthenticationService implements AuthenticationService {
 	private AuthenticationResult executeAuthenticationFlow(long startTime) {
 		try (var playwright = Playwright.create()) {
 
-			try (var browser = browserCreator.createBrowser(playwright); var context = browser.newContext()) {
+			try (var browser = browserCreator.createBrowser(playwright);
+					var context = browser.newContext(createStealthBrowserContextOptions())) {
+
+				// CRITICAL: Inject stealth script BEFORE creating any pages
+				// This ensures the script runs before any page content loads
+				context.addInitScript(stealthInjector.getStealthScript());
+				log.debug("DataDome stealth script injected into browser context");
+
 				var page = context.newPage();
 
 				// Extract user-agent and browser language
@@ -144,14 +157,23 @@ public class CoopAuthenticationService implements AuthenticationService {
 						route.resume();
 					});
 				}
-				// Add the DataDome cookie from the configuration - for development
-				if (context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
+				// Add the DataDome cookie from the configuration - optional fallback
+				// With stealth measures, this should no longer be strictly necessary
+				if (browserConfiguration.datadomeCookieValue() != null
+						&& !browserConfiguration.datadomeCookieValue().isBlank()
+						&& context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
+
+					log.debug("Adding preconfigured DataDome cookie as fallback");
 					context.addCookies(Collections
 						.singletonList(new Cookie(DATADOME_COOKIE, browserConfiguration.datadomeCookieValue())
 							.setDomain(WILDCARD_COOKIE_DOMAIN)
 							.setPath("/") // usually "/"
 							.setHttpOnly(false)
 							.setSecure(true)));
+				}
+				else if (browserConfiguration.datadomeCookieValue() == null
+						|| browserConfiguration.datadomeCookieValue().isBlank()) {
+					log.info("No DataDome cookie provided - relying on stealth measures and chrome arguments");
 				}
 
 				performLoginFlow(page);
@@ -165,6 +187,31 @@ public class CoopAuthenticationService implements AuthenticationService {
 				return AuthenticationResult.successful(cookies, executionDuration, userAgent, browserLanguage);
 			}
 		}
+	}
+
+	/**
+	 * Creates browser context options with stealth configurations to avoid bot detection.
+	 * <p>
+	 * This method configures the browser context with realistic settings including:
+	 * <ul>
+	 * <li>Realistic viewport size (1920x1080)</li>
+	 * <li>User agent override (if needed)</li>
+	 * <li>Locale and timezone settings</li>
+	 * <li>Permissions for notifications, geolocation, etc.</li>
+	 * </ul>
+	 * @return browser context options with stealth settings
+	 */
+	private Browser.NewContextOptions createStealthBrowserContextOptions() {
+		return new Browser.NewContextOptions().setViewportSize(1920, 1080)
+			.setLocale("de-CH")
+			.setTimezoneId("Europe/Zurich")
+			.setPermissions(java.util.List.of("geolocation", "notifications"))
+			.setGeolocation(new com.microsoft.playwright.options.Geolocation(47.3769, 8.5417)) // Zurich
+																								// coordinates
+			.setDeviceScaleFactor(1.0)
+			.setIsMobile(false)
+			.setHasTouch(false)
+			.setColorScheme(com.microsoft.playwright.options.ColorScheme.LIGHT);
 	}
 
 	private void validateUserCredentials() {
@@ -201,10 +248,18 @@ public class CoopAuthenticationService implements AuthenticationService {
 		}
 		page.navigate(browserConfiguration.loginUrl());
 		page.waitForLoadState(LoadState.NETWORKIDLE);
+
+		// CRITICAL: Wait for DataDome's initial checks to complete
+		// DataDome runs fingerprinting in the first 2-3 seconds
+		addRandomDelay(2000, 3500);
+		log.debug("Waited for DataDome initial checks to complete");
 	}
 
 	private void handleCookieConsent(Page page) {
 		try {
+			// Add small random delay before interacting
+			addRandomDelay(500, 1500);
+
 			var acceptButton = page.locator(elementSelectors.cookieAcceptButton());
 			acceptButton.first().waitFor(new Locator.WaitForOptions().setTimeout(3000));
 
@@ -220,13 +275,38 @@ public class CoopAuthenticationService implements AuthenticationService {
 	}
 
 	private void clickLoginLink(Page page) {
+		addRandomDelay(300, 800);
 		clickElement(page, elementSelectors.loginLink());
 	}
 
 	private void enterCredentialsAndSubmit(Page page) {
+		addRandomDelay(500, 1200);
 		typeIntoField(page, elementSelectors.usernameInput(), userCredentials.email());
+
+		addRandomDelay(400, 900);
 		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password());
+
+		addRandomDelay(300, 700);
 		clickElement(page, elementSelectors.submitButton());
+	}
+
+	/**
+	 * Adds a random delay to simulate human behavior and avoid detection.
+	 * @param minMs minimum delay in milliseconds
+	 * @param maxMs maximum delay in milliseconds
+	 */
+	private void addRandomDelay(int minMs, int maxMs) {
+		try {
+			int delay = minMs + (int) (Math.random() * (maxMs - minMs));
+			if (log.isTraceEnabled()) {
+				log.trace("Adding random delay of {}ms", delay);
+			}
+			Thread.sleep(delay);
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			log.warn("Random delay interrupted", e);
+		}
 	}
 
 	private void typeIntoField(Page page, String selector, String text) {

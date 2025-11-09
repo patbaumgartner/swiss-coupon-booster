@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
  * Supercard automation.
  * <p>
  * This factory handles the setup of a Chromium browser with the appropriate configuration
- * for web automation tasks, including headless mode, slow motion, timeout settings, and
- * proxy configuration.
+ * for web automation tasks, including headless mode, slow motion, timeout settings,
+ * anti-bot detection arguments, and proxy configuration.
  *
  * @see CoopPlaywrightProperties
  * @see ProxyProperties
@@ -50,18 +50,26 @@ public class CoopBrowserFactory {
 
 	/**
 	 * Creates and configures a new Chromium browser instance with the configured options.
+	 * <p>
+	 * This method configures the browser with anti-bot detection measures including:
+	 * <ul>
+	 * <li>Custom Chrome arguments to disable automation flags</li>
+	 * <li>Slow motion and typing delays to mimic human behavior</li>
+	 * <li>Optional proxy support for IP rotation</li>
+	 * </ul>
 	 * @param playwrightInstance the Playwright instance to create the browser from
 	 * @return a configured {@link Browser} instance ready for automation
 	 */
 	public Browser createBrowser(Playwright playwrightInstance) {
 		if (log.isDebugEnabled()) {
-			log.debug("Creating browser with headless: {}, slowMo: {}ms", browserConfiguration.headless(),
-					browserConfiguration.slowMoMs());
+			log.debug("Creating browser with headless: {}, slowMo: {}ms, args: {}", browserConfiguration.headless(),
+					browserConfiguration.slowMoMs(), browserConfiguration.chromeArgs());
 		}
 
 		BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions();
 		launchOptions.setHeadless(browserConfiguration.headless())
 			.setSlowMo(browserConfiguration.slowMoMs())
+			.setArgs(browserConfiguration.chromeArgs())
 			.setTimeout(browserConfiguration.timeoutMs());
 
 		if (proxyProperties.enabled()) {
@@ -76,7 +84,7 @@ public class CoopBrowserFactory {
 					.setPassword(proxy.password()));
 		}
 
-		return playwrightInstance.firefox().launch(launchOptions);
+		return playwrightInstance.chromium().launch(launchOptions);
 	}
 
 }
