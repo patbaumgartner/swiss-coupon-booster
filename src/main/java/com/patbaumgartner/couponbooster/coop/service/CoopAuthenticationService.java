@@ -1,6 +1,12 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.microsoft.playwright.*;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.Request;
+import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.Cookie;
 import com.microsoft.playwright.options.LoadState;
 import com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties;
@@ -10,13 +16,13 @@ import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import com.patbaumgartner.couponbooster.util.proxy.ProxyProperties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.security.SecureRandom;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
@@ -50,6 +56,8 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadom
 public class CoopAuthenticationService implements AuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(CoopAuthenticationService.class);
+
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private final DatadomeCaptchaResolver datadomeCaptchaResolver;
 
@@ -297,7 +305,7 @@ public class CoopAuthenticationService implements AuthenticationService {
 	 */
 	private void addRandomDelay(int minMs, int maxMs) {
 		try {
-			int delay = minMs + (int) (Math.random() * (maxMs - minMs));
+			int delay = minMs + SECURE_RANDOM.nextInt(maxMs - minMs + 1);
 			if (log.isTraceEnabled()) {
 				log.trace("Adding random delay of {}ms", delay);
 			}
@@ -305,7 +313,7 @@ public class CoopAuthenticationService implements AuthenticationService {
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			log.warn("Random delay interrupted", e);
+			log.error("Random delay interrupted", e);
 		}
 	}
 

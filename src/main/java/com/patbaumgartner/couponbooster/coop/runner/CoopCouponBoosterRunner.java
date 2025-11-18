@@ -9,6 +9,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 /**
  * {@link ApplicationRunner} for Coop Supercard coupon activation.
  * <p>
@@ -36,8 +38,10 @@ public class CoopCouponBoosterRunner implements ApplicationRunner {
 	 */
 	public CoopCouponBoosterRunner(CoopAuthenticationService coopAuthenticationService,
 			SupercardCouponService supercardCouponService) {
-		this.coopAuthenticationService = coopAuthenticationService;
-		this.supercardCouponService = supercardCouponService;
+		this.coopAuthenticationService = Objects.requireNonNull(coopAuthenticationService,
+				"CoopAuthenticationService cannot be null");
+		this.supercardCouponService = Objects.requireNonNull(supercardCouponService,
+				"SupercardCouponService cannot be null");
 	}
 
 	/**
