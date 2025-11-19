@@ -9,6 +9,7 @@ import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.migros.model.CouponDetail;
 import com.patbaumgartner.couponbooster.migros.model.CouponInfo;
 import com.patbaumgartner.couponbooster.migros.properties.CumulusProperties;
+import com.patbaumgartner.couponbooster.service.AbstractCouponService;
 import com.patbaumgartner.couponbooster.service.CouponService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,6 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.Cookies.AUTHENTICATION_DOMAIN;
@@ -44,7 +44,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * @see CumulusProperties
  */
 @Service
-public final class CumulusCouponService implements CouponService {
+public final class CumulusCouponService extends AbstractCouponService {
 
 	private static final Logger log = LoggerFactory.getLogger(CumulusCouponService.class);
 
@@ -77,6 +77,7 @@ public final class CumulusCouponService implements CouponService {
 	 * @return a {@link CouponActivationResult} containing activation statistics and
 	 * coupon details
 	 */
+	@Override
 	public CouponActivationResult activateAllAvailableCoupons(final List<Cookie> sessionCookies, String userAgent,
 			String language) {
 		if (sessionCookies == null || sessionCookies.isEmpty()) {
@@ -175,21 +176,6 @@ public final class CumulusCouponService implements CouponService {
 		return new CouponActivationResult(successfulActivations, failedActivations, activationResults);
 	}
 
-	private void logActivationSummary(int successCount, int failureCount, int totalAttempts) {
-		if (successCount > 0) {
-			int successRate = (successCount * 100) / totalAttempts;
-			log.info("Successfully activated {} of {} coupons ({}% success rate)", successCount, totalAttempts,
-					successRate);
-		}
-		else {
-			log.warn("No coupons were successfully activated");
-		}
-
-		if (failureCount > 0) {
-			log.warn("{} coupon activations failed", failureCount);
-		}
-	}
-
 	private CouponDetail activateSingleCoupon(final String couponId, final List<Cookie> sessionCookies,
 			String userAgent, String language) {
 		try {
@@ -245,18 +231,6 @@ public final class CumulusCouponService implements CouponService {
 			.findFirst()
 			.orElseThrow(() -> new CouponBoosterException(
 					"CSRF token '%s' not found or empty in session cookies".formatted(CSRF_COOKIE_NAME)));
-	}
-
-	private String buildCookieHeader(final List<Cookie> sessionCookies) {
-		return sessionCookies.stream()
-			.map(cookie -> cookie.name + "=" + cookie.value)
-			.collect(Collectors.joining("; "));
-	}
-
-	private List<Cookie> filterDomainSpecificCookies(final List<Cookie> allCookies, final String targetDomain) {
-		return allCookies.stream()
-			.filter(cookie -> cookie.domain.startsWith(".") || cookie.domain.startsWith(targetDomain))
-			.toList();
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

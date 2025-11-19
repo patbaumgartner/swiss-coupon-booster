@@ -10,6 +10,7 @@ import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.migros.model.CouponDetail;
+import com.patbaumgartner.couponbooster.service.AbstractCouponService;
 import com.patbaumgartner.couponbooster.service.CouponService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.AUTHENTICATION_DOMAIN;
@@ -49,7 +49,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
  * @see SupercardProperties
  */
 @Service
-public class SupercardCouponService implements CouponService {
+public class SupercardCouponService extends AbstractCouponService {
 
 	private static final Logger log = LoggerFactory.getLogger(SupercardCouponService.class);
 
@@ -195,24 +195,6 @@ public class SupercardCouponService implements CouponService {
 	}
 
 	/**
-	 * Builds a semicolon-separated cookie header string from a list of cookies.
-	 */
-	private String buildCookieHeader(final List<Cookie> sessionCookies) {
-		return sessionCookies.stream()
-			.map(cookie -> cookie.name + "=" + cookie.value)
-			.collect(Collectors.joining("; "));
-	}
-
-	/**
-	 * Filters a list of cookies to retain only those relevant for the target domain.
-	 */
-	private List<Cookie> filterDomainSpecificCookies(final List<Cookie> allCookies, final String targetDomain) {
-		return allCookies.stream()
-			.filter(cookie -> cookie.domain.startsWith(".") || cookie.domain.startsWith(targetDomain))
-			.toList();
-	}
-
-	/**
 	 * Fetches the complete list of digital coupons from the Supercard API.
 	 */
 	private List<DigitalCoupon> fetchDigitalCoupons(String webapiBearerToken, String userAgent, String language)
@@ -335,21 +317,6 @@ public class SupercardCouponService implements CouponService {
 		if (activationResponse.getStatusCode() != HttpStatus.OK
 				|| activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
 			throw new CouponBoosterException("Digital coupon activation failed.");
-		}
-	}
-
-	private void logActivationSummary(int successCount, int failureCount, int totalAttempts) {
-		if (successCount > 0) {
-			int successRate = (successCount * 100) / totalAttempts;
-			log.info("Successfully activated {} of {} coupons ({}% success rate)", successCount, totalAttempts,
-					successRate);
-		}
-		else {
-			log.warn("No coupons were successfully activated");
-		}
-
-		if (failureCount > 0) {
-			log.warn("{} coupon activations failed", failureCount);
 		}
 	}
 

@@ -10,6 +10,7 @@ import com.patbaumgartner.couponbooster.migros.properties.MigrosPlaywrightProper
 import com.patbaumgartner.couponbooster.migros.properties.MigrosSelectorsProperties;
 import com.patbaumgartner.couponbooster.migros.properties.MigrosUserProperties;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
+import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import com.patbaumgartner.couponbooster.util.WebAuthnDisabler;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ import java.util.Objects;
  * @see WebAuthnDisabler
  */
 @Service
-public class MigrosAuthenticationService implements AuthenticationService {
+public class MigrosAuthenticationService extends AbstractAuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(MigrosAuthenticationService.class);
 
@@ -68,7 +69,7 @@ public class MigrosAuthenticationService implements AuthenticationService {
 	public MigrosAuthenticationService(MigrosUserProperties userCredentials,
 			MigrosPlaywrightProperties browserConfiguration, MigrosSelectorsProperties elementSelectors,
 			MigrosBrowserFactory browserCreator, WebAuthnDisabler webAuthnDisabler) {
-
+		super();
 		this.userCredentials = Objects.requireNonNull(userCredentials, "User credentials cannot be null");
 		this.browserConfiguration = Objects.requireNonNull(browserConfiguration,
 				"Browser configuration cannot be null");
@@ -134,10 +135,6 @@ public class MigrosAuthenticationService implements AuthenticationService {
 		}
 	}
 
-	private static boolean isBlank(String value) {
-		return value == null || value.isBlank();
-	}
-
 	private void performLoginFlow(Page page) {
 		log.debug("Starting authentication flow sequence");
 
@@ -185,7 +182,8 @@ public class MigrosAuthenticationService implements AuthenticationService {
 	}
 
 	private void enterEmailAndContinue(Page page) {
-		typeIntoField(page, elementSelectors.emailInput(), userCredentials.email());
+		typeIntoField(page, elementSelectors.emailInput(), userCredentials.email(),
+				browserConfiguration.typingDelayMs());
 		clickElement(page, elementSelectors.submitButton());
 	}
 
@@ -205,7 +203,8 @@ public class MigrosAuthenticationService implements AuthenticationService {
 	}
 
 	private void enterPasswordAndLogin(Page page) {
-		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password());
+		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password(),
+				browserConfiguration.typingDelayMs());
 		clickElement(page, elementSelectors.submitButton());
 	}
 
@@ -218,33 +217,6 @@ public class MigrosAuthenticationService implements AuthenticationService {
 		}
 
 		log.debug("Successfully authenticated and redirected away from login page");
-	}
-
-	private void typeIntoField(Page page, String selector, String text) {
-		var field = findElement(page, selector);
-		field.clear();
-		field.type(text, new Locator.TypeOptions().setDelay(browserConfiguration.typingDelayMs()));
-	}
-
-	private void clickElement(Page page, String selector) {
-		findElement(page, selector).click();
-	}
-
-	private Locator findElement(Page page, String selector) {
-		try {
-			var element = page.locator(selector);
-			element.first().waitFor(new Locator.WaitForOptions().setTimeout(2000));
-
-			if (!element.first().isVisible()) {
-				throw new CouponBoosterException("Element not visible: " + selector);
-			}
-
-			return element;
-		}
-		catch (Exception e) {
-			throw new CouponBoosterException("Failed to find element with selector '" + selector + "'. "
-					+ "This may indicate a UI change or timing issue.", e);
-		}
 	}
 
 	private void disableWebAuthn(Page page) {

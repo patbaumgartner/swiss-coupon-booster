@@ -1,7 +1,6 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
 import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
@@ -14,6 +13,7 @@ import com.patbaumgartner.couponbooster.coop.properties.CoopSelectorsProperties;
 import com.patbaumgartner.couponbooster.coop.properties.CoopUserProperties;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
+import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import com.patbaumgartner.couponbooster.util.proxy.ProxyProperties;
 import org.slf4j.Logger;
@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Objects;
-import java.security.SecureRandom;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
@@ -46,6 +45,48 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadom
  * and element selectors.
  *
  * @see DatadomeCaptchaResolver
+ * @see ProxyProperties ```java package com.patbaumgartner.couponbooster.coop.service;
+ *
+ * import com.microsoft.playwright.Browser; import com.microsoft.playwright.Locator;
+ * import com.microsoft.playwright.Page; import com.microsoft.playwright.Playwright;
+ * import com.microsoft.playwright.Request; import com.microsoft.playwright.TimeoutError;
+ * import com.microsoft.playwright.options.Cookie; import
+ * com.microsoft.playwright.options.LoadState; import
+ * com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties; import
+ * com.patbaumgartner.couponbooster.coop.properties.CoopSelectorsProperties; import
+ * com.patbaumgartner.couponbooster.coop.properties.CoopUserProperties; import
+ * com.patbaumgartner.couponbooster.exception.CouponBoosterException; import
+ * com.patbaumgartner.couponbooster.model.AuthenticationResult; import
+ * com.patbaumgartner.couponbooster.service.AuthenticationService; import
+ * com.patbaumgartner.couponbooster.util.proxy.ProxyProperties; import org.slf4j.Logger;
+ * import org.slf4j.LoggerFactory; import org.springframework.stereotype.Service;
+ *
+ * import java.util.Collections; import java.util.Objects; import
+ * java.security.SecureRandom;
+ *
+ * import static
+ * com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
+ * import static
+ * com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
+ * import static
+ * com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadome.CAPTCHA_DELIVERY_URL;
+ *
+ * /** {@link AuthenticationService} implementation for Coop Supercard using Playwright
+ * for browser automation.
+ * <p>
+ * This service handles the entire authentication flow for the Coop website, including:
+ * <ul>
+ * <li>Navigating to the login page.</li>
+ * <li>Handling cookie consent dialogs.</li>
+ * <li>Entering user credentials (email and password).</li>
+ * <li>Submitting the login form.</li>
+ * <li>Handling Datadome CAPTCHA challenges by integrating with a
+ * {@link DatadomeCaptchaResolver}.</li>
+ * <li>Extracting session cookies upon successful authentication.</li>
+ * </ul>
+ * It is highly configurable through properties for user credentials, Playwright settings,
+ * and element selectors.
+ * @see DatadomeCaptchaResolver
  * @see ProxyProperties
  * @see CoopUserProperties
  * @see CoopPlaywrightProperties
@@ -53,11 +94,9 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadom
  * @see CoopBrowserFactory
  */
 @Service
-public class CoopAuthenticationService implements AuthenticationService {
+public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(CoopAuthenticationService.class);
-
-	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private final DatadomeCaptchaResolver datadomeCaptchaResolver;
 
@@ -88,6 +127,7 @@ public class CoopAuthenticationService implements AuthenticationService {
 			CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
 			DatadomeStealthInjector stealthInjector) {
+		super(); // Pass log and SECURE_RANDOM to the superclass
 		this.datadomeCaptchaResolver = Objects.requireNonNull(datadomeCaptchaResolver,
 				"Datadome captcha resolver cannot be null");
 		this.proxyProperties = Objects.requireNonNull(proxyProperties, "Proxy properties cannot be null");
@@ -122,8 +162,8 @@ public class CoopAuthenticationService implements AuthenticationService {
 	private AuthenticationResult executeAuthenticationFlow(long startTime) {
 		try (var playwright = Playwright.create()) {
 
-			try (var browser = browserCreator.createBrowser(playwright);
-					var context = browser.newContext(createStealthBrowserContextOptions())) {
+			try (var contextHandle = browserCreator.createBrowserContext(playwright,
+					createStealthBrowserContextOptions()); var context = contextHandle.get()) {
 
 				// CRITICAL: Inject stealth script BEFORE creating any pages
 				// This ensures the script runs before any page content loads
@@ -139,6 +179,26 @@ public class CoopAuthenticationService implements AuthenticationService {
 				if (log.isDebugEnabled()) {
 					log.debug("Browser user-agent: {}", userAgent);
 					log.debug("Browser language: {}", browserLanguage);
+				}
+
+				// Clean login requirement:
+				// The user wants to perform a fresh login every time but keep the
+				// DataDome
+				// cookie
+				// to bypass the captcha.
+				var existingCookies = context.cookies();
+				var datadomeCookieOpt = existingCookies.stream()
+					.filter(c -> DATADOME_COOKIE.equals(c.name))
+					.findFirst();
+
+				if (!existingCookies.isEmpty()) {
+					context.clearCookies();
+					log.debug("Cleared {} existing cookies to ensure clean login", existingCookies.size());
+
+					if (datadomeCookieOpt.isPresent()) {
+						context.addCookies(Collections.singletonList(datadomeCookieOpt.get()));
+						log.debug("Restored DataDome cookie from persistent storage");
+					}
 				}
 
 				if (proxyProperties.enabled()) {
@@ -229,24 +289,38 @@ public class CoopAuthenticationService implements AuthenticationService {
 		}
 	}
 
-	private static boolean isBlank(String value) {
-		return value == null || value.isBlank();
-	}
-
 	private void performLoginFlow(Page page) {
 		log.debug("Starting login flow");
 
 		try {
 			navigateToLoginPage(page);
 			handleCookieConsent(page);
-			clickLoginLink(page);
-			enterCredentialsAndSubmit(page);
 
-			log.debug("Login flow completed");
+			if (isLoginNeeded(page)) {
+				clickLoginLink(page);
+				enterCredentialsAndSubmit(page);
+				log.debug("Login flow completed");
+			}
+			else {
+				log.info("Login link not found - assuming user is already logged in via persistent session");
+			}
 		}
 		catch (Exception flowException) {
 			log.error("Login flow failed: {}", flowException.getMessage(), flowException);
 			throw new CouponBoosterException("Login flow failed: " + flowException.getMessage(), flowException);
+		}
+	}
+
+	private boolean isLoginNeeded(Page page) {
+		try {
+			// Check for login button with a short timeout
+			Locator loginButton = page.locator(elementSelectors.loginLink()).first();
+			// Use a shorter timeout to check for presence
+			loginButton.waitFor(new Locator.WaitForOptions().setTimeout(5000));
+			return loginButton.isVisible();
+		}
+		catch (TimeoutError e) {
+			return false;
 		}
 	}
 
@@ -289,65 +363,15 @@ public class CoopAuthenticationService implements AuthenticationService {
 
 	private void enterCredentialsAndSubmit(Page page) {
 		addRandomDelay(500, 1200);
-		typeIntoField(page, elementSelectors.usernameInput(), userCredentials.email());
+		typeIntoField(page, elementSelectors.usernameInput(), userCredentials.email(),
+				browserConfiguration.typingDelayMs());
 
 		addRandomDelay(400, 900);
-		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password());
+		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password(),
+				browserConfiguration.typingDelayMs());
 
 		addRandomDelay(300, 700);
 		clickElement(page, elementSelectors.submitButton());
-	}
-
-	/**
-	 * Adds a random delay to simulate human behavior and avoid detection.
-	 * @param minMs minimum delay in milliseconds
-	 * @param maxMs maximum delay in milliseconds
-	 */
-	private void addRandomDelay(int minMs, int maxMs) {
-		try {
-			int delay = minMs + SECURE_RANDOM.nextInt(maxMs - minMs + 1);
-			if (log.isTraceEnabled()) {
-				log.trace("Adding random delay of {}ms", delay);
-			}
-			Thread.sleep(delay);
-		}
-		catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			log.error("Random delay interrupted", e);
-		}
-	}
-
-	private void typeIntoField(Page page, String selector, String text) {
-		var field = findElement(page, selector);
-		field.focus();
-		field.clear();
-		if (browserConfiguration.typingDelayMs() > 0) {
-			field.pressSequentially(text,
-					new Locator.PressSequentiallyOptions().setDelay(browserConfiguration.typingDelayMs()));
-		}
-		else {
-			field.fill(text); // fallback: fast input if no delay is needed
-		}
-	}
-
-	private void clickElement(Page page, String selector) {
-		findElement(page, selector).click();
-	}
-
-	private Locator findElement(Page page, String selector) {
-		try {
-			var element = page.locator(selector);
-			element.first().waitFor(new Locator.WaitForOptions().setTimeout(20000));
-
-			if (!element.first().isVisible()) {
-				throw new CouponBoosterException("Element not visible: " + selector);
-			}
-
-			return element;
-		}
-		catch (TimeoutError e) {
-			throw new CouponBoosterException("Element not found: " + selector, e);
-		}
 	}
 
 }

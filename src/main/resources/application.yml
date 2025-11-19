@@ -63,6 +63,9 @@ coop:
       - "--window-position=0,0"
       # Use default user agent (don't override via args - let context handle it)
     timeout-ms: 20000
+    # Directory to store browser user data (cookies, local storage) for persistent sessions
+    # Set this to enable persistent context and avoid repeated captchas
+    user-data-dir: "${COOP_PLAYWRIGHT_USER_DATA_DIR:}"
 
   selectors:
     cookie-accept-button: '[data-testid="uc-accept-all-button"]'

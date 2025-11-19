@@ -27,6 +27,8 @@ import java.util.List;
  * security settings
  * @param timeoutMs maximum time in milliseconds to wait for page elements and navigation
  * actions
+ * @param userDataDir optional directory to store browser user data (cookies, local
+ * storage). If set, a persistent browser context will be used.
  */
 @ConfigurationProperties(prefix = "coop.playwright")
 @Validated
@@ -48,22 +50,15 @@ public record CoopPlaywrightProperties(
 		@NotNull(message = "Chrome arguments list is required") List<String> chromeArgs,
 
 		@Min(value = 1000, message = "Timeout must be at least 1000ms") @Max(value = 300000,
-				message = "Timeout cannot exceed 300000ms (5 minutes)") int timeoutMs) {
+				message = "Timeout cannot exceed 300000ms (5 minutes)") int timeoutMs,
 
-	public CoopPlaywrightProperties(String loginUrl, String datadomeCookieValue, int typingDelayMs, int slowMoMs,
-			boolean headless, List<String> chromeArgs, int timeoutMs) {
-		this.loginUrl = loginUrl;
-		// Allow empty/null cookie value - stealth measures should handle bot detection
-		this.datadomeCookieValue = datadomeCookieValue == null || datadomeCookieValue.isBlank() ? ""
-				: datadomeCookieValue;
-		this.typingDelayMs = typingDelayMs;
-		this.slowMoMs = slowMoMs;
-		this.headless = headless;
-		this.chromeArgs = chromeArgs == null ? List.of() : List.copyOf(chromeArgs);
-		this.timeoutMs = timeoutMs;
+		String userDataDir) {
+
+	/**
+	 * Custom constructor that creates a defensive copy of the chromeArgs list.
+	 */
+	public CoopPlaywrightProperties {
+		chromeArgs = chromeArgs != null ? List.copyOf(chromeArgs) : List.of();
 	}
 
-	public List<String> chromeArgs() {
-		return chromeArgs; // Already immutable from constructor
-	}
 }

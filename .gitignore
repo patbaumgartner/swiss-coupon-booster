@@ -36,3 +36,4 @@ build/
 .vscode/
 
 migros-cookies.txt
+playwright-user-data/
