@@ -64,7 +64,7 @@
     <rewrite-maven-plugin.version>6.24.0</rewrite-maven-plugin.version>
     <rewrite-spring.version>0.16.0</rewrite-spring.version>
     <rewrite-static-analysis.version>2.21.0</rewrite-static-analysis.version>
-    <rewrite-testing-frameworks.version>3.21.3</rewrite-testing-frameworks.version>
+    <rewrite-testing-frameworks.version>3.22.0</rewrite-testing-frameworks.version>
 
     <!-- Coverage & Quality Thresholds -->
     <jacoco.branch.coverage.minimum>0.75</jacoco.branch.coverage.minimum>
