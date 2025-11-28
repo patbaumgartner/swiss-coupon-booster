@@ -51,7 +51,7 @@
     <pitest.version>1.22.0</pitest.version>
     <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <spotbugs.version>4.9.8.1</spotbugs.version>
+    <spotbugs.version>4.9.8.2</spotbugs.version>
     <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
     <spring-javaformat.version>0.0.47</spring-javaformat.version>
 
@@ -60,9 +60,9 @@
     <versions-maven-plugin.version>2.19.1</versions-maven-plugin.version>
 
     <!-- OpenRewrite Plugins -->
-    <rewrite-logging-frameworks.version>3.18.1</rewrite-logging-frameworks.version>
+    <rewrite-logging-frameworks.version>3.19.0</rewrite-logging-frameworks.version>
     <rewrite-maven-plugin.version>6.24.0</rewrite-maven-plugin.version>
-    <rewrite-spring.version>0.16.0</rewrite-spring.version>
+    <rewrite-spring.version>0.17.0</rewrite-spring.version>
     <rewrite-static-analysis.version>2.22.0</rewrite-static-analysis.version>
     <rewrite-testing-frameworks.version>3.22.0</rewrite-testing-frameworks.version>
 
