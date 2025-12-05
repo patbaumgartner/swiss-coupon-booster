@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
@@ -225,17 +227,33 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 						route.resume();
 					});
 				}
-				// Add the DataDome cookie from the configuration - optional fallback
-				// With stealth measures, this should no longer be strictly necessary
-				if (browserConfiguration.datadomeCookieValue() != null
+				// Determine if a persistent user-data directory already exists. If it
+				// does and a
+				// DataDome cookie value is configured, we IGNORE the configured cookie so
+				// that it
+				// is only ever used on the initial run to seed the persistent profile.
+				boolean userDataDirExists = browserConfiguration.userDataDir() != null
+						&& !browserConfiguration.userDataDir().isBlank()
+						&& Files.exists(Path.of(browserConfiguration.userDataDir()));
+
+				if (userDataDirExists && browserConfiguration.datadomeCookieValue() != null
+						&& !browserConfiguration.datadomeCookieValue().isBlank()) {
+					log.debug(
+							"Persistent user data directory detected; ignoring configured DataDome cookie value (only used on first run).");
+				}
+				// Add the DataDome cookie from the configuration - optional fallback only
+				// if
+				// user-data-dir does NOT yet exist (first run) and no datadome cookie
+				// currently
+				// present in the context.
+				else if (!userDataDirExists && browserConfiguration.datadomeCookieValue() != null
 						&& !browserConfiguration.datadomeCookieValue().isBlank()
 						&& context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
-
-					log.debug("Adding preconfigured DataDome cookie as fallback");
+					log.debug("Adding preconfigured DataDome cookie as fallback (initial run)");
 					context.addCookies(Collections
 						.singletonList(new Cookie(DATADOME_COOKIE, browserConfiguration.datadomeCookieValue())
 							.setDomain(WILDCARD_COOKIE_DOMAIN)
-							.setPath("/") // usually "/"
+							.setPath("/")
 							.setHttpOnly(false)
 							.setSecure(true)));
 				}

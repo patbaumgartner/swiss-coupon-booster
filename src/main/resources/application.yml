@@ -65,7 +65,7 @@ coop:
     timeout-ms: 20000
     # Directory to store browser user data (cookies, local storage) for persistent sessions
     # Set this to enable persistent context and avoid repeated captchas
-    user-data-dir: "${COOP_PLAYWRIGHT_USER_DATA_DIR:}"
+    user-data-dir: "${COOP_PLAYWRIGHT_USER_DATA_DIR:playwright-user-data}"
 
   selectors:
     cookie-accept-button: '[data-testid="uc-accept-all-button"]'
