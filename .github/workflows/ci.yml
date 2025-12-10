@@ -91,7 +91,7 @@ jobs:
         PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
     - name: Generate Test Report
-      uses: dorny/test-reporter@v2.2.0
+      uses: dorny/test-reporter@v2.3.0
       if: always()
       with:
         name: Test Results (Java ${{ matrix.java-version }})
