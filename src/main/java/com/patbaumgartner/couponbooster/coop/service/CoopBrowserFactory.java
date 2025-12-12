@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Factory for creating and configuring Playwright {@link Browser} instances for Coop
@@ -115,7 +115,7 @@ public class CoopBrowserFactory extends AbstractBrowserFactory {
 			}
 
 			BrowserContext context = playwright.chromium()
-				.launchPersistentContext(Paths.get(browserConfiguration.userDataDir()), options);
+				.launchPersistentContext(Path.of(browserConfiguration.userDataDir()), options);
 			return BrowserContextHandle.persistent(context);
 		}
 		else {

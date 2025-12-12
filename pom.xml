@@ -76,7 +76,11 @@
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
@@ -106,7 +110,12 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient-test</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -140,7 +149,7 @@
                 <bannedDependencies>
                   <searchTransitive>true</searchTransitive>
                   <excludes>
-                    <exclude>commons-logging</exclude>
+                    <!-- <exclude>commons-logging</exclude> -->
                     <exclude>log4j:log4j</exclude>
                   </excludes>
                 </bannedDependencies>

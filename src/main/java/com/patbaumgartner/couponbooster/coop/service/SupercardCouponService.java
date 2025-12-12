@@ -2,9 +2,8 @@ package com.patbaumgartner.couponbooster.coop.service;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
@@ -68,13 +67,9 @@ public class SupercardCouponService extends AbstractCouponService {
 	 */
 	public SupercardCouponService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
 			SupercardProperties supercardProperties) {
-
 		this.apiClient = restClientBuilder.build(); // Removed requestFactory
 													// customization
-
-		this.objectMapper = objectMapper.copy();
-		objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
-		objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+		this.objectMapper = objectMapper;
 		this.supercardProperties = supercardProperties;
 	}
 
@@ -164,12 +159,10 @@ public class SupercardCouponService extends AbstractCouponService {
 	 * This token is required for all subsequent API calls to manage coupons.
 	 * @param sessionCookies The list of browser cookies from an authenticated session.
 	 * @return The extracted JWT token as a String.
-	 * @throws JsonProcessingException if the API response cannot be parsed.
 	 * @throws CouponBoosterException if the API call fails or returns an unexpected
 	 * status.
 	 */
-	public String extractJwtToken(List<Cookie> sessionCookies, String userAgent, String language)
-			throws JsonProcessingException {
+	public String extractJwtToken(List<Cookie> sessionCookies, String userAgent, String language) {
 		String cookieHeader = buildCookieHeader(sessionCookies);
 
 		ResponseEntity<String> configResponse = apiClient.get()
@@ -197,8 +190,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	/**
 	 * Fetches the complete list of digital coupons from the Supercard API.
 	 */
-	private List<DigitalCoupon> fetchDigitalCoupons(String webapiBearerToken, String userAgent, String language)
-			throws JsonProcessingException {
+	private List<DigitalCoupon> fetchDigitalCoupons(String webapiBearerToken, String userAgent, String language) {
 
 		ResponseEntity<String> collectionResponse = apiClient.get()
 			.uri(supercardProperties.urls().couponsUrl())
@@ -265,7 +257,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	}
 
 	private void deactivateDigitalCoupons(List<DigitalCoupon> activeCoupons, String webapiBearerToken, String userAgent,
-			String language) throws JsonProcessingException {
+			String language) {
 
 		List<String> couponCodes = activeCoupons.stream().map(DigitalCoupon::code).toList();
 
@@ -293,7 +285,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	}
 
 	private void activateDigitalCoupons(List<DigitalCoupon> inactiveCoupons, String webapiBearerToken, String userAgent,
-			String language) throws JsonProcessingException {
+			String language) {
 
 		List<String> couponCodes = inactiveCoupons.stream().map(DigitalCoupon::code).toList();
 

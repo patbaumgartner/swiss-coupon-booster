@@ -1,13 +1,13 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.boot.restclient.test.autoconfigure.RestClientTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
