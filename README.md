@@ -65,22 +65,21 @@ The application requires your personal account credentials to be configured in `
 ```yaml
 migros:
   user:
-    email: 'your-migros-email@example.com'
-    password: 'your-migros-password'
-  # Optional: Define a specific browser to use (e.g., chromium, firefox, webkit)
-  playwright:
-    browser: 'chromium'
+    email: "${MIGROS_USER_EMAIL}"
+    password: "${MIGROS_USER_PASSWORD}"
 
 coop:
   user:
-    email: 'your-coop-email@example.com'
-    password: 'your-coop-password'
-  # Required for Coop login flow due to bot detection
+    email: "${COOP_USER_EMAIL}"
+    password: "${COOP_USER_PASSWORD}"
+  # Optional: Required for initial Coop login flow or if bot detection occurs
   playwright:
-    datadomeCookieValue: 'your-datadome-cookie-value'
+    datadomeCookieValue: "${COOP_DATADOME_COOKIE_VALUE}"
 ```
 
-**Important:** The `datadomeCookieValue` for Coop is necessary to bypass their bot detection measures. You may need to manually acquire this value from a real browser session.
+**Important:** The application uses regular environment variables (or a `.env` file) for configuration.
+
+For Coop, the `datadomeCookieValue` is **optional**. The application is designed to handle bot detection automatically. However, if you experience login issues or captchas, you can provide a valid DataDome cookie value from a real browser session to bypass the check. On the first successful run, the browser profile is cached locally, reducing the need for this cookie in subsequent runs.
 
 ## Usage
 
