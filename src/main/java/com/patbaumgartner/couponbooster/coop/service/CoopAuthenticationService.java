@@ -23,6 +23,8 @@ import java.util.Objects;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.patbaumgartner.couponbooster.service.PlaywrightProvider;
+
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.*;
@@ -62,6 +64,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	private final DatadomeStealthInjector stealthInjector;
 
+	private final PlaywrightProvider playwrightProvider;
+
 	/**
 	 * Constructs a new {@code CoopAuthenticationService} with the specified dependencies.
 	 * challenges
@@ -73,7 +77,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	 */
 	public CoopAuthenticationService(CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
-			DatadomeStealthInjector stealthInjector) {
+			DatadomeStealthInjector stealthInjector, PlaywrightProvider playwrightProvider) {
 		super(); // Pass log and SECURE_RANDOM to the superclass
 		this.userCredentials = Objects.requireNonNull(userCredentials, "User credentials cannot be null");
 		this.browserConfiguration = Objects.requireNonNull(browserConfiguration,
@@ -81,6 +85,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 		this.elementSelectors = Objects.requireNonNull(elementSelectors, "Element selectors cannot be null");
 		this.browserCreator = Objects.requireNonNull(browserCreator, "Browser factory cannot be null");
 		this.stealthInjector = Objects.requireNonNull(stealthInjector, "Stealth injector cannot be null");
+		this.playwrightProvider = Objects.requireNonNull(playwrightProvider, "Playwright provider cannot be null");
 	}
 
 	/**
@@ -104,7 +109,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	private AuthenticationResult executeAuthenticationFlow(long startTime) {
-		try (var playwright = Playwright.create()) {
+		try (var playwright = playwrightProvider.create()) {
 
 			try (var contextHandle = browserCreator.createBrowserContext(playwright,
 					createStealthBrowserContextOptions()); var context = contextHandle.get()) {
