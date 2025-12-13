@@ -1,8 +1,16 @@
 // Advanced stealth script to evade DataDome and other bot detection systems
 // This script is injected before any page loads to modify browser properties
 
-(function() {
+(function () {
     'use strict';
+
+    // Helper function for cryptographically secure random numbers (replaces Math.random())
+    // This satisfies SonarQube security requirements (S2245)
+    function secureRandom() {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        return array[0] / (0xFFFFFFFF + 1); // Convert to 0-1 range like Math.random()
+    }
 
     // 1. Override navigator.webdriver (primary detection vector)
     // Use delete and redefine for better stealth
@@ -76,8 +84,8 @@
                 chargingTime: 0,
                 dischargingTime: Infinity,
                 level: 1.0,
-                addEventListener: () => {},
-                removeEventListener: () => {},
+                addEventListener: () => { },
+                removeEventListener: () => { },
                 dispatchEvent: () => true
             })
         });
@@ -136,7 +144,7 @@
     try {
         const originalIframeGetter = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'contentWindow').get;
         Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
-            get: function() {
+            get: function () {
                 const win = originalIframeGetter.call(this);
                 if (win) {
                     try {
@@ -154,15 +162,15 @@
 
     // 10. Randomize canvas fingerprint slightly
     const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-    HTMLCanvasElement.prototype.toDataURL = function(type) {
+    HTMLCanvasElement.prototype.toDataURL = function (type) {
         // Add tiny random noise to canvas (not detectable visually)
         const context = this.getContext('2d');
         if (context) {
             const imageData = context.getImageData(0, 0, this.width, this.height);
             for (let i = 0; i < imageData.data.length; i += 4) {
                 // Add very small random noise (< 1%)
-                if (Math.random() < 0.001) {
-                    imageData.data[i] = Math.min(255, imageData.data[i] + Math.floor(Math.random() * 3) - 1);
+                if (secureRandom() < 0.001) {
+                    imageData.data[i] = Math.min(255, imageData.data[i] + Math.floor(secureRandom() * 3) - 1);
                 }
             }
             context.putImageData(imageData, 0, 0);
@@ -172,7 +180,7 @@
 
     // 11. Override toString to hide our modifications
     const originalToString = Function.prototype.toString;
-    Function.prototype.toString = function() {
+    Function.prototype.toString = function () {
         // Make our overrides look like native code
         if (this === navigator.permissions.query) {
             return 'function query() { [native code] }';
@@ -202,7 +210,7 @@
     // 13. Override connection API if exists
     if ('connection' in navigator) {
         Object.defineProperty(navigator.connection, 'rtt', {
-            get: () => 50 + Math.floor(Math.random() * 50) // 50-100ms
+            get: () => 50 + Math.floor(secureRandom() * 50) // 50-100ms
         });
     }
 
@@ -210,7 +218,7 @@
     delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
     delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
     delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
-    
+
     // 15. Override Notification.permission
     try {
         if (window.Notification) {
@@ -218,20 +226,20 @@
                 get: () => 'default'
             });
         }
-    } catch (e) {}
+    } catch (e) { }
 
     // 16. Add performance timing
     if (window.performance && window.performance.timing) {
         // Make timing look natural
         const now = Date.now();
         Object.defineProperty(window.performance.timing, 'navigationStart', {
-            get: () => now - Math.floor(Math.random() * 1000)
+            get: () => now - Math.floor(secureRandom() * 1000)
         });
     }
 
     // 17. Override Object.getOwnPropertyDescriptor to hide modifications
     const originalGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-    Object.getOwnPropertyDescriptor = function(obj, prop) {
+    Object.getOwnPropertyDescriptor = function (obj, prop) {
         if (obj === Navigator.prototype && prop === 'webdriver') {
             return undefined;
         }
@@ -240,11 +248,19 @@
 
     // 18. Prevent detection via Error.stack
     const originalError = Error;
-    Error = function(...args) {
+    Error = function (...args) {
         const error = new originalError(...args);
-        if (error.stack) {
-            error.stack = error.stack.replace(/\s+at __puppeteer_evaluation_script__:\d+:\d+/g, '');
+
+        if (typeof error?.stack === "string") {
+            // optional: DoS-Guard
+            if (error.stack.length <= 200_000) {
+                const re = /^[ \t]{0,20}at __puppeteer_evaluation_script__:\d{1,10}:\d{1,10}\r?$/gm;
+                error.stack = error.stack.replace(re, "");
+                // optional: leere Zeilen zusammenziehen
+                error.stack = error.stack.replace(/\n{3,}/g, "\n\n");
+            }
         }
+
         return error;
     };
     Error.prototype = originalError.prototype;
