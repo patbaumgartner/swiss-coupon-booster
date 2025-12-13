@@ -45,15 +45,40 @@ public interface CoopConstants {
 
 	}
 
-	/*
-	 * Constants for DataDome captcha service.
+	/**
+	 * Timeouts and delays (in milliseconds) used for bot evasion and UI interactions.
 	 */
-	interface Datadome {
+	interface Delays {
 
-		/**
-		 * The URL for DataDome captcha service.
-		 */
-		String CAPTCHA_DELIVERY_URL = "https://geo.captcha-delivery.com/captcha/**";
+		/** Min delay before interacting with cookie consent. */
+		int COOKIE_CONSENT_MIN = 500;
+
+		/** Max delay before interacting with cookie consent. */
+		int COOKIE_CONSENT_MAX = 1500;
+
+		/** Min delay before clicking login link. */
+		int LOGIN_CLICK_MIN = 300;
+
+		/** Max delay before clicking login link. */
+		int LOGIN_CLICK_MAX = 800;
+
+		/** Min delay before typing username/password. */
+		int INPUT_TYPING_MIN = 400; // slightly generalized
+
+		/** Max delay before typing username/password. */
+		int INPUT_TYPING_MAX = 1200;
+
+		/** Min delay before clicking submit. */
+		int SUBMIT_CLICK_MIN = 300;
+
+		/** Max delay before clicking submit. */
+		int SUBMIT_CLICK_MAX = 700;
+
+		/** Min delay to wait for DataDome initial checks. */
+		int DATADOME_CHECK_MIN = 2000;
+
+		/** Max delay to wait for DataDome initial checks. */
+		int DATADOME_CHECK_MAX = 3500;
 
 	}
 

@@ -22,13 +22,6 @@ logging:
     com.patbaumgartner: DEBUG
     root: INFO
 
-two-captcha:
-  api-key: "${TWO_CAPTCHA_API_KEY:}"
-
-proxy:
-  enabled: ${PROXY_ENABLED:false}
-  list-url: "https://proxy.webshare.io/api/v2/proxy/list/download/qlnkscljhsydwjnpccskhyygcgogbztvwgqbmkvl/-/any/username/direct/-/"
-
 coop:
   login:
     enabled: true

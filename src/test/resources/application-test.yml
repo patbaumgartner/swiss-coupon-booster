@@ -6,10 +6,6 @@ logging:
     org.springframework: WARN
     root: WARN
 
-two-captcha:
-  api-key: "two-captcha-api-key"
-  website-url: "https://www.supercard.ch"
-
 # Disable actual browser automation in tests
 migros:
   login:

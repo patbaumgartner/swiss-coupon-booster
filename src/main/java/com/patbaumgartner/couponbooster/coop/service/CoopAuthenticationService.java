@@ -4,7 +4,6 @@ import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
-import com.microsoft.playwright.Request;
 import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.Cookie;
 import com.microsoft.playwright.options.LoadState;
@@ -15,7 +14,6 @@ import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
-import com.patbaumgartner.couponbooster.util.proxy.ProxyProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,7 +25,7 @@ import java.nio.file.Path;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
-import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadome.CAPTCHA_DELIVERY_URL;
+import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.*;
 
 /**
  * {@link AuthenticationService} implementation for Coop Supercard using Playwright for
@@ -39,57 +37,11 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadom
  * <li>Handling cookie consent dialogs.</li>
  * <li>Entering user credentials (email and password).</li>
  * <li>Submitting the login form.</li>
- * <li>Handling Datadome CAPTCHA challenges by integrating with a
- * {@link DatadomeCaptchaResolver}.</li>
  * <li>Extracting session cookies upon successful authentication.</li>
  * </ul>
  * It is highly configurable through properties for user credentials, Playwright settings,
  * and element selectors.
  *
- * @see DatadomeCaptchaResolver
- * @see ProxyProperties ```java package com.patbaumgartner.couponbooster.coop.service;
- *
- * import com.microsoft.playwright.Browser; import com.microsoft.playwright.Locator;
- * import com.microsoft.playwright.Page; import com.microsoft.playwright.Playwright;
- * import com.microsoft.playwright.Request; import com.microsoft.playwright.TimeoutError;
- * import com.microsoft.playwright.options.Cookie; import
- * com.microsoft.playwright.options.LoadState; import
- * com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties; import
- * com.patbaumgartner.couponbooster.coop.properties.CoopSelectorsProperties; import
- * com.patbaumgartner.couponbooster.coop.properties.CoopUserProperties; import
- * com.patbaumgartner.couponbooster.exception.CouponBoosterException; import
- * com.patbaumgartner.couponbooster.model.AuthenticationResult; import
- * com.patbaumgartner.couponbooster.service.AuthenticationService; import
- * com.patbaumgartner.couponbooster.util.proxy.ProxyProperties; import org.slf4j.Logger;
- * import org.slf4j.LoggerFactory; import org.springframework.stereotype.Service;
- *
- * import java.util.Collections; import java.util.Objects; import
- * java.security.SecureRandom;
- *
- * import static
- * com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
- * import static
- * com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
- * import static
- * com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadome.CAPTCHA_DELIVERY_URL;
- *
- * /** {@link AuthenticationService} implementation for Coop Supercard using Playwright
- * for browser automation.
- * <p>
- * This service handles the entire authentication flow for the Coop website, including:
- * <ul>
- * <li>Navigating to the login page.</li>
- * <li>Handling cookie consent dialogs.</li>
- * <li>Entering user credentials (email and password).</li>
- * <li>Submitting the login form.</li>
- * <li>Handling Datadome CAPTCHA challenges by integrating with a
- * {@link DatadomeCaptchaResolver}.</li>
- * <li>Extracting session cookies upon successful authentication.</li>
- * </ul>
- * It is highly configurable through properties for user credentials, Playwright settings,
- * and element selectors.
- * @see DatadomeCaptchaResolver
- * @see ProxyProperties
  * @see CoopUserProperties
  * @see CoopPlaywrightProperties
  * @see CoopSelectorsProperties
@@ -99,10 +51,6 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Datadom
 public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(CoopAuthenticationService.class);
-
-	private final DatadomeCaptchaResolver datadomeCaptchaResolver;
-
-	private final ProxyProperties proxyProperties;
 
 	private final CoopUserProperties userCredentials;
 
@@ -116,23 +64,17 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	/**
 	 * Constructs a new {@code CoopAuthenticationService} with the specified dependencies.
-	 * @param datadomeCaptchaResolver the resolver for handling Datadome CAPTCHA
 	 * challenges
-	 * @param proxyProperties the proxy configuration properties
 	 * @param userCredentials the user's login credentials (email and password)
 	 * @param browserConfiguration the configuration for the Playwright browser instance
 	 * @param elementSelectors the CSS selectors for locating elements on the page
 	 * @param browserCreator the factory for creating Playwright browser instances
 	 * @param stealthInjector the injector for DataDome stealth scripts
 	 */
-	public CoopAuthenticationService(DatadomeCaptchaResolver datadomeCaptchaResolver, ProxyProperties proxyProperties,
-			CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
+	public CoopAuthenticationService(CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
 			DatadomeStealthInjector stealthInjector) {
 		super(); // Pass log and SECURE_RANDOM to the superclass
-		this.datadomeCaptchaResolver = Objects.requireNonNull(datadomeCaptchaResolver,
-				"Datadome captcha resolver cannot be null");
-		this.proxyProperties = Objects.requireNonNull(proxyProperties, "Proxy properties cannot be null");
 		this.userCredentials = Objects.requireNonNull(userCredentials, "User credentials cannot be null");
 		this.browserConfiguration = Objects.requireNonNull(browserConfiguration,
 				"Browser configuration cannot be null");
@@ -185,9 +127,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 				// Clean login requirement:
 				// The user wants to perform a fresh login every time but keep the
-				// DataDome
-				// cookie
-				// to bypass the captcha.
+				// DataDome cookie to bypass the captcha.
 				var existingCookies = context.cookies();
 				var datadomeCookieOpt = existingCookies.stream()
 					.filter(c -> DATADOME_COOKIE.equals(c.name))
@@ -203,35 +143,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 					}
 				}
 
-				if (proxyProperties.enabled()) {
-					log.info("Proxy is enabled, registering route to handle Datadome captcha.");
-
-					// Listen for requests and fetch cookie from 2captcha
-					page.route(CAPTCHA_DELIVERY_URL, route -> {
-						Request request = route.request();
-						String url = request.url();
-
-						if (url.contains("t=bv")) {
-							throw new CouponBoosterException("Proxy IP is blocked by Datadome (t=bv in URL)");
-						}
-
-						var parsedCookie = datadomeCaptchaResolver.resolveCaptcha(url, page.url(), userAgent);
-
-						context.addCookies(Collections.singletonList(
-								new Cookie(parsedCookie.name(), parsedCookie.value()).setDomain(parsedCookie.domain())
-									.setPath(parsedCookie.path() != null ? parsedCookie.path() : "/")
-									.setHttpOnly(parsedCookie.httpOnly())
-									.setSecure(parsedCookie.secure())));
-
-						// Let the request continue after cookies are set
-						route.resume();
-					});
-				}
-				// Determine if a persistent user-data directory already exists. If it
-				// does and a
-				// DataDome cookie value is configured, we IGNORE the configured cookie so
-				// that it
-				// is only ever used on the initial run to seed the persistent profile.
+				// Determine if a persistent user-data directory already exists.
 				boolean userDataDirExists = browserConfiguration.userDataDir() != null
 						&& !browserConfiguration.userDataDir().isBlank()
 						&& Files.exists(Path.of(browserConfiguration.userDataDir()));
@@ -239,13 +151,11 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 				if (userDataDirExists && browserConfiguration.datadomeCookieValue() != null
 						&& !browserConfiguration.datadomeCookieValue().isBlank()) {
 					log.debug(
-							"Persistent user data directory detected; ignoring configured DataDome cookie value (only used on first run).");
+							"Persistent user data directory detected; ignoring configured DataDome cookie value (using profile's cookie).");
 				}
-				// Add the DataDome cookie from the configuration - optional fallback only
-				// if
+				// Add the DataDome cookie from the configuration - fallback only if
 				// user-data-dir does NOT yet exist (first run) and no datadome cookie
-				// currently
-				// present in the context.
+				// currently present in the context.
 				else if (!userDataDirExists && browserConfiguration.datadomeCookieValue() != null
 						&& !browserConfiguration.datadomeCookieValue().isBlank()
 						&& context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
@@ -259,7 +169,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 				}
 				else if (browserConfiguration.datadomeCookieValue() == null
 						|| browserConfiguration.datadomeCookieValue().isBlank()) {
-					log.info("No DataDome cookie provided - relying on stealth measures and chrome arguments");
+					log.info("No DataDome cookie provided - relying on stealth measures");
 				}
 
 				performLoginFlow(page);
@@ -351,14 +261,14 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 		// CRITICAL: Wait for DataDome's initial checks to complete
 		// DataDome runs fingerprinting in the first 2-3 seconds
-		addRandomDelay(2000, 3500);
+		addRandomDelay(DATADOME_CHECK_MIN, DATADOME_CHECK_MAX);
 		log.debug("Waited for DataDome initial checks to complete");
 	}
 
 	private void handleCookieConsent(Page page) {
 		try {
 			// Add small random delay before interacting
-			addRandomDelay(500, 1500);
+			addRandomDelay(COOKIE_CONSENT_MIN, COOKIE_CONSENT_MAX);
 
 			var acceptButton = page.locator(elementSelectors.cookieAcceptButton());
 			acceptButton.first().waitFor(new Locator.WaitForOptions().setTimeout(3000));
@@ -375,20 +285,20 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	private void clickLoginLink(Page page) {
-		addRandomDelay(300, 800);
+		addRandomDelay(LOGIN_CLICK_MIN, LOGIN_CLICK_MAX);
 		clickElement(page, elementSelectors.loginLink());
 	}
 
 	private void enterCredentialsAndSubmit(Page page) {
-		addRandomDelay(500, 1200);
+		addRandomDelay(INPUT_TYPING_MIN, INPUT_TYPING_MAX);
 		typeIntoField(page, elementSelectors.usernameInput(), userCredentials.email(),
 				browserConfiguration.typingDelayMs());
 
-		addRandomDelay(400, 900);
+		addRandomDelay(INPUT_TYPING_MIN, INPUT_TYPING_MAX);
 		typeIntoField(page, elementSelectors.passwordInput(), userCredentials.password(),
 				browserConfiguration.typingDelayMs());
 
-		addRandomDelay(300, 700);
+		addRandomDelay(SUBMIT_CLICK_MIN, SUBMIT_CLICK_MAX);
 		clickElement(page, elementSelectors.submitButton());
 	}
 

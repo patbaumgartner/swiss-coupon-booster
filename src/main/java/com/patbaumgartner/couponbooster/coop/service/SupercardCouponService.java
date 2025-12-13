@@ -1,7 +1,5 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.options.Cookie;
@@ -184,7 +182,7 @@ public class SupercardCouponService extends AbstractCouponService {
 
 		JsonNode rootNode = objectMapper.readTree(configResponse.getBody());
 		JsonNode jwtToken = rootNode.path("jwtToken");
-		return jwtToken.asText();
+		return jwtToken.asString();
 	}
 
 	/**
@@ -215,21 +213,21 @@ public class SupercardCouponService extends AbstractCouponService {
 
 		if (digitalCoupons.isArray()) {
 			for (JsonNode coupon : digitalCoupons) {
-				String code = coupon.path("code").asText();
-				String status = coupon.path("status").asText();
-				String shop = coupon.path("formatIdMain").asText();
-				String textDescription = coupon.path("textDescription").asText();
-				String textDiscountAmount = coupon.path("textDiscountAmount").asText();
+				String code = coupon.path("code").asString();
+				String status = coupon.path("status").asString();
+				String shop = coupon.path("formatIdMain").asString();
+				String textDescription = coupon.path("textDescription").asString();
+				String textDiscountAmount = coupon.path("textDiscountAmount").asString();
 
 				boolean isNew = coupon.path("isNew").asBoolean();
 				boolean isRecommendation = coupon.path("isRecommendation").asBoolean();
-				boolean hasLogoProduct = !"none".equals(coupon.path("logoProduct").asText("none"));
+				boolean hasLogoProduct = !"none".equals(coupon.path("logoProduct").asString("none"));
 
 				List<String> productTypes = new ArrayList<>();
 				JsonNode productTypeArray = coupon.path("productTypes");
 				if (productTypeArray.isArray()) {
 					for (JsonNode productType : productTypeArray) {
-						productTypes.add(productType.asText());
+						productTypes.add(productType.asString());
 					}
 				}
 

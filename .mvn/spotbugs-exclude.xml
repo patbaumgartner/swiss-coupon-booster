@@ -43,4 +43,10 @@
         <Class name="com.patbaumgartner.couponbooster.migros.service.CumulusCouponService"/>
         <Bug pattern="IMPROPER_UNICODE"/>
     </Match>
+
+    <!-- Suppress EI_EXPOSE_REP2 for SupercardCouponService -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.coop.service.SupercardCouponService"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
 </FindBugsFilter>
