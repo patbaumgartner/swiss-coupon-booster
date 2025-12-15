@@ -136,7 +136,7 @@ jobs:
         cache: maven
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: build-artifacts-java-21
         path: target/
