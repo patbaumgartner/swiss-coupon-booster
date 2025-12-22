@@ -21,7 +21,7 @@ on:
         default: false
 
 env:
-  JAVA_VERSION: 21
+  JAVA_VERSION: 25
   MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
   PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
 
@@ -272,7 +272,7 @@ jobs:
         # Installation Guide
 
         ## Prerequisites
-        - Java 21 or higher
+        - Java 25 or higher
         - Network access for Playwright browser downloads
 
         ## Quick Start
