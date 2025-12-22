@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <relativePath></relativePath>
     <!-- lookup parent from repository -->
   </parent>
@@ -36,11 +36,11 @@
     <java.version>21</java.version>
 
     <!-- External Library Versions -->
-    <logback.version>1.5.22</logback.version>
+    <logback.version>1.5.23</logback.version>
     <playwright.version>1.57.0</playwright.version>
 
     <!-- Maven Core Plugins -->
-    <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
+    <exec-maven-plugin.version>3.6.3</exec-maven-plugin.version>
     <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
     <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
     <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
@@ -59,11 +59,11 @@
     <versions-maven-plugin.version>2.20.1</versions-maven-plugin.version>
 
     <!-- OpenRewrite Plugins -->
-    <rewrite-logging-frameworks.version>3.19.1</rewrite-logging-frameworks.version>
-    <rewrite-maven-plugin.version>6.25.0</rewrite-maven-plugin.version>
-    <rewrite-spring.version>0.18.0</rewrite-spring.version>
-    <rewrite-static-analysis.version>2.23.0</rewrite-static-analysis.version>
-    <rewrite-testing-frameworks.version>3.23.0</rewrite-testing-frameworks.version>
+    <rewrite-logging-frameworks.version>3.20.0</rewrite-logging-frameworks.version>
+    <rewrite-maven-plugin.version>6.26.0</rewrite-maven-plugin.version>
+    <rewrite-spring.version>0.19.0</rewrite-spring.version>
+    <rewrite-static-analysis.version>2.24.0</rewrite-static-analysis.version>
+    <rewrite-testing-frameworks.version>3.24.0</rewrite-testing-frameworks.version>
 
     <!-- Coverage & Quality Thresholds -->
     <jacoco.branch.coverage.minimum>0.75</jacoco.branch.coverage.minimum>
