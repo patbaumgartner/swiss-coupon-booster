@@ -49,18 +49,11 @@ public record MigrosPlaywrightProperties(
 		@Min(value = 1000, message = "Timeout must be at least 1000ms") @Max(value = 300000,
 				message = "Timeout cannot exceed 300000ms (5 minutes)") int timeoutMs) {
 
-	public MigrosPlaywrightProperties(String loginUrl, String passwordUrl, int typingDelayMs, int slowMoMs,
-			boolean headless, List<String> chromeArgs, int timeoutMs) {
-		this.loginUrl = loginUrl;
-		this.passwordUrl = passwordUrl;
-		this.typingDelayMs = typingDelayMs;
-		this.slowMoMs = slowMoMs;
-		this.headless = headless;
-		this.chromeArgs = chromeArgs == null ? List.of() : List.copyOf(chromeArgs);
-		this.timeoutMs = timeoutMs;
+	/**
+	 * Compact constructor that creates a defensive copy of the chromeArgs list.
+	 */
+	public MigrosPlaywrightProperties {
+		chromeArgs = chromeArgs == null ? List.of() : List.copyOf(chromeArgs);
 	}
 
-	public List<String> chromeArgs() {
-		return chromeArgs; // Already immutable from constructor
-	}
 }

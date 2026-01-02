@@ -3,7 +3,6 @@ package com.patbaumgartner.couponbooster.coop.service;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.Cookie;
 import com.microsoft.playwright.options.LoadState;
@@ -14,19 +13,19 @@ import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
+import com.patbaumgartner.couponbooster.service.PlaywrightProvider;
+import com.patbaumgartner.couponbooster.util.cookie.NetscapeCookieParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Objects;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import com.patbaumgartner.couponbooster.service.PlaywrightProvider;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.DATADOME_COOKIE;
-import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieNames.WILDCARD_COOKIE_DOMAIN;
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.*;
 
 /**
@@ -68,12 +67,12 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	/**
 	 * Constructs a new {@code CoopAuthenticationService} with the specified dependencies.
-	 * challenges
 	 * @param userCredentials the user's login credentials (email and password)
 	 * @param browserConfiguration the configuration for the Playwright browser instance
 	 * @param elementSelectors the CSS selectors for locating elements on the page
 	 * @param browserCreator the factory for creating Playwright browser instances
 	 * @param stealthInjector the injector for DataDome stealth scripts
+	 * @param playwrightProvider the provider for Playwright instances
 	 */
 	public CoopAuthenticationService(CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
@@ -130,6 +129,9 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 					log.debug("Browser language: {}", browserLanguage);
 				}
 
+				// Load cookies from file if configured (BEFORE navigation)
+				loadCookiesFromFileIfConfigured(context);
+
 				// Clean login requirement:
 				// The user wants to perform a fresh login every time but keep the
 				// DataDome cookie to bypass the captcha.
@@ -146,35 +148,6 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 						context.addCookies(Collections.singletonList(datadomeCookieOpt.get()));
 						log.debug("Restored DataDome cookie from persistent storage");
 					}
-				}
-
-				// Determine if a persistent user-data directory already exists.
-				boolean userDataDirExists = browserConfiguration.userDataDir() != null
-						&& !browserConfiguration.userDataDir().isBlank()
-						&& Files.exists(Path.of(browserConfiguration.userDataDir()));
-
-				if (userDataDirExists && browserConfiguration.datadomeCookieValue() != null
-						&& !browserConfiguration.datadomeCookieValue().isBlank()) {
-					log.debug(
-							"Persistent user data directory detected; ignoring configured DataDome cookie value (using profile's cookie).");
-				}
-				// Add the DataDome cookie from the configuration - fallback only if
-				// user-data-dir does NOT yet exist (first run) and no datadome cookie
-				// currently present in the context.
-				else if (!userDataDirExists && browserConfiguration.datadomeCookieValue() != null
-						&& !browserConfiguration.datadomeCookieValue().isBlank()
-						&& context.cookies().stream().noneMatch(cookie -> DATADOME_COOKIE.equals(cookie.name))) {
-					log.debug("Adding preconfigured DataDome cookie as fallback (initial run)");
-					context.addCookies(Collections
-						.singletonList(new Cookie(DATADOME_COOKIE, browserConfiguration.datadomeCookieValue())
-							.setDomain(WILDCARD_COOKIE_DOMAIN)
-							.setPath("/")
-							.setHttpOnly(false)
-							.setSecure(true)));
-				}
-				else if (browserConfiguration.datadomeCookieValue() == null
-						|| browserConfiguration.datadomeCookieValue().isBlank()) {
-					log.info("No DataDome cookie provided - relying on stealth measures");
 				}
 
 				performLoginFlow(page);
@@ -305,6 +278,44 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 		addRandomDelay(SUBMIT_CLICK_MIN, SUBMIT_CLICK_MAX);
 		clickElement(page, elementSelectors.submitButton());
+	}
+
+	/**
+	 * Loads cookies from a file if configured in the Playwright properties. This method
+	 * reads cookies from a Netscape format cookies.txt file and adds them to the browser
+	 * context BEFORE any navigation occurs.
+	 * <p>
+	 * This is particularly useful for bypassing bot detection (DataDome) by reusing
+	 * previously obtained valid cookies.
+	 * @param context the browser context to add cookies to
+	 */
+	private void loadCookiesFromFileIfConfigured(com.microsoft.playwright.BrowserContext context) {
+		String cookiesFilePath = browserConfiguration.cookiesFilePath();
+
+		if (cookiesFilePath == null || cookiesFilePath.isBlank()) {
+			log.debug("No cookies file path configured, skipping cookie loading");
+			return;
+		}
+
+		Path cookiesPath = Path.of(cookiesFilePath);
+		if (!Files.exists(cookiesPath)) {
+			log.warn("Cookies file does not exist: {}", cookiesFilePath);
+			return;
+		}
+
+		try {
+			log.info("Loading cookies from file: {}", cookiesFilePath);
+			List<Cookie> cookies = NetscapeCookieParser.parseFromFile(cookiesPath);
+			context.addCookies(cookies);
+			log.info("Successfully loaded {} cookies from file", cookies.size());
+
+			if (log.isDebugEnabled()) {
+				cookies.forEach(c -> log.debug("Loaded cookie: {} = {} (domain: {})", c.name, c.value, c.domain));
+			}
+		}
+		catch (Exception exception) {
+			log.error("Failed to load cookies from file: {}", exception.getMessage(), exception);
+		}
 	}
 
 }

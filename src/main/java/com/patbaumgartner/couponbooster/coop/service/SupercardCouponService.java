@@ -1,7 +1,5 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
@@ -17,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

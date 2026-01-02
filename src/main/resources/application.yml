@@ -32,9 +32,9 @@ coop:
 
   playwright:
     login-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
-    # DataDome cookie is now OPTIONAL - leave empty to rely on stealth measures
-    # Only set this if you're experiencing detection issues
-    datadome-cookie-value: "${COOP_DATADOME_COOKIE_VALUE:}"
+    # Provide a Netscape format cookies.txt file (e.g., exported from curl or browser)
+    # Optional: Only needed for initial authentication if stealth measures fail
+    cookies-file-path: "${COOP_COOKIES_FILE_PATH:}"
     typing-delay-ms: 100
     slow-mo-ms: 1000
     headless: false

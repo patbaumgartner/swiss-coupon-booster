@@ -86,17 +86,13 @@ public record SupercardProperties(@Valid @NotNull Urls urls, @Valid @NotNull Cou
 	 */
 	public record CouponFilter(List<String> includeProductTypes) {
 
+		/**
+		 * Compact constructor that creates a defensive copy of the includeProductTypes
+		 * list.
+		 */
 		public CouponFilter {
 			includeProductTypes = includeProductTypes == null ? List.of() : List.copyOf(includeProductTypes);
 		}
 
-		/**
-		 * Returns an immutable copy of the product types list.
-		 * @return immutable list of product types
-		 */
-		@Override
-		public List<String> includeProductTypes() {
-			return includeProductTypes;
-		}
 	}
 }

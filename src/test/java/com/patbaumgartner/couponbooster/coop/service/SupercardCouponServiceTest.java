@@ -1,6 +1,5 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
@@ -11,6 +10,7 @@ import org.springframework.boot.restclient.test.autoconfigure.RestClientTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 import java.util.List;

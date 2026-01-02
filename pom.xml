@@ -242,7 +242,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>${jacoco.argLine} -Xmx1024m</argLine>
+          <argLine>@{jacoco.argLine} -Xmx1024m</argLine>
           <includes>
             <include>**/*Test.java</include>
             <include>**/*Tests.java</include>
@@ -278,12 +278,21 @@
       </plugin>
 
       <!-- Code Coverage -->
+      <!--
+      NOTE: JaCoCo has issues with UNC paths on Windows (e.g., \\wsl.localhost\...).
+      If you encounter file locking errors when running tests from a UNC path, use:
+      mvn test -Djacoco.skip=true
+
+      Alternatively, map the WSL path to a network drive or run from a local Windows path.
+      -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
         <configuration>
           <propertyName>jacoco.argLine</propertyName>
+          <!-- Use append mode to avoid file locking issues -->
+          <append>true</append>
         </configuration>
         <executions>
           <execution>
@@ -293,6 +302,8 @@
             </goals>
             <configuration>
               <propertyName>jacoco.argLine</propertyName>
+              <!-- Use append mode to avoid file locking issues on Windows with UNC paths -->
+              <append>true</append>
             </configuration>
           </execution>
           <execution>

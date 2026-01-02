@@ -75,10 +75,10 @@ public interface CoopConstants {
 		int SUBMIT_CLICK_MAX = 700;
 
 		/** Min delay to wait for DataDome initial checks. */
-		int DATADOME_CHECK_MIN = 2000;
+		int DATADOME_CHECK_MIN = 3000;
 
 		/** Max delay to wait for DataDome initial checks. */
-		int DATADOME_CHECK_MAX = 3500;
+		int DATADOME_CHECK_MAX = 5000;
 
 	}
 

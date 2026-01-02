@@ -265,6 +265,79 @@
     };
     Error.prototype = originalError.prototype;
 
+    // 19. Override WebGL vendor/renderer for consistency
+    const getParameter = WebGLRenderingContext.prototype.getParameter;
+    WebGLRenderingContext.prototype.getParameter = function (parameter) {
+        if (parameter === 37445) {
+            return 'Intel Inc.'; // UNMASKED_VENDOR_WEBGL
+        }
+        if (parameter === 37446) {
+            return 'Intel Iris OpenGL Engine'; // UNMASKED_RENDERER_WEBGL
+        }
+        return getParameter.call(this, parameter);
+    };
+
+    // 20. Override AudioContext for consistent fingerprinting
+    if (window.AudioContext || window.webkitAudioContext) {
+        const OriginalAudioContext = window.AudioContext || window.webkitAudioContext;
+        const AudioContext = function () {
+            const context = new OriginalAudioContext();
+            const originalGetChannelData = context.createBuffer(1, 1, 44100).getChannelData;
+            AudioBuffer.prototype.getChannelData = function () {
+                const data = originalGetChannelData.apply(this, arguments);
+                // Add minimal noise to audio fingerprinting
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = data[i] + (secureRandom() - 0.5) * 0.0000001;
+                }
+                return data;
+            };
+            return context;
+        };
+        AudioContext.prototype = OriginalAudioContext.prototype;
+        window.AudioContext = AudioContext;
+        if (window.webkitAudioContext) {
+            window.webkitAudioContext = AudioContext;
+        }
+    }
+
+    // 21. Make document.hidden and visibilityState consistent
+    Object.defineProperty(document, 'hidden', {
+        get: () => false
+    });
+    Object.defineProperty(document, 'visibilityState', {
+        get: () => 'visible'
+    });
+
+    // 22. Override Date.now() to prevent timing attacks
+    const originalDateNow = Date.now;
+    const startTime = originalDateNow();
+    Date.now = function () {
+        // Add small random variance to prevent timing fingerprinting
+        return startTime + (originalDateNow() - startTime) + Math.floor(secureRandom() * 5);
+    };
+
+    // 23. Hide Playwright-specific properties
+    delete window.__playwright;
+    delete window.__pw_manual;
+    delete window.__PW_inspect;
+
+    // 24. Make outerWidth/outerHeight realistic
+    if (window.outerWidth === 0 || window.outerHeight === 0) {
+        Object.defineProperty(window, 'outerWidth', {
+            get: () => 1920
+        });
+        Object.defineProperty(window, 'outerHeight', {
+            get: () => 1080
+        });
+    }
+
+    // 25. Override userAgent if it contains "HeadlessChrome"
+    if (navigator.userAgent.includes('HeadlessChrome')) {
+        Object.defineProperty(navigator, 'userAgent', {
+            get: () => navigator.userAgent.replace('HeadlessChrome', 'Chrome')
+        });
+    }
+
     console.log('🛡️ Stealth mode activated - bot detection evasion enabled');
 
 })();

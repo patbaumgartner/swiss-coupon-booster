@@ -16,10 +16,20 @@ migros:
     password: "test-password"
 
   playwright:
+    login-url: "https://login.migros.ch/"
+    password-url: "https://login.migros.ch/login/password"
     headless: true
     timeout-ms: 5000
     typing-delay-ms: 0
     slow-mo-ms: 0
+    chrome-args: []
+
+  selectors:
+    email-input: "#input-email"
+    password-input: "#input-password"
+    submit-button: "#button-submit"
+    password-login-link: "#link-login-option-PASSWORD"
+    cookie-accept-button: "button:has-text('Accept')"
 
 coop:
   login:
@@ -30,6 +40,40 @@ coop:
     password: "test-password"
 
   playwright:
-    datadome-cookie-value: "dummy-cookie-value"
+    login-url: "https://www.supercard.ch/content/supercard/de.html"
+    headless: true
+    timeout-ms: 5000
+    typing-delay-ms: 0
+    slow-mo-ms: 0
+    chrome-args: []
+
+  selectors:
+    cookie-accept-button: '[data-testid="uc-accept-all-button"]'
+    login-link: "#a-accountLogin-desktop"
+    username-input: "#username"
+    password-input: "#password"
+    submit-button: "#btnSubmit"
+
+cumulus:
+  urls:
+    base-url: "https://account.migros.ch"
+    coupons-endpoint: "https://account.migros.ch/ma/api/user/cumulus/coupon"
+    coupons-referer: "https://account.migros.ch/cumulus/dashboard"
+    activation-endpoint: "https://account.migros.ch/ma/api/user/cumulus/coupon/activation"
+  api:
+    request-delay: "PT0.5S"
+    max-retries: 3
+    timeout: "PT30S"
+
+supercard:
+  urls:
+    base-url: "https://www.supercard.ch"
+    config-url: "https://www.supercard.ch/bin/coop/supercard/oidc/pwa/configs.json"
+    config-url-referer: "https://www.supercard.ch/de/app-digitale-services/digitale-bons.html"
+    coupons-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc"
+    coupons-activation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/activate"
+    coupons-deactivation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/deactivate"
+  coupon-filter:
+    include-product-types: []
 
 

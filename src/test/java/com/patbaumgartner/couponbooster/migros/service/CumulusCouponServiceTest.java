@@ -25,6 +25,10 @@ class CumulusCouponServiceTest {
 	@Mock
 	private RestClient restClient;
 
+	@SuppressWarnings("rawtypes")
+	@Mock
+	private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
 	@Mock
 	private CumulusProperties cumulusProperties;
 
@@ -33,12 +37,16 @@ class CumulusCouponServiceTest {
 
 	private CumulusCouponService cumulusCouponService;
 
+	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void setUp() {
 		lenient().when(cumulusProperties.urls()).thenReturn(urls);
 		lenient().when(urls.baseUrl()).thenReturn("https://api.migros.ch");
+		lenient().when(urls.couponsEndpoint()).thenReturn("https://api.migros.ch/coupons");
+		lenient().when(urls.couponsReferer()).thenReturn("https://api.migros.ch/dashboard");
 		lenient().when(restClientBuilder.baseUrl("https://api.migros.ch")).thenReturn(restClientBuilder);
 		lenient().when(restClientBuilder.build()).thenReturn(restClient);
+		lenient().when(restClient.get()).thenReturn(requestHeadersUriSpec);
 
 		cumulusCouponService = new CumulusCouponService(restClientBuilder, cumulusProperties);
 	}

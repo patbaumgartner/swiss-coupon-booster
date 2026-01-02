@@ -72,14 +72,30 @@ coop:
   user:
     email: "${COOP_USER_EMAIL}"
     password: "${COOP_USER_PASSWORD}"
-  # Optional: Required for initial Coop login flow or if bot detection occurs
   playwright:
-    datadomeCookieValue: "${COOP_DATADOME_COOKIE_VALUE}"
+    cookiesFilePath: "${COOP_COOKIES_FILE_PATH}"
 ```
 
 **Important:** The application uses regular environment variables (or a `.env` file) for configuration.
 
-For Coop, the `datadomeCookieValue` is **optional**. The application is designed to handle bot detection automatically. However, if you experience login issues or captchas, you can provide a valid DataDome cookie value from a real browser session to bypass the check. On the first successful run, the browser profile is cached locally, reducing the need for this cookie in subsequent runs.
+### Cookie Configuration for Coop
+
+For the initial authentication, you can optionally provide cookies in Netscape format (the same format used by curl).
+
+**How to provide cookies:**
+
+1. Export cookies from your browser using an extension like:
+   - "Get cookies.txt LOCALLY" for Chrome/Edge
+   - "cookies.txt" for Firefox
+   
+2. Set the path to the file in your `.env`:
+   ```bash
+   COOP_COOKIES_FILE_PATH=/path/to/your/cookies.txt
+   ```
+
+See [cookies.txt.example](cookies.txt.example) for the format specification.
+
+**Note:** Providing cookies is **optional**. The application is designed to handle bot detection automatically using stealth measures. However, if you experience login issues or captchas, providing cookies can help bypass these checks. On the first successful run, the browser profile is cached locally, reducing the need for cookies in subsequent runs.
 
 ## Usage
 

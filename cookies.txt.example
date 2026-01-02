@@ -1,0 +1,21 @@
+# Netscape HTTP Cookie File
+# This is a generated file! Do not edit.
+# Example cookies.txt file format for use with COOP_COOKIES_FILE_PATH
+#
+# Format: domain    flag    path    secure    expiration    name    value
+# - domain: The domain that created AND can read the cookie
+# - flag: TRUE/FALSE - whether all machines within a given domain can access the cookie
+# - path: The path within the domain that the cookie is valid for
+# - secure: TRUE/FALSE - whether the cookie requires a secure connection (HTTPS)
+# - expiration: Unix timestamp (in seconds) when the cookie expires, or 0 for session cookies
+# - name: The name of the cookie
+# - value: The value of the cookie
+#
+# You can export cookies in this format from your browser using extensions like:
+# - "Get cookies.txt LOCALLY" for Chrome/Edge
+# - "cookies.txt" for Firefox
+# Or use curl with the --cookie-jar option
+#
+# Example for Coop Supercard:
+# .supercard.ch	TRUE	/	TRUE	1735819200	datadome	YOUR_DATADOME_COOKIE_VALUE_HERE
+# .supercard.ch	TRUE	/	TRUE	1735819200	other_cookie	other_value
