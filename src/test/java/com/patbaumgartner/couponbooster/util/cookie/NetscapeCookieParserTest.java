@@ -18,8 +18,8 @@ class NetscapeCookieParserTest {
 
 	@Test
 	void parseLine_withValidCookie_shouldParseCorrectly() {
-		// Given
-		String line = ".example.com\tTRUE\t/\tTRUE\t1234567890\tsession_id\tabc123";
+		// Given - use a future timestamp
+		String line = ".example.com\tTRUE\t/\tTRUE\t9999999999\tsession_id\tabc123";
 
 		// When
 		Cookie cookie = NetscapeCookieParser.parseLine(line);
@@ -30,7 +30,7 @@ class NetscapeCookieParserTest {
 		assertThat(cookie.domain).isEqualTo(".example.com");
 		assertThat(cookie.path).isEqualTo("/");
 		assertThat(cookie.secure).isTrue();
-		assertThat(cookie.expires).isEqualTo(1234567890.0);
+		assertThat(cookie.expires).isEqualTo(9999999999.0);
 	}
 
 	@Test
@@ -84,8 +84,8 @@ class NetscapeCookieParserTest {
 
 	@Test
 	void parseLine_withEmptyCookieName_shouldThrowException() {
-		// Given
-		String line = ".example.com\tTRUE\t/\tTRUE\t1234567890\t\tvalue";
+		// Given - use future timestamp so the expiration check doesn't fail first
+		String line = ".example.com\tTRUE\t/\tTRUE\t9999999999\t\tvalue";
 
 		// Then
 		assertThatThrownBy(() -> NetscapeCookieParser.parseLine(line)).isInstanceOf(CookieParseException.class)
@@ -99,7 +99,7 @@ class NetscapeCookieParserTest {
 		String content = """
 				# Netscape HTTP Cookie File
 				# This is a comment
-				.example.com\tTRUE\t/\tTRUE\t1234567890\tsession_id\tabc123
+				.example.com\tTRUE\t/\tTRUE\t9999999999\tsession_id\tabc123
 				.example.com\tTRUE\t/api\tFALSE\t9999999999\tapi_token\ttoken123
 				""";
 		Files.writeString(cookieFile, content);
@@ -132,7 +132,7 @@ class NetscapeCookieParserTest {
 		Path cookieFile = tempDir.resolve("mixed_cookies.txt");
 		String content = """
 				# Netscape HTTP Cookie File
-				.example.com\tTRUE\t/\tTRUE\t1234567890\tsession_id\tabc123
+				.example.com\tTRUE\t/\tTRUE\t9999999999\tsession_id\tabc123
 				invalid_line_with_too_few_fields
 				.example.com\tTRUE\t/api\tFALSE\t9999999999\tapi_token\ttoken123
 				""";
@@ -181,8 +181,8 @@ class NetscapeCookieParserTest {
 
 	@Test
 	void parseLine_withDataDomeCookie_shouldParseCorrectly() {
-		// Given - Real-world example similar to the one in .env
-		String line = ".supercard.ch\tTRUE\t/\tTRUE\t1735819200\tdatadome\trExg2hWbLopl8nuwV1eTIb2JWhyxkI0rWlS9JZCQP9G4j3dld_0W89U5E7N9W5dhqjtCKohkslErilbKjE_z_XEn~DxbiSS5VHUHjNm8LMsYjGqjzgnT64sFlko2AjNC";
+		// Given - Real-world example similar to the one in .env (with future timestamp)
+		String line = ".supercard.ch\tTRUE\t/\tTRUE\t9999999999\tdatadome\trExg2hWbLopl8nuwV1eTIb2JWhyxkI0rWlS9JZCQP9G4j3dld_0W89U5E7N9W5dhqjtCKohkslErilbKjE_z_XEn~DxbiSS5VHUHjNm8LMsYjGqjzgnT64sFlko2AjNC";
 
 		// When
 		Cookie cookie = NetscapeCookieParser.parseLine(line);
@@ -199,13 +199,42 @@ class NetscapeCookieParserTest {
 	@Test
 	void parseLine_withEmptyPath_shouldDefaultToRoot() {
 		// Given
-		String line = ".example.com\tTRUE\t\tTRUE\t1234567890\ttest\tvalue";
+		String line = ".example.com\tTRUE\t\tTRUE\t9999999999\ttest\tvalue";
 
 		// When
 		Cookie cookie = NetscapeCookieParser.parseLine(line);
 
 		// Then
 		assertThat(cookie.path).isEqualTo("/");
+	}
+
+	@Test
+	void parseLine_withExpiredCookie_shouldThrowException() {
+		// Given - timestamp from 2009 (clearly expired)
+		String line = ".example.com\tTRUE\t/\tTRUE\t1234567890\texpired_cookie\tvalue";
+
+		// Then
+		assertThatThrownBy(() -> NetscapeCookieParser.parseLine(line)).isInstanceOf(CookieParseException.class)
+			.hasMessageContaining("expired");
+	}
+
+	@Test
+	void parseFromFile_withExpiredCookie_shouldSkipExpiredCookies() throws IOException {
+		// Given
+		Path cookieFile = tempDir.resolve("expired_cookies.txt");
+		String content = """
+				# Netscape HTTP Cookie File
+				.example.com\tTRUE\t/\tTRUE\t1234567890\texpired_cookie\told_value
+				.example.com\tTRUE\t/api\tFALSE\t9999999999\tvalid_cookie\tvalid_value
+				""";
+		Files.writeString(cookieFile, content);
+
+		// When
+		List<Cookie> cookies = NetscapeCookieParser.parseFromFile(cookieFile);
+
+		// Then - expired cookie should be skipped, only valid cookie parsed
+		assertThat(cookies).hasSize(1);
+		assertThat(cookies.get(0).name).isEqualTo("valid_cookie");
 	}
 
 }

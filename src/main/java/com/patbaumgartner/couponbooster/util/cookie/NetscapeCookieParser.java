@@ -166,6 +166,7 @@ public final class NetscapeCookieParser {
 	 * Parses the expiration timestamp from the Netscape cookie format.
 	 * @param expirationStr the expiration string (Unix timestamp in seconds)
 	 * @return the expiration as a double (Unix timestamp), or -1 if invalid/expired
+	 * @throws CookieParseException if the cookie is expired
 	 */
 	private static double parseExpiration(String expirationStr) {
 		try {
@@ -179,8 +180,8 @@ public final class NetscapeCookieParser {
 			// Check if the cookie is already expired
 			long currentTimeSeconds = System.currentTimeMillis() / 1000;
 			if (expirationSeconds < currentTimeSeconds) {
-				log.debug("Cookie has expired (expiration: {}, current: {})", expirationSeconds, currentTimeSeconds);
-				// Return the expiration anyway - let Playwright decide whether to use it
+				throw new CookieParseException("Cookie has expired (expiration: " + expirationSeconds + ", current: "
+						+ currentTimeSeconds + ")");
 			}
 
 			return (double) expirationSeconds;
