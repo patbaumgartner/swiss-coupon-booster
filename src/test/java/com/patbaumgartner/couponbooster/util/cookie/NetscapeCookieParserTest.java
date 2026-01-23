@@ -93,7 +93,7 @@ class NetscapeCookieParserTest {
 	}
 
 	@Test
-	void parseFromFile_withValidFile_shouldParseAllCookies() throws IOException {
+	void parseFromFile_withValidFile_shouldParseAllCookies() throws Exception {
 		// Given
 		Path cookieFile = tempDir.resolve("cookies.txt");
 		String content = """
@@ -114,7 +114,7 @@ class NetscapeCookieParserTest {
 	}
 
 	@Test
-	void parseFromFile_withEmptyFile_shouldReturnEmptyList() throws IOException {
+	void parseFromFile_withEmptyFile_shouldReturnEmptyList() throws Exception {
 		// Given
 		Path cookieFile = tempDir.resolve("empty_cookies.txt");
 		Files.writeString(cookieFile, "# Only comments\n\n");
@@ -127,7 +127,7 @@ class NetscapeCookieParserTest {
 	}
 
 	@Test
-	void parseFromFile_withMixedValidAndInvalidLines_shouldParseValidOnes() throws IOException {
+	void parseFromFile_withMixedValidAndInvalidLines_shouldParseValidOnes() throws Exception {
 		// Given
 		Path cookieFile = tempDir.resolve("mixed_cookies.txt");
 		String content = """
@@ -219,7 +219,7 @@ class NetscapeCookieParserTest {
 	}
 
 	@Test
-	void parseFromFile_withExpiredCookie_shouldSkipExpiredCookies() throws IOException {
+	void parseFromFile_withExpiredCookie_shouldSkipExpiredCookies() throws Exception {
 		// Given
 		Path cookieFile = tempDir.resolve("expired_cookies.txt");
 		String content = """

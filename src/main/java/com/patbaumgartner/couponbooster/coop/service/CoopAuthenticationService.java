@@ -1,10 +1,13 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
 import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.TimeoutError;
+import com.microsoft.playwright.options.ColorScheme;
 import com.microsoft.playwright.options.Cookie;
+import com.microsoft.playwright.options.Geolocation;
 import com.microsoft.playwright.options.LoadState;
 import com.patbaumgartner.couponbooster.coop.properties.CoopPlaywrightProperties;
 import com.patbaumgartner.couponbooster.coop.properties.CoopSelectorsProperties;
@@ -142,7 +145,9 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 				if (!existingCookies.isEmpty()) {
 					context.clearCookies();
-					log.debug("Cleared {} existing cookies to ensure clean login", existingCookies.size());
+					log.atDebug()
+						.addArgument(() -> existingCookies.size())
+						.log("Cleared {} existing cookies to ensure clean login");
 
 					if (datadomeCookieOpt.isPresent()) {
 						context.addCookies(Collections.singletonList(datadomeCookieOpt.get()));
@@ -179,13 +184,13 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 		return new Browser.NewContextOptions().setViewportSize(1920, 1080)
 			.setLocale("de-CH")
 			.setTimezoneId("Europe/Zurich")
-			.setPermissions(java.util.List.of("geolocation", "notifications"))
-			.setGeolocation(new com.microsoft.playwright.options.Geolocation(47.3769, 8.5417)) // Zurich
-																								// coordinates
+			.setPermissions(List.of("geolocation", "notifications"))
+			.setGeolocation(new Geolocation(47.3769, 8.5417)) // Zurich
+																// coordinates
 			.setDeviceScaleFactor(1.0)
 			.setIsMobile(false)
 			.setHasTouch(false)
-			.setColorScheme(com.microsoft.playwright.options.ColorScheme.LIGHT);
+			.setColorScheme(ColorScheme.LIGHT);
 	}
 
 	private void validateUserCredentials() {
@@ -289,7 +294,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	 * previously obtained valid cookies.
 	 * @param context the browser context to add cookies to
 	 */
-	private void loadCookiesFromFileIfConfigured(com.microsoft.playwright.BrowserContext context) {
+	private void loadCookiesFromFileIfConfigured(BrowserContext context) {
 		String cookiesFilePath = browserConfiguration.cookiesFilePath();
 
 		if (cookiesFilePath == null || cookiesFilePath.isBlank()) {
@@ -307,7 +312,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 			log.info("Loading cookies from file: {}", cookiesFilePath);
 			List<Cookie> cookies = NetscapeCookieParser.parseFromFile(cookiesPath);
 			context.addCookies(cookies);
-			log.info("Successfully loaded {} cookies from file", cookies.size());
+			log.atInfo().addArgument(() -> cookies.size()).log("Successfully loaded {} cookies from file");
 
 			if (log.isDebugEnabled()) {
 				cookies.forEach(c -> log.debug("Loaded cookie: {} = {} (domain: {})", c.name, c.value, c.domain));

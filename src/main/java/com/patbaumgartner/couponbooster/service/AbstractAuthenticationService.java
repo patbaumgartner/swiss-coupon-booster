@@ -7,6 +7,8 @@ import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
+
 /**
  * Abstract base class for authentication services using Playwright.
  * <p>
@@ -67,7 +69,7 @@ public abstract class AbstractAuthenticationService implements AuthenticationSer
 		}
 	}
 
-	private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	/**
 	 * Checks if a string is null or empty/blank.

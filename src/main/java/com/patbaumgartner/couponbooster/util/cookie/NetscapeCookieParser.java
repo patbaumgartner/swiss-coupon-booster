@@ -85,7 +85,7 @@ public final class NetscapeCookieParser {
 					}
 				}
 				catch (CookieParseException e) {
-					log.warn("Failed to parse cookie at line {}: {}", lineNumber, e.getMessage());
+					log.error("Failed to parse cookie at line {}: {}", lineNumber, e.getMessage(), e);
 					// Continue parsing other cookies
 				}
 			}
