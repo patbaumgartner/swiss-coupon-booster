@@ -63,7 +63,7 @@
     <rewrite-logging-frameworks.version>3.24.0</rewrite-logging-frameworks.version>
     <rewrite-maven-plugin.version>6.32.0</rewrite-maven-plugin.version>
     <rewrite-spring.version>0.26.1</rewrite-spring.version>
-    <rewrite-static-analysis.version>2.28.0</rewrite-static-analysis.version>
+    <rewrite-static-analysis.version>2.29.0</rewrite-static-analysis.version>
     <rewrite-testing-frameworks.version>3.29.0</rewrite-testing-frameworks.version>
 
     <!-- Coverage & Quality Thresholds -->
