@@ -325,7 +325,7 @@ jobs:
         name: release-packages-${{ needs.validate-release.outputs.version }}
 
     - name: Upload to GitHub Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: |
           swiss-coupon-booster-*.tar.gz
