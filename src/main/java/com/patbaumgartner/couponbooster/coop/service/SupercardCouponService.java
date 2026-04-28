@@ -31,7 +31,8 @@ import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
- * Service for managing Coop Supercard digital coupons (bons) through the Coop API.
+ * Service for managing Coop Supercard digital coupons (bons) through the Coop
+ * API.
  * <p>
  * This service handles the entire lifecycle of coupon management, including:
  * <ul>
@@ -40,7 +41,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
  * <li>Deactivating currently active coupons to free up slots.</li>
  * <li>Activating new, eligible coupons based on a predefined filter.</li>
  * </ul>
- * It interacts directly with the Coop Supercard web API using a {@link RestClient}.
+ * It interacts directly with the Coop Supercard web API using a
+ * {@link RestClient}.
  *
  * @see CouponService
  * @see SupercardProperties
@@ -58,10 +60,14 @@ public class SupercardCouponService extends AbstractCouponService {
 
 	/**
 	 * Creates a new SuperCard coupon service.
-	 * @param restClientBuilder Builder for creating the {@link RestClient} instance.
-	 * @param objectMapper Jackson object mapper for JSON serialization/deserialization.
-	 * @param supercardProperties Configuration properties for SuperCard API endpoints and
-	 * browser settings.
+	 * 
+	 * @param restClientBuilder   Builder for creating the {@link RestClient}
+	 *                            instance.
+	 * @param objectMapper        Jackson object mapper for JSON
+	 *                            serialization/deserialization.
+	 * @param supercardProperties Configuration properties for SuperCard API
+	 *                            endpoints and
+	 *                            browser settings.
 	 */
 	public SupercardCouponService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
 			SupercardProperties supercardProperties) {
@@ -84,9 +90,10 @@ public class SupercardCouponService extends AbstractCouponService {
 	 * <li>Activates the filtered coupons.</li>
 	 * <li>Fetches the final list of coupons to confirm activation.</li>
 	 * </ol>
+	 * 
 	 * @param sessionCookies authentication cookies from browser session
-	 * @param userAgent the user agent of the browser
-	 * @param language the language of the browser
+	 * @param userAgent      the user agent of the browser
+	 * @param language       the language of the browser
 	 * @return result containing activation statistics and coupon details
 	 */
 	@Override
@@ -114,39 +121,39 @@ public class SupercardCouponService extends AbstractCouponService {
 
 			// Deactivate all ACTIVE digital coupons
 			List<DigitalCoupon> activeCoupons = digitalCoupons.stream()
-				.filter(item -> "ACTIVE".equals(item.status()))
-				.toList();
+					.filter(item -> "ACTIVE".equals(item.status()))
+					.toList();
 			deactivateDigitalCoupons(activeCoupons, webapiBearerToken, userAgent, language);
 
 			// Activate all OPEN digital coupons
 			digitalCoupons = fetchDigitalCoupons(webapiBearerToken, userAgent, language);
 			List<DigitalCoupon> inactiveCoupons = Stream
-				.concat(digitalCoupons.stream().filter(item -> item.textDiscountAmount().contains("5 Rappen")),
-						digitalCoupons.stream()
-							.filter(item -> "OPEN".equals(item.status()))
-							.filter(this::filterProductTypes)
-							.filter(item -> "retail".equals(item.shop())))
-				.limit(20)
-				.toList();
+					.concat(digitalCoupons.stream().filter(item -> item.textDiscountAmount().contains("5 Rappen")),
+							digitalCoupons.stream()
+									.filter(item -> "OPEN".equals(item.status()))
+									.filter(this::filterProductTypes)
+									.filter(item -> "retail".equals(item.shop())))
+					.limit(20)
+					.toList();
 
 			activateDigitalCoupons(inactiveCoupons, webapiBearerToken, userAgent, language);
 
 			digitalCoupons = fetchDigitalCoupons(webapiBearerToken, userAgent, language);
 			List<CouponDetail> activationResults = digitalCoupons.stream()
-				.filter(item -> "ACTIVE".equals(item.status()))
-				.map(item -> new CouponDetail(item.textDescription(), item.code(), true, item.textDiscountAmount()))
-				.toList();
+					.filter(item -> "ACTIVE".equals(item.status()))
+					.map(item -> new CouponDetail(item.textDescription(), item.code(), true, item.textDiscountAmount()))
+					.toList();
 			int successfulActivations = activationResults.size();
 			int failedActivations = digitalCoupons.size() - successfulActivations;
 
 			logActivationSummary(successfulActivations, failedActivations, digitalCoupons.size());
 
 			return new CouponActivationResult(successfulActivations, failedActivations, activationResults);
-		}
-		catch (Exception exception) {
+		} catch (Exception exception) {
 			log.error("Coupon activation process failed unexpectedly: {}", exception.getMessage(), exception);
 			return new CouponActivationResult(0, 1, List
-				.of(new CouponDetail("System Error", "unknown", false, "Process failed: " + exception.getMessage())));
+					.of(new CouponDetail("System Error", "unknown", false,
+							"Process failed: " + exception.getMessage())));
 		}
 
 	}
@@ -155,25 +162,25 @@ public class SupercardCouponService extends AbstractCouponService {
 	 * Extracts the JWT (JSON Web Token) from the Supercard configuration endpoint.
 	 * <p>
 	 * This token is required for all subsequent API calls to manage coupons.
-	 * @param sessionCookies The list of browser cookies from an authenticated session.
+	 * 
+	 * @param sessionCookies The list of browser cookies from an authenticated
+	 *                       session.
 	 * @return The extracted JWT token as a String.
 	 * @throws CouponBoosterException if the API call fails or returns an unexpected
-	 * status.
+	 *                                status.
 	 */
 	public String extractJwtToken(List<Cookie> sessionCookies, String userAgent, String language) {
 		String cookieHeader = buildCookieHeader(sessionCookies);
 
 		ResponseEntity<String> configResponse = apiClient.get()
-			.uri(supercardProperties.urls().configUrl())
-			.header(HttpHeaders.USER_AGENT, userAgent)
-			.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-			.accept(APPLICATION_JSON)
-			.header(USER_AGENT, userAgent)
-			.header(ACCEPT_LANGUAGE, language)
-			.header(COOKIE, cookieHeader)
-			.header(REFERER, supercardProperties.urls().configUrlReferer())
-			.retrieve()
-			.toEntity(String.class);
+				.uri(supercardProperties.urls().configUrl())
+				.accept(APPLICATION_JSON)
+				.header(USER_AGENT, userAgent)
+				.header(ACCEPT_LANGUAGE, language)
+				.header(COOKIE, cookieHeader)
+				.header(REFERER, supercardProperties.urls().configUrlReferer())
+				.retrieve()
+				.toEntity(String.class);
 
 		if (configResponse.getStatusCode() != HttpStatus.OK
 				|| configResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
@@ -191,14 +198,14 @@ public class SupercardCouponService extends AbstractCouponService {
 	private List<DigitalCoupon> fetchDigitalCoupons(String webapiBearerToken, String userAgent, String language) {
 
 		ResponseEntity<String> collectionResponse = apiClient.get()
-			.uri(supercardProperties.urls().couponsUrl())
-			.header(HttpHeaders.USER_AGENT, userAgent)
-			.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-			.accept(APPLICATION_JSON)
-			.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
-			.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
-			.retrieve()
-			.toEntity(String.class);
+				.uri(supercardProperties.urls().couponsUrl())
+				.header(HttpHeaders.USER_AGENT, userAgent)
+				.header(HttpHeaders.ACCEPT_LANGUAGE, language)
+				.accept(APPLICATION_JSON)
+				.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
+				.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
+				.retrieve()
+				.toEntity(String.class);
 
 		if (collectionResponse.getStatusCode() != HttpStatus.OK
 				|| collectionResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
@@ -231,7 +238,7 @@ public class SupercardCouponService extends AbstractCouponService {
 					}
 				}
 
-				LocalDateTime endDate = LocalDateTime.parse(coupon.path("endDate").asText(),
+				LocalDateTime endDate = LocalDateTime.parse(coupon.path("endDate").asString(),
 						DateTimeFormatter.ISO_DATE_TIME);
 
 				digitalCouponCollection.add(new DigitalCoupon(code, status, shop, isNew, isRecommendation,
@@ -265,16 +272,16 @@ public class SupercardCouponService extends AbstractCouponService {
 		}
 
 		ResponseEntity<String> activationResponse = apiClient.put()
-			.uri(supercardProperties.urls().couponsDeactivationUrl())
-			.header(HttpHeaders.USER_AGENT, userAgent)
-			.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-			.accept(APPLICATION_JSON)
-			.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
-			.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
-			.contentType(APPLICATION_JSON)
-			.body(objectMapper.writeValueAsString(new DigitalCouponCollection(couponCodes)))
-			.retrieve()
-			.toEntity(String.class);
+				.uri(supercardProperties.urls().couponsDeactivationUrl())
+				.header(HttpHeaders.USER_AGENT, userAgent)
+				.header(HttpHeaders.ACCEPT_LANGUAGE, language)
+				.accept(APPLICATION_JSON)
+				.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
+				.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
+				.contentType(APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(new DigitalCouponCollection(couponCodes)))
+				.retrieve()
+				.toEntity(String.class);
 
 		if (activationResponse.getStatusCode() != HttpStatus.OK
 				|| activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
@@ -293,16 +300,16 @@ public class SupercardCouponService extends AbstractCouponService {
 		}
 
 		ResponseEntity<String> activationResponse = apiClient.put()
-			.uri(supercardProperties.urls().couponsActivationUrl())
-			.header(HttpHeaders.USER_AGENT, userAgent)
-			.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-			.accept(APPLICATION_JSON)
-			.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
-			.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
-			.contentType(APPLICATION_JSON)
-			.body(objectMapper.writeValueAsString(new DigitalCouponCollection(couponCodes)))
-			.retrieve()
-			.toEntity(String.class);
+				.uri(supercardProperties.urls().couponsActivationUrl())
+				.header(HttpHeaders.USER_AGENT, userAgent)
+				.header(HttpHeaders.ACCEPT_LANGUAGE, language)
+				.accept(APPLICATION_JSON)
+				.header(AUTHORIZATION, "Bearer " + webapiBearerToken)
+				.header(X_CLIENT_ID, X_CLIENT_ID_VALUE)
+				.contentType(APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(new DigitalCouponCollection(couponCodes)))
+				.retrieve()
+				.toEntity(String.class);
 
 		if (activationResponse.getStatusCode() != HttpStatus.OK
 				|| activationResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
