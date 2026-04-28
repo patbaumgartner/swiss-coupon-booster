@@ -32,12 +32,10 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.CookieN
 import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.*;
 
 /**
- * {@link AuthenticationService} implementation for Coop Supercard using
- * Playwright for
+ * {@link AuthenticationService} implementation for Coop Supercard using Playwright for
  * browser automation.
  * <p>
- * This service handles the entire authentication flow for the Coop website,
- * including:
+ * This service handles the entire authentication flow for the Coop website, including:
  * <ul>
  * <li>Navigating to the login page.</li>
  * <li>Handling cookie consent dialogs.</li>
@@ -45,8 +43,7 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.
  * <li>Submitting the login form.</li>
  * <li>Extracting session cookies upon successful authentication.</li>
  * </ul>
- * It is highly configurable through properties for user credentials, Playwright
- * settings,
+ * It is highly configurable through properties for user credentials, Playwright settings,
  * and element selectors.
  *
  * @see CoopUserProperties
@@ -72,18 +69,13 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	private final PlaywrightProvider playwrightProvider;
 
 	/**
-	 * Constructs a new {@code CoopAuthenticationService} with the specified
-	 * dependencies.
-	 * 
-	 * @param userCredentials      the user's login credentials (email and password)
-	 * @param browserConfiguration the configuration for the Playwright browser
-	 *                             instance
-	 * @param elementSelectors     the CSS selectors for locating elements on the
-	 *                             page
-	 * @param browserCreator       the factory for creating Playwright browser
-	 *                             instances
-	 * @param stealthInjector      the injector for DataDome stealth scripts
-	 * @param playwrightProvider   the provider for Playwright instances
+	 * Constructs a new {@code CoopAuthenticationService} with the specified dependencies.
+	 * @param userCredentials the user's login credentials (email and password)
+	 * @param browserConfiguration the configuration for the Playwright browser instance
+	 * @param elementSelectors the CSS selectors for locating elements on the page
+	 * @param browserCreator the factory for creating Playwright browser instances
+	 * @param stealthInjector the injector for DataDome stealth scripts
+	 * @param playwrightProvider the provider for Playwright instances
 	 */
 	public CoopAuthenticationService(CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
@@ -100,9 +92,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	/**
 	 * Performs the authentication flow for the Coop website.
-	 * 
 	 * @return an {@link AuthenticationResult} containing the session cookies if
-	 *         successful, or an error message if the authentication fails.
+	 * successful, or an error message if the authentication fails.
 	 */
 	@Override
 	public AuthenticationResult performAuthentication() {
@@ -111,7 +102,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 		try {
 			validateUserCredentials();
 			return executeAuthenticationFlow(startTime);
-		} catch (Exception authenticationException) {
+		}
+		catch (Exception authenticationException) {
 			var executionDuration = System.currentTimeMillis() - startTime;
 			log.error("Authentication failed: {}", authenticationException.getMessage(), authenticationException);
 			return AuthenticationResult.failed(authenticationException.getMessage(), executionDuration);
@@ -148,14 +140,14 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 				// DataDome cookie to bypass the captcha.
 				var existingCookies = context.cookies();
 				var datadomeCookieOpt = existingCookies.stream()
-						.filter(c -> DATADOME_COOKIE.equals(c.name))
-						.findFirst();
+					.filter(c -> DATADOME_COOKIE.equals(c.name))
+					.findFirst();
 
 				if (!existingCookies.isEmpty()) {
 					context.clearCookies();
 					log.atDebug()
-							.addArgument(() -> existingCookies.size())
-							.log("Cleared {} existing cookies to ensure clean login");
+						.addArgument(() -> existingCookies.size())
+						.log("Cleared {} existing cookies to ensure clean login");
 
 					if (datadomeCookieOpt.isPresent()) {
 						context.addCookies(Collections.singletonList(datadomeCookieOpt.get()));
@@ -177,8 +169,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	/**
-	 * Creates browser context options with stealth configurations to avoid bot
-	 * detection.
+	 * Creates browser context options with stealth configurations to avoid bot detection.
 	 * <p>
 	 * This method configures the browser context with realistic settings including:
 	 * <ul>
@@ -187,20 +178,19 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	 * <li>Locale and timezone settings</li>
 	 * <li>Permissions for notifications, geolocation, etc.</li>
 	 * </ul>
-	 * 
 	 * @return browser context options with stealth settings
 	 */
 	private Browser.NewContextOptions createStealthBrowserContextOptions() {
 		return new Browser.NewContextOptions().setViewportSize(1920, 1080)
-				.setLocale("de-CH")
-				.setTimezoneId("Europe/Zurich")
-				.setPermissions(List.of("geolocation", "notifications"))
-				.setGeolocation(new Geolocation(47.3769, 8.5417)) // Zurich
-																	// coordinates
-				.setDeviceScaleFactor(1.0)
-				.setIsMobile(false)
-				.setHasTouch(false)
-				.setColorScheme(ColorScheme.LIGHT);
+			.setLocale("de-CH")
+			.setTimezoneId("Europe/Zurich")
+			.setPermissions(List.of("geolocation", "notifications"))
+			.setGeolocation(new Geolocation(47.3769, 8.5417)) // Zurich
+																// coordinates
+			.setDeviceScaleFactor(1.0)
+			.setIsMobile(false)
+			.setHasTouch(false)
+			.setColorScheme(ColorScheme.LIGHT);
 	}
 
 	private void validateUserCredentials() {
@@ -221,10 +211,12 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 				clickLoginLink(page);
 				enterCredentialsAndSubmit(page);
 				log.debug("Login flow completed");
-			} else {
+			}
+			else {
 				log.info("Login link not found - assuming user is already logged in via persistent session");
 			}
-		} catch (Exception flowException) {
+		}
+		catch (Exception flowException) {
 			log.error("Login flow failed: {}", flowException.getMessage(), flowException);
 			throw new CouponBoosterException("Login flow failed: " + flowException.getMessage(), flowException);
 		}
@@ -237,7 +229,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 			// Use a shorter timeout to check for presence
 			loginButton.waitFor(new Locator.WaitForOptions().setTimeout(5000));
 			return loginButton.isVisible();
-		} catch (TimeoutError e) {
+		}
+		catch (TimeoutError e) {
 			return false;
 		}
 	}
@@ -268,7 +261,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 				page.waitForLoadState(LoadState.NETWORKIDLE);
 				log.debug("Accepted cookies");
 			}
-		} catch (TimeoutError e) {
+		}
+		catch (TimeoutError e) {
 			log.debug("Cookie consent dialog not shown or already dismissed; continuing");
 		}
 	}
@@ -292,15 +286,12 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	/**
-	 * Loads cookies from a file if configured in the Playwright properties. This
-	 * method
-	 * reads cookies from a Netscape format cookies.txt file and adds them to the
-	 * browser
+	 * Loads cookies from a file if configured in the Playwright properties. This method
+	 * reads cookies from a Netscape format cookies.txt file and adds them to the browser
 	 * context BEFORE any navigation occurs.
 	 * <p>
 	 * This is particularly useful for bypassing bot detection (DataDome) by reusing
 	 * previously obtained valid cookies.
-	 * 
 	 * @param context the browser context to add cookies to
 	 */
 	private void loadCookiesFromFileIfConfigured(BrowserContext context) {
@@ -326,7 +317,8 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 			if (log.isDebugEnabled()) {
 				cookies.forEach(c -> log.debug("Loaded cookie: {} = {} (domain: {})", c.name, c.value, c.domain));
 			}
-		} catch (Exception exception) {
+		}
+		catch (Exception exception) {
 			log.error("Failed to load cookies from file: {}", exception.getMessage(), exception);
 		}
 	}

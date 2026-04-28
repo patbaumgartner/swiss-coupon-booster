@@ -20,8 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 
 /**
- * {@link AuthenticationService} implementation for Migros accounts using
- * Playwright for
+ * {@link AuthenticationService} implementation for Migros accounts using Playwright for
  * browser automation.
  * <p>
  * This service handles the complete authentication flow for the Migros website,
@@ -29,14 +28,12 @@ import java.util.Objects;
  * <ul>
  * <li>Navigating to the login page.</li>
  * <li>Handling cookie consent dialogs.</li>
- * <li>Entering user credentials (email and password) in a multi-step
- * process.</li>
+ * <li>Entering user credentials (email and password) in a multi-step process.</li>
  * <li>Disabling WebAuthn to ensure the password field is available.</li>
  * <li>Submitting the login form.</li>
  * <li>Extracting session cookies upon successful authentication.</li>
  * </ul>
- * It is highly configurable through properties for user credentials, Playwright
- * settings,
+ * It is highly configurable through properties for user credentials, Playwright settings,
  * and element selectors.
  *
  * @see MigrosUserProperties
@@ -63,15 +60,11 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 	/**
 	 * Constructs a new {@code MigrosAuthenticationService} with the specified
 	 * dependencies.
-	 * 
-	 * @param userCredentials      the user's login credentials (email and password)
-	 * @param browserConfiguration the configuration for the Playwright browser
-	 *                             instance
-	 * @param elementSelectors     the CSS selectors for locating elements on the
-	 *                             page
-	 * @param browserCreator       the factory for creating Playwright browser
-	 *                             instances
-	 * @param webAuthnDisabler     the utility to disable WebAuthn
+	 * @param userCredentials the user's login credentials (email and password)
+	 * @param browserConfiguration the configuration for the Playwright browser instance
+	 * @param elementSelectors the CSS selectors for locating elements on the page
+	 * @param browserCreator the factory for creating Playwright browser instances
+	 * @param webAuthnDisabler the utility to disable WebAuthn
 	 */
 	public MigrosAuthenticationService(MigrosUserProperties userCredentials,
 			MigrosPlaywrightProperties browserConfiguration, MigrosSelectorsProperties elementSelectors,
@@ -87,9 +80,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 
 	/**
 	 * Performs the authentication flow for the Migros website.
-	 * 
 	 * @return an {@link AuthenticationResult} containing the session cookies if
-	 *         successful, or an error message if the authentication fails.
+	 * successful, or an error message if the authentication fails.
 	 */
 	@Override
 	public AuthenticationResult performAuthentication() {
@@ -98,7 +90,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 		try {
 			validateUserCredentials();
 			return executeAuthenticationFlow(startTime);
-		} catch (Exception authenticationException) {
+		}
+		catch (Exception authenticationException) {
 			var executionDuration = System.currentTimeMillis() - startTime;
 			log.error("Authentication process failed: {}", authenticationException.getMessage(),
 					authenticationException);
@@ -156,7 +149,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 			waitForLoginSuccess(page);
 
 			log.debug("Authentication flow completed successfully");
-		} catch (Exception flowException) {
+		}
+		catch (Exception flowException) {
 			log.error("Authentication flow failed: {}", flowException.getMessage(), flowException);
 			throw new CouponBoosterException("Authentication flow failed: " + flowException.getMessage(),
 					flowException);
@@ -181,7 +175,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 				page.waitForLoadState(LoadState.NETWORKIDLE);
 				log.debug("Cookie consent accepted");
 			}
-		} catch (TimeoutError e) {
+		}
+		catch (TimeoutError e) {
 			log.debug("Cookie consent dialog not shown or already dismissed; continuing");
 		}
 	}
@@ -201,7 +196,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 			page.waitForURL(browserConfiguration.passwordUrl() + "*",
 					new Page.WaitForURLOptions().setTimeout(browserConfiguration.timeoutMs()));
 			log.debug("Successfully navigated to password page");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			log.warn("Timed out waiting for password page navigation; continuing anyway: {}", e.getMessage());
 		}
 	}
@@ -227,7 +223,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 		try {
 			page.addInitScript(webAuthnDisabler.getDisableScript());
 			log.debug("WebAuthn disabled");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			log.warn("Failed to disable WebAuthn (non-critical): {}", e.getMessage());
 		}
 	}
