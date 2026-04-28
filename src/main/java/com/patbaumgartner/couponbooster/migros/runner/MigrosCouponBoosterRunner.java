@@ -12,8 +12,10 @@ import org.springframework.stereotype.Component;
 /**
  * {@link ApplicationRunner} for Migros Cumulus coupon activation.
  * <p>
- * This runner orchestrates the authentication and coupon activation process for Migros
- * Cumulus. It is conditionally enabled based on the {@code migros.login.enabled}
+ * This runner orchestrates the authentication and coupon activation process for
+ * Migros
+ * Cumulus. It is conditionally enabled based on the
+ * {@code migros.login.enabled}
  * property.
  *
  * @see com.patbaumgartner.couponbooster.migros.service.MigrosAuthenticationService
@@ -30,21 +32,25 @@ public class MigrosCouponBoosterRunner implements ApplicationRunner {
 	private final CumulusCouponService cumulusCouponService;
 
 	/**
-	 * Constructs a new {@code MigrosCouponBoosterRunner} with the specified services.
+	 * Constructs a new {@code MigrosCouponBoosterRunner} with the specified
+	 * services.
+	 * 
 	 * @param migrosAuthenticationService the service to use for authentication
-	 * @param couponActivationService the service to use for coupon activation
+	 * @param cumulusCouponService        the service to use for coupon activation
 	 */
 	public MigrosCouponBoosterRunner(MigrosAuthenticationService migrosAuthenticationService,
-			CumulusCouponService couponActivationService) {
+			CumulusCouponService cumulusCouponService) {
 		this.migrosAuthenticationService = migrosAuthenticationService;
-		this.cumulusCouponService = couponActivationService;
+		this.cumulusCouponService = cumulusCouponService;
 	}
 
 	/**
 	 * Executes the Migros coupon activation process.
 	 * <p>
-	 * This method first performs authentication and, if successful, proceeds to activate
+	 * This method first performs authentication and, if successful, proceeds to
+	 * activate
 	 * all available Cumulus coupons.
+	 * 
 	 * @param applicationArgs the application arguments
 	 * @throws Exception if an error occurs during the process
 	 */
@@ -68,8 +74,7 @@ public class MigrosCouponBoosterRunner implements ApplicationRunner {
 				log.info("Runner completed - {} coupons activated successfully, {} failed",
 						activationResult.successCount(), activationResult.failureCount());
 			}
-		}
-		else {
+		} else {
 			log.error("Authentication failed: {} (took {}ms)", authenticationResult.statusMessage(),
 					authenticationResult.executionDurationMs());
 		}
