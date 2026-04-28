@@ -17,11 +17,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.time.Duration;
 
 import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.Cookies.AUTHENTICATION_DOMAIN;
 import static com.patbaumgartner.couponbooster.migros.config.MigrosConstants.Cookies.CSRF_COOKIE_NAME;
@@ -38,7 +40,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * <li>Fetching all available and activated digital coupons.</li>
  * <li>Activating all available, inactive coupons.</li>
  * </ul>
- * It interacts directly with the Migros Cumulus web API using a {@link RestClient}.
+ * It interacts directly with the Migros Cumulus web API using a
+ * {@link RestClient}.
  *
  * @see CouponService
  * @see CumulusProperties
@@ -53,9 +56,12 @@ public final class CumulusCouponService extends AbstractCouponService {
 	private final CumulusProperties configuration;
 
 	/**
-	 * Constructs a new {@code CumulusCouponService} with the specified dependencies.
-	 * @param restClientBuilder the builder for creating the {@link RestClient} instance
-	 * @param configuration the configuration properties for the Cumulus API
+	 * Constructs a new {@code CumulusCouponService} with the specified
+	 * dependencies.
+	 * 
+	 * @param restClientBuilder the builder for creating the {@link RestClient}
+	 *                          instance
+	 * @param configuration     the configuration properties for the Cumulus API
 	 */
 	public CumulusCouponService(final RestClient.Builder restClientBuilder, final CumulusProperties configuration) {
 		this.configuration = configuration;
@@ -71,11 +77,12 @@ public final class CumulusCouponService extends AbstractCouponService {
 	 * <li>Filters for inactive coupons.</li>
 	 * <li>Activates each inactive coupon individually.</li>
 	 * </ol>
+	 * 
 	 * @param sessionCookies authentication cookies from browser session
-	 * @param userAgent the user agent of the browser
-	 * @param language the language of the browser
+	 * @param userAgent      the user agent of the browser
+	 * @param language       the language of the browser
 	 * @return a {@link CouponActivationResult} containing activation statistics and
-	 * coupon details
+	 *         coupon details
 	 */
 	@Override
 	public CouponActivationResult activateAllAvailableCoupons(final List<Cookie> sessionCookies, String userAgent,
@@ -98,11 +105,11 @@ public final class CumulusCouponService extends AbstractCouponService {
 
 			var availableCoupons = fetchAvailableCoupons(filteredCookies, userAgent, language);
 			return processCouponActivations(availableCoupons, filteredCookies, userAgent, language);
-		}
-		catch (Exception exception) {
+		} catch (Exception exception) {
 			log.error("Coupon activation process failed unexpectedly: {}", exception.getMessage(), exception);
 			return new CouponActivationResult(0, 1, List
-				.of(new CouponDetail("System Error", "unknown", false, "Process failed: " + exception.getMessage())));
+					.of(new CouponDetail("System Error", "unknown", false,
+							"Process failed: " + exception.getMessage())));
 		}
 	}
 
@@ -114,28 +121,27 @@ public final class CumulusCouponService extends AbstractCouponService {
 			log.debug("Fetching available coupons from API");
 
 			CouponsResponse apiResponse = this.apiClient.get()
-				.uri(configuration.urls().couponsEndpoint())
-				.accept(APPLICATION_JSON)
-				.header(HttpHeaders.USER_AGENT, userAgent)
-				.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-				.header(COOKIE, cookieHeader)
-				.header(REFERER, this.configuration.urls().couponsReferer())
-				.header(CSRF_TOKEN_HEADER, extractCsrfToken(sessionCookies))
-				.retrieve()
-				.body(CouponsResponse.class);
+					.uri(configuration.urls().couponsEndpoint())
+					.accept(APPLICATION_JSON)
+					.header(HttpHeaders.USER_AGENT, userAgent)
+					.header(HttpHeaders.ACCEPT_LANGUAGE, language)
+					.header(COOKIE, cookieHeader)
+					.header(REFERER, this.configuration.urls().couponsReferer())
+					.header(CSRF_TOKEN_HEADER, extractCsrfToken(sessionCookies))
+					.retrieve()
+					.body(CouponsResponse.class);
 
 			if (apiResponse == null) {
 				return List.of();
 			}
 
 			return Stream.of(apiResponse.available(), apiResponse.activated())
-				.filter(Objects::nonNull)
-				.flatMap(List::stream)
-				.filter(Objects::nonNull)
-				.map(this::mapToCouponInfo)
-				.toList();
-		}
-		catch (Exception exception) {
+					.filter(Objects::nonNull)
+					.flatMap(List::stream)
+					.filter(Objects::nonNull)
+					.map(this::mapToCouponInfo)
+					.toList();
+		} catch (Exception exception) {
 			log.error("Failed to fetch coupons from API: {}", exception.getMessage(), exception);
 			throw new CouponBoosterException("Failed to fetch coupons", exception);
 		}
@@ -164,9 +170,11 @@ public final class CumulusCouponService extends AbstractCouponService {
 			return new CouponActivationResult(0, 0, List.of());
 		}
 
-		var activationResults = inactiveCoupons.stream()
-			.map(coupon -> activateSingleCoupon(coupon.id(), sessionCookies, userAgent, language))
-			.toList();
+		var activationResults = inactiveCoupons.stream().map(coupon -> {
+			CouponDetail result = activateSingleCoupon(coupon.id(), sessionCookies, userAgent, language);
+			applyInterRequestDelay();
+			return result;
+		}).toList();
 
 		int successfulActivations = (int) activationResults.stream().filter(CouponDetail::success).count();
 		int failedActivations = activationResults.size() - successfulActivations;
@@ -190,18 +198,17 @@ public final class CumulusCouponService extends AbstractCouponService {
 			String csrfToken = extractCsrfToken(sessionCookies);
 
 			var activationRequest = this.apiClient.post()
-				.uri(configuration.urls().activationEndpoint())
-				.header(HttpHeaders.USER_AGENT, userAgent)
-				.header(HttpHeaders.ACCEPT_LANGUAGE, language)
-				.header(ACCEPT, APPLICATION_JSON_VALUE)
-				.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-				.header(COOKIE, cookieHeader)
-				.header(REFERER, this.configuration.urls().couponsEndpoint());
+					.uri(configuration.urls().activationEndpoint())
+					.header(HttpHeaders.USER_AGENT, userAgent)
+					.header(HttpHeaders.ACCEPT_LANGUAGE, language)
+					.header(ACCEPT, APPLICATION_JSON_VALUE)
+					.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+					.header(COOKIE, cookieHeader)
+					.header(REFERER, this.configuration.urls().couponsEndpoint());
 
 			if (csrfToken != null && !csrfToken.isBlank()) {
 				activationRequest = activationRequest.header(MigrosConstants.HttpHeaders.CSRF_TOKEN_HEADER, csrfToken);
-			}
-			else {
+			} else {
 				log.warn("CSRF token not found in session cookies, proceeding without token");
 			}
 
@@ -210,27 +217,47 @@ public final class CumulusCouponService extends AbstractCouponService {
 			if (apiResponse.getStatusCode().is2xxSuccessful()) {
 				log.debug("Coupon activation successful: {}", couponId);
 				return new CouponDetail("Coupon", couponId, true, "Activation completed successfully");
-			}
-			else {
+			} else {
 				log.warn("Coupon activation failed for {}: HTTP status {}", couponId,
 						apiResponse.getStatusCode().value());
 				return new CouponDetail("Coupon", couponId, false, "HTTP " + apiResponse.getStatusCode().value());
 			}
-		}
-		catch (HttpClientErrorException exception) {
-			log.error("Failed to activate coupon {}: {}", couponId, exception.getMessage(), exception);
+		} catch (HttpClientErrorException exception) {
+			log.warn("Failed to activate coupon {}: HTTP {} - {}", couponId, exception.getStatusCode().value(),
+					exception.getMessage());
 			return new CouponDetail("Coupon", couponId, false, exception.getMessage());
+		} catch (RestClientException exception) {
+			// Catch transport, server-side and unknown content-type errors so a single
+			// bad coupon never aborts the rest of the batch.
+			log.warn("Activation request failed for coupon {}: {}", couponId, exception.getMessage());
+			return new CouponDetail("Coupon", couponId, false, exception.getMessage());
+		} catch (RuntimeException exception) {
+			log.warn("Unexpected error activating coupon {}: {}", couponId, exception.getMessage());
+			return new CouponDetail("Coupon", couponId, false, exception.getMessage());
+		}
+	}
+
+	private void applyInterRequestDelay() {
+		Duration delay = configuration.api() == null ? null : configuration.api().requestDelay();
+		if (delay == null || delay.isZero() || delay.isNegative()) {
+			return;
+		}
+		try {
+			Thread.sleep(delay.toMillis());
+		} catch (InterruptedException ie) {
+			Thread.currentThread().interrupt();
+			log.debug("Inter-request delay interrupted");
 		}
 	}
 
 	private String extractCsrfToken(final List<Cookie> sessionCookies) {
 		return sessionCookies.stream()
-			.filter(cookie -> CSRF_COOKIE_NAME.equals(cookie.name))
-			.map(cookie -> cookie.value)
-			.filter(value -> value != null && !value.isBlank())
-			.findFirst()
-			.orElseThrow(() -> new CouponBoosterException(
-					"CSRF token '%s' not found or empty in session cookies".formatted(CSRF_COOKIE_NAME)));
+				.filter(cookie -> CSRF_COOKIE_NAME.equals(cookie.name))
+				.map(cookie -> cookie.value)
+				.filter(value -> value != null && !value.isBlank())
+				.findFirst()
+				.orElseThrow(() -> new CouponBoosterException(
+						"CSRF token '%s' not found or empty in session cookies".formatted(CSRF_COOKIE_NAME)));
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

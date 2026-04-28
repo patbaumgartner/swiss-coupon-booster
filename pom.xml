@@ -71,6 +71,14 @@
     <jacoco.line.coverage.minimum>0.80</jacoco.line.coverage.minimum>
     <pitest.coverage.threshold>0</pitest.coverage.threshold>
     <pitest.mutation.threshold>0</pitest.mutation.threshold>
+
+    <!--
+      NVD API key used by OWASP dependency-check. Override via:
+        - command line: -DnvdApiKey=...
+        - environment variable: NVD_API_KEY (Maven exposes env vars as ${env.NVD_API_KEY})
+      Empty by default so the build does not leak credentials and runs without a key (slower).
+    -->
+    <nvdApiKey></nvdApiKey>
   </properties>
 
   <dependencies>
@@ -176,8 +184,8 @@
             <format>ALL</format>
           </formats>
           <suppressionFile>${project.basedir}/.mvn/owasp-suppression.xml</suppressionFile>
-          <!-- NVD API Configuration for enhanced vulnerability data -->
-          <nvdApiKey>583dd667-e2c5-492d-9f1d-dca0c2af2cbf</nvdApiKey>
+          <!-- NVD API Configuration for enhanced vulnerability data. Provide via -DnvdApiKey=... or env var NVD_API_KEY. -->
+          <nvdApiKey>${nvdApiKey}</nvdApiKey>
           <nvdMaxRetryCount>3</nvdMaxRetryCount>
           <nvdApiDelay>2000</nvdApiDelay>
           <!-- Disable analyzers that require external tools not available -->
