@@ -119,7 +119,7 @@ jobs:
 
       - name: Build and Test
         if: ${{ github.event.inputs.skip_tests != 'true' }}
-        run: xvfb-run -a mvn clean verify -ntp
+        run: xvfb-run -a mvn clean verify -ntp -Dmaven.test.failure.ignore=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
@@ -129,6 +129,17 @@ jobs:
         run: mvn clean package -DskipTests -ntp
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: "Test Results – Java ${{ env.JAVA_VERSION }}"
+          path: |
+            coupon-booster/target/surefire-reports/*.xml
+            coupon-booster/target/failsafe-reports/TEST-*.xml
+          reporter: java-junit
+          fail-on-error: true
 
       - name: Upload JAR
         uses: actions/upload-artifact@v7
@@ -259,7 +270,7 @@ jobs:
       - name: Update GitHub Release notes
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
           prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
           generate_release_notes: true
           body: |

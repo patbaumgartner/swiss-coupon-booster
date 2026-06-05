@@ -7,7 +7,7 @@
 [![CI](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java 25](https://img.shields.io/badge/Java-25-blue?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
-[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3120/)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3140/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Docker Hub – coupon-booster](https://img.shields.io/docker/v/patbaumgartner/coupon-booster?label=coupon-booster&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/coupon-booster)
 [![Docker Hub – stealth-service](https://img.shields.io/docker/v/patbaumgartner/stealth-service?label=stealth-service&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/stealth-service)
@@ -92,9 +92,10 @@ swiss-coupon-booster/
 │   ├── pyproject.toml       # uv dependency source + pytest config
 │   ├── uv.lock              # Locked Python dependencies for reproducible installs
 │   └── Dockerfile
-├── docker-compose.yml       # Production — pulls images from Docker Hub
-├── docker-compose.build.yml # Development — builds images from source
-├── .env.example             # Configuration template — copy to .env
+├── docker-compose.yml        # Production — pulls images from Docker Hub
+├── docker-compose.build.yml  # Development — builds images from source
+├── docker-compose.sidecar.yml # Local dev — Spring Boot auto-starts stealth-service only
+├── .env.example              # Configuration template — copy to .env
 └── .github/
     ├── workflows/
     │   ├── ci.yml           # On push / PR: test Java + Python, validate Docker builds

@@ -172,6 +172,7 @@ ci: add concurrency cancellation to CI workflow
 
 - `docker-compose.yml` — **production only**, pulls from Docker Hub.
 - `docker-compose.build.yml` — **development/CI**, builds from source.
+- `docker-compose.sidecar.yml` — **local dev**, Spring Boot Docker Compose integration auto-starts stealth-service only.
 - Never add credentials or secrets to Dockerfiles or Compose files.
 
 ### Branch naming
