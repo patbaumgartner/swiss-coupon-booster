@@ -86,9 +86,6 @@ services:
       # ── Feature toggles ───────────────────────────────────────────────────────
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
-      # ── JVM tuning (optional) ─────────────────────────────────────────────────
-      # Paketo's CNB launcher reads JAVA_TOOL_OPTIONS (not JAVA_OPTS)
-      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:+UseZGC -Xmx512m}"
     volumes:
       - coop-user-data:/data/coop-user-data
       - screenshots:/data/screenshots

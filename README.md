@@ -170,7 +170,7 @@ Run coupon-booster as a long-running Spring app with profile `server`.
 cd coupon-booster
 
 # Profile enables Spring MVC mode + @Scheduled jobs
-SPRING_PROFILES_ACTIVE=server mvn spring-boot:run
+SPRING_PROFILES_ACTIVE=server ./mvnw spring-boot:run
 ```
 
 Default schedule (server profile):
@@ -181,16 +181,10 @@ Default schedule (server profile):
 Startup runners are disabled by default in server profile to avoid duplicate runs.
 Enable one-time boot run explicitly with:
 
-- COOP_STARTUP_RUN_ENABLED=true
-- MIGROS_STARTUP_RUN_ENABLED=true
+- `COOP_STARTUP_RUN_ENABLED=true`
+- `MIGROS_STARTUP_RUN_ENABLED=true`
 
-Override via `.env` or environment variables:
-
-- `COOP_SCHEDULER_CRON`
-- `MIGROS_SCHEDULER_CRON`
-- `COUPONBOOSTER_SCHEDULER_ZONE`
-- `COOP_SCHEDULER_ENABLED`
-- `MIGROS_SCHEDULER_ENABLED`
+Override via `.env` or environment variables — see the [Scheduler](#scheduler-server-profile-only) section in the configuration reference.
 
 ### Option 2: External cron (Linux/NAS)
 
@@ -240,7 +234,7 @@ uv run pytest -v --tb=short
 cd coupon-booster
 
 # First-time: install Playwright Chromium (used by the browser auth fallback)
-mvn exec:java -e \
+./mvnw exec:java -e \
   -Dexec.mainClass="com.microsoft.playwright.CLI" \
   -Dexec.args="install --with-deps"
 
@@ -248,13 +242,13 @@ mvn exec:java -e \
 # The ../.env file at the repo root is loaded automatically via spring.config.import
 # When COOP_AUTH_MODE=sidecar and/or MIGROS_AUTH_MODE=sidecar, Spring Boot
 # auto-starts docker-compose.sidecar.yml (stealth-service only).
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Unit tests only
-mvn test
+./mvnw test
 
 # Full verify: formatting, unit + integration tests, SpotBugs, JaCoCo coverage
-mvn verify
+./mvnw verify
 ```
 
 ---
@@ -272,27 +266,60 @@ Copy `.env.example` to `.env` and fill in the required values.
 | `COOP_USER_EMAIL` | Coop / Supercard e-mail |
 | `COOP_USER_PASSWORD` | Coop / Supercard password |
 
-### Optional
+### Auth modes
 
 | Variable | Default | Description |
 |---|---|---|
-| `COOP_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
-| `MIGROS_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
-| `COOP_STARTUP_RUN_ENABLED` | `true` | Run Coop once at application startup |
-| `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
-| `VERSION` | `latest` | Docker Hub image tag to pull |
-| `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
-| `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
-| `STEALTH_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
-| `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
-| `JAVA_OPTS` | `-XX:+UseZGC -Xmx512m` | JVM flags for coupon-booster |
-
-### Auth modes
+| `COOP_AUTH_MODE` | `sidecar` | `sidecar` (Docker/prod) or `browser` (local dev) |
+| `MIGROS_AUTH_MODE` | `sidecar` | `sidecar` (Docker/prod) or `browser` (local dev) |
 
 | Mode | When to use |
 |---|---|
-| `browser` **(local dev default)** | Login via Java Playwright directly. No sidecar required. Suitable for `mvn spring-boot:run` on a developer machine. May be challenged by DataDome on non-residential IPs. |
-| `sidecar` **(Docker / production)** | Login delegated to `stealth-service`. Uses Patchright + Xvfb to bypass DataDome bot detection. Set via `COOP_AUTH_MODE=sidecar` / `MIGROS_AUTH_MODE=sidecar` — both Docker Compose files do this automatically. |
+| `sidecar` **(Docker / production default)** | Login delegated to `stealth-service`. Uses Patchright + Xvfb to bypass DataDome. Both Docker Compose files default to this. Also used with `mvn spring-boot:run` — Spring Boot auto-starts `docker-compose.sidecar.yml`. |
+| `browser` **(local dev fallback)** | Login via Java Playwright directly. No sidecar required. Suitable for `mvn spring-boot:run` on a developer machine. May be challenged by DataDome on non-residential IPs. |
+
+### Feature toggles
+
+| Variable | Default | Description |
+|---|---|---|
+| `COOP_STARTUP_RUN_ENABLED` | `true` | Run Coop once at application startup |
+| `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
+
+### Scheduler (server profile only)
+
+Activate with `SPRING_PROFILES_ACTIVE=server` to run as a long-lived Spring app with built-in daily jobs.
+
+| Variable | Default | Description |
+|---|---|---|
+| `COOP_SCHEDULER_ENABLED` | `true` | Enable/disable the Coop scheduler |
+| `MIGROS_SCHEDULER_ENABLED` | `true` | Enable/disable the Migros scheduler |
+| `COOP_SCHEDULER_CRON` | `0 0 6 * * *` | Cron expression for Coop (daily 06:00) |
+| `MIGROS_SCHEDULER_CRON` | `0 10 6 * * *` | Cron expression for Migros (daily 06:10) |
+| `COUPONBOOSTER_SCHEDULER_ZONE` | `Europe/Zurich` | Timezone for all cron schedules |
+
+### Docker image
+
+| Variable | Default | Description |
+|---|---|---|
+| `VERSION` | `latest` | Docker Hub image tag for both services |
+
+### Stealth sidecar tuning
+
+| Variable | Default | Description |
+|---|---|---|
+| `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
+| `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
+| `STEALTH_TYPING_DELAY_MS` | `80` | Delay between individual keystrokes (ms) |
+| `STEALTH_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
+| `COOP_LOGIN_URL` | _(Supercard SSO URL)_ | Override the Coop login URL |
+| `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
+
+### Playwright settings (browser mode only)
+
+| Variable | Default | Description |
+|---|---|---|
+| `PLAYWRIGHT_HEADLESS` | `true` | Run browser headless (set `false` for debugging) |
+| `COOP_PLAYWRIGHT_USER_DATA_DIR` | _(none)_ | Persist browser session data across runs |
 
 ---
 
