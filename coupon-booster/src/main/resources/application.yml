@@ -27,8 +27,9 @@ coop:
     enabled: true
 
   # Authentication mode:
-  #   browser  - uses Java Playwright directly (local development — no sidecar needed)
-  #   sidecar  - delegates login to the Patchright stealth sidecar (set via COOP_AUTH_MODE=sidecar in Docker)
+  #   browser  - Java Playwright login (default for local mvn spring-boot:run)
+  #   sidecar  - Patchright stealth sidecar login (recommended in Docker/production)
+  # Note: root .env is imported and can override this default via COOP_AUTH_MODE.
   auth:
     mode: "${COOP_AUTH_MODE:browser}"
 
@@ -40,7 +41,7 @@ coop:
     email: "${COOP_USER_EMAIL:}"
     password: "${COOP_USER_PASSWORD:}"
 
-  # Browser automation settings — only used when coop.auth.mode=browser (legacy fallback)
+  # Browser automation settings — only used when coop.auth.mode=browser
   playwright:
     login-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
     typing-delay-ms: 100
@@ -97,8 +98,9 @@ migros:
     enabled: true
 
   # Authentication mode:
-  #   browser  - uses Java Playwright directly (local development — no sidecar needed)
-  #   sidecar  - delegates login to the Patchright stealth sidecar (set via MIGROS_AUTH_MODE=sidecar in Docker)
+  #   browser  - Java Playwright login (default for local mvn spring-boot:run)
+  #   sidecar  - Patchright stealth sidecar login (recommended in Docker/production)
+  # Note: root .env is imported and can override this default via MIGROS_AUTH_MODE.
   auth:
     mode: "${MIGROS_AUTH_MODE:browser}"
 
