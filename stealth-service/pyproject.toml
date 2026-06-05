@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stealth-service"
+version = "0.0.1"
+requires-python = ">=3.14"
+description = "Patchright stealth login sidecar for Swiss Coupon Booster"
+dependencies = [
+	"fastapi==0.136.3",
+	"patchright==1.60.1",
+	"uvicorn[standard]==0.49.0",
+	"pydantic[email]==2.13.4",
+]
+
+[dependency-groups]
+dev = [
+	"anyio==4.13.0",
+	"httpx==0.28.1",
+	"pytest==9.0.3",
+	"pytest-asyncio==1.4.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

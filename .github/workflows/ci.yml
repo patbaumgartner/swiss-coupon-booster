@@ -1,206 +1,168 @@
-name: CI Pipeline
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
+
+# Cancel in-progress runs for the same branch/PR when a new commit is pushed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
   actions: read
   checks: write
   pull-requests: write
-  statuses: write
 
 env:
-  JAVA_VERSION: 25
+  JAVA_VERSION: "25"
+  PYTHON_VERSION: "3.14"
   MAVEN_OPTS: "-Xmx1024m -XX:+UseG1GC"
   PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  # ── Java / Spring Boot ──────────────────────────────────────────────────────
+  java:
+    name: Java – Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    strategy:
-      matrix:
-        java-version: [25]
-      fail-fast: false
+    defaults:
+      run:
+        working-directory: coupon-booster
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up JDK ${{ matrix.java-version }}
-      uses: actions/setup-java@v5
-      with:
-        java-version: ${{ matrix.java-version }}
-        distribution: 'temurin'
-        cache: maven
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
 
-    - name: Cache Maven dependencies
-      uses: actions/cache@v5
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-browsers-${{ hashFiles('coupon-booster/pom.xml') }}
+          restore-keys: playwright-browsers-
 
-    - name: Cache Playwright browsers
-      uses: actions/cache@v5
-      with:
-        path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-        key: playwright-browsers-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          playwright-browsers-
+      - name: Install system dependencies
+        run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends xvfb
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb
+      - name: Install Playwright browsers
+        run: |
+          mvn exec:java -e -ntp \
+            -Dexec.mainClass="com.microsoft.playwright.CLI" \
+            -Dexec.args="install --with-deps"
 
-    - name: Install Playwright browsers
-      run: |
-        mvn exec:java -e -ntp -Dexec.mainClass="com.microsoft.playwright.CLI" -Dexec.args="install --with-deps" || {
-          echo "Playwright installation failed, retrying..."
-          sleep 5
-          mvn exec:java -e -ntp -Dexec.mainClass="com.microsoft.playwright.CLI" -Dexec.args="install --with-deps"
-        }
+      - name: Check code formatting
+        run: mvn spring-javaformat:validate -ntp
 
-    - name: Validate Maven POM
-      run: mvn validate -ntp
+      - name: Build, test & verify
+        run: xvfb-run -a mvn clean verify -ntp -Dmaven.test.failure.ignore=true
+        env:
+          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
-    - name: Check code formatting
-      run: mvn spring-javaformat:validate -ntp
-      continue-on-error: false
+      - name: Publish test results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: "Test Results – Java ${{ env.JAVA_VERSION }}"
+          path: |
+            coupon-booster/target/surefire-reports/*.xml
+            coupon-booster/target/failsafe-reports/TEST-*.xml
+          reporter: java-junit
+          fail-on-error: true
 
-    - name: Build, Test, and Package
-      run: |
-        # The 'verify' phase runs all tests (unit and integration) and packages the application.
-        # We use -Dmaven.test.failure.ignore=true to ensure that all tests run and
-        # reports are generated, even if some tests fail. The job's overall success
-        # will be determined by the test-reporter action.
-        xvfb-run -a mvn clean verify -ntp -Dmaven.test.failure.ignore=true
-      env:
-        MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-        PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report
+          path: coupon-booster/target/site/jacoco/
+          retention-days: 7
+          if-no-files-found: ignore
 
-    - name: Generate Test Report
-      uses: dorny/test-reporter@v3.0.0
-      if: always()
-      with:
-        name: Test Results (Java ${{ matrix.java-version }})
-        path: target/surefire-reports/*.xml,target/failsafe-reports/TEST-*.xml
-        reporter: java-junit
-        fail-on-error: true
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v7
-      if: always()
-      with:
-        name: build-artifacts-java-${{ matrix.java-version }}
-        path: |
-          target/*.jar
-          target/surefire-reports/
-          target/failsafe-reports/
-          target/site/
-          target/dependency-check-report.html
-          target/dependency-check-report.xml
-          target/spotbugsXml.xml
-          target/pit-reports/
-        retention-days: 30
-        if-no-files-found: ignore
-
-  analysis:
-    name: Quality and Security Analysis
+  # ── Python / stealth-service ────────────────────────────────────────────────
+  python:
+    name: Python – Test
     runs-on: ubuntu-latest
-    needs: build-and-test
-    timeout-minutes: 20
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: stealth-service
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 25
-      uses: actions/setup-java@v5
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: maven
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: stealth-service/uv.lock
 
-    - name: Download build artifacts
-      uses: actions/download-artifact@v8
-      with:
-        name: build-artifacts-java-25
-        path: target/
+      - name: Install dependencies (locked)
+        run: uv sync --frozen --all-groups
 
-    - name: Run OpenRewrite analysis
-      run: mvn rewrite:dryRun -ntp
+      - name: Run tests
+        run: uv run pytest -v --tb=short --junit-xml=test-results.xml
 
-    - name: Check POM sorting
-      run: mvn sortpom:verify -Dsort.verifyFail=Stop -ntp
+      - name: Publish test results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: "Test Results – Python ${{ env.PYTHON_VERSION }}"
+          path: stealth-service/test-results.xml
+          reporter: java-junit
+          fail-on-error: true
 
-    - name: Run SpotBugs analysis
-      run: mvn spotbugs:check -ntp
-
-    - name: Run mutation testing
-      run: mvn org.jacoco:jacoco-maven-plugin:prepare-agent pitest:mutationCoverage -ntp
-      env:
-        MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-
-    - name: Run OWASP dependency check
-      run: mvn org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=8 -ntp
-      env:
-        MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-
-    - name: Generate SBOM
-      run: mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -ntp
-
-    - name: Upload SBOM
-      uses: actions/upload-artifact@v7
-      with:
-        name: software-bill-of-materials
-        path: target/bom.xml
-        retention-days: 90
-
-  summary:
-    name: Build Summary
+  # ── Docker build validation ──────────────────────────────────────────────────
+  docker:
+    name: Docker – Build Check
     runs-on: ubuntu-latest
-    needs: [build-and-test, analysis]
-    if: always()
+    timeout-minutes: 30
+    needs: [java, python]
 
     steps:
-    - name: Report build status
-      run: |
-        echo "## 📊 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Job Status" >> $GITHUB_STEP_SUMMARY
-        echo "- **Build and Test**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Quality and Security Analysis**: ${{ needs.analysis.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        # Determine overall status
-        if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
-          echo "### ❌ Pipeline Failed" >> $GITHUB_STEP_SUMMARY
-          echo "The build and test phase failed. Please check the test reports and build logs." >> $GITHUB_STEP_SUMMARY
-          exit 1
-        elif [[ "${{ needs.analysis.result }}" == "failure" ]]; then
-          echo "### ⚠️ Pipeline Completed with Issues" >> $GITHUB_STEP_SUMMARY
-          echo "The build succeeded, but the quality and/or security analysis found issues to address." >> $GITHUB_STEP_SUMMARY
-        else
-          echo "### ✅ Pipeline Successful" >> $GITHUB_STEP_SUMMARY
-          echo "All checks passed successfully!" >> $GITHUB_STEP_SUMMARY
-        fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📁 Available Artifacts" >> $GITHUB_STEP_SUMMARY
-        echo "- Build and analysis reports" >> $GITHUB_STEP_SUMMARY
-        echo "- Packaged JAR file" >> $GITHUB_STEP_SUMMARY
-        echo "- Software Bill of Materials (SBOM)" >> $GITHUB_STEP_SUMMARY
+      - name: Build stealth-service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./stealth-service
+          file: ./stealth-service/Dockerfile
+          push: false
+          tags: patbaumgartner/stealth-service:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build coupon-booster image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./coupon-booster/Dockerfile
+          push: false
+          tags: patbaumgartner/coupon-booster:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
