@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/**
+ * Swiss Coupon Booster application entry point.
+ */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class CouponBoosterApplication {

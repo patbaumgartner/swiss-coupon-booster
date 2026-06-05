@@ -248,7 +248,7 @@
 
     // 18. Prevent detection via Error.stack
     const originalError = Error;
-    Error = function (...args) {
+    const stealthError = function (...args) { // NOSONAR: intentional override of built-in Error to strip stealth-detection stack frames
         const error = new originalError(...args);
 
         if (typeof error?.stack === "string") {
@@ -263,7 +263,8 @@
 
         return error;
     };
-    Error.prototype = originalError.prototype;
+    stealthError.prototype = originalError.prototype;
+    Object.defineProperty(globalThis, "Error", { value: stealthError, writable: true, configurable: true }); // NOSONAR
 
     // 19. Override WebGL vendor/renderer for consistency
     const getParameter = WebGLRenderingContext.prototype.getParameter;

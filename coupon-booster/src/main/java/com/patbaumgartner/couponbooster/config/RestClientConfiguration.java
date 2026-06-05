@@ -11,6 +11,10 @@ import org.springframework.web.client.RestClient;
 import static org.springframework.http.HttpHeaders.ACCEPT_ENCODING;
 import static org.springframework.http.HttpHeaders.CONNECTION;
 
+/**
+ * Configures the default {@link RestClient} with compression headers and a request
+ * logging interceptor.
+ */
 @Configuration
 public class RestClientConfiguration {
 
