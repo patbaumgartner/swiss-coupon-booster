@@ -255,10 +255,9 @@ jobs:
       - name: Tag and push coupon-booster latest
         if: needs.validate-release.outputs.is_prerelease == 'false'
         run: |
-          docker tag \
-            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }} \
-            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest
-          docker push docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest
+          docker buildx imagetools create \
+            --tag docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest \
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}
 
       - name: Extract Docker metadata – stealth-service
         id: meta-stealth
