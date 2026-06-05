@@ -148,6 +148,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -161,12 +168,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build coupon-booster image
+      - name: Build coupon-booster run image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./coupon-booster/Dockerfile
-          push: false
-          tags: patbaumgartner/coupon-booster:ci
+          file: ./coupon-booster/run-image.Dockerfile
+          load: true
+          tags: patbaumgartner/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build coupon-booster image
+        working-directory: coupon-booster
+        run: ./mvnw -B spring-boot:build-image -DskipTests
+        env:
+          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
