@@ -130,7 +130,7 @@ jobs:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 
       - name: Upload JAR
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coupon-booster-jar-${{ needs.validate-release.outputs.version }}
           path: coupon-booster/target/coupon-booster-*.jar
