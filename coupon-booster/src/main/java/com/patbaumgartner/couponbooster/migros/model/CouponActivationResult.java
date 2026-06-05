@@ -10,7 +10,4 @@ public record CouponActivationResult(int successCount, int failureCount, List<Co
 		this.details = details == null ? List.of() : List.copyOf(details);
 	}
 
-	public List<CouponDetail> details() {
-		return details; // Already immutable from constructor
-	}
 }

@@ -132,14 +132,20 @@ public class MigrosStealthAuthenticationService implements AuthenticationService
 			if (cookiesNode.isArray()) {
 				for (JsonNode c : cookiesNode) {
 					var cookie = new Cookie(c.path("name").asString(""), c.path("value").asString(""));
-					cookie.domain = c.path("domain").asString(null);
-					cookie.path = c.path("path").asString("/");
-					cookie.httpOnly = c.path("httpOnly").asBoolean(false);
-					cookie.secure = c.path("secure").asBoolean(false);
-					double exp = c.path("expires").asDouble(-1);
-					if (exp > 0) {
-						cookie.expires = exp;
+					String domain = c.path("domain").asString(null);
+					if (domain != null) {
+						cookie.setDomain(domain);
 					}
+					String path = c.path("path").asString(null);
+					if (path != null) {
+						cookie.setPath(path);
+					}
+					double expires = c.path("expires").asDouble(-1);
+					if (expires > 0) {
+						cookie.setExpires(expires);
+					}
+					cookie.setHttpOnly(c.path("httpOnly").asBoolean(false));
+					cookie.setSecure(c.path("secure").asBoolean(false));
 					cookies.add(cookie);
 				}
 			}

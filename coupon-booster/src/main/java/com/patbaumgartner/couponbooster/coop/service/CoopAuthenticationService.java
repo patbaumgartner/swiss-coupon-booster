@@ -81,7 +81,7 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 	public CoopAuthenticationService(CoopUserProperties userCredentials, CoopPlaywrightProperties browserConfiguration,
 			CoopSelectorsProperties elementSelectors, CoopBrowserFactory browserCreator,
 			DatadomeStealthInjector stealthInjector, PlaywrightProvider playwrightProvider) {
-		super(); // Pass log and SECURE_RANDOM to the superclass
+		super();
 		this.userCredentials = Objects.requireNonNull(userCredentials, "User credentials cannot be null");
 		this.browserConfiguration = Objects.requireNonNull(browserConfiguration,
 				"Browser configuration cannot be null");
