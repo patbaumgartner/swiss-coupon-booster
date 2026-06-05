@@ -1,0 +1,96 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Swiss Coupon Booster – local build compose file
+#
+# Builds both Docker images from source. Use this file for development
+# or to produce the images that are pushed to Docker Hub.
+#
+# Usage
+# ─────
+#   docker compose -f docker-compose.build.yml build        # build only
+#   docker compose -f docker-compose.build.yml up --build   # build and run
+#
+# To run pre-built images from Docker Hub instead, use:
+#   docker compose up
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Stealth login sidecar ───────────────────────────────────────────────────
+  stealth-service:
+    build:
+      context: ./stealth-service
+      dockerfile: Dockerfile
+    image: patbaumgartner/stealth-service:${VERSION:-latest}
+    container_name: stealth-service
+    restart: "no"
+    environment:
+      COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
+      COOP_USER_DATA_DIR: /data/coop-user-data
+      MIGROS_USER_DATA_DIR: /data/migros-user-data
+      SCREENSHOT_DIR: /data/screenshots
+      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      # PROXY_URL: "${PROXY_URL}"
+    volumes:
+      - coop-user-data:/data/coop-user-data
+      - migros-user-data:/data/migros-user-data
+      - screenshots:/data/screenshots
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  # ── Spring Boot coupon booster ───────────────────────────────────────────────
+  coupon-booster:
+    build:
+      # Root context so the Dockerfile can access .git (required by git-commit-id-maven-plugin)
+      context: .
+      dockerfile: coupon-booster/Dockerfile
+    image: patbaumgartner/coupon-booster:${VERSION:-latest}
+    container_name: coupon-booster
+    restart: "no"
+    depends_on:
+      stealth-service:
+        condition: service_healthy
+    environment:
+      MIGROS_USER_EMAIL: "${MIGROS_USER_EMAIL}"
+      MIGROS_USER_PASSWORD: "${MIGROS_USER_PASSWORD}"
+      COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
+      COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
+      COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
+      MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
+      COOP_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
+      PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
+      MIGROS_LOGIN_ENABLED: "${MIGROS_LOGIN_ENABLED:-true}"
+      COOP_LOGIN_ENABLED: "${COOP_LOGIN_ENABLED:-true}"
+      JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
+    volumes:
+      - coop-user-data:/data/coop-user-data
+      - screenshots:/data/screenshots
+    networks:
+      - internal
+
+# ── Named volumes ──────────────────────────────────────────────────────────────
+volumes:
+  coop-user-data:
+    driver: local
+  migros-user-data:
+    driver: local
+  screenshots:
+    driver: local
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  internal:
+    driver: bridge

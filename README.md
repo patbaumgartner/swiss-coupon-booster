@@ -1,118 +1,330 @@
-# Swiss Coupon Booster
+<div align="center">
 
-[![Build Status](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=patbaumgartner_swiss-coupon-booster&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=patbaumgartner_swiss-coupon-booster)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=patbaumgartner_swiss-coupon-booster&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=patbaumgartner_swiss-coupon-booster)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=patbaumgartner_swiss-coupon-booster&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=patbaumgartner_swiss-coupon-booster)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=patbaumgartner_swiss-coupon-booster&metric=coverage)](https://sonarcloud.io/summary/new_code?id=patbaumgartner_swiss-coupon-booster)
+# 🛒 Swiss Coupon Booster
 
-A Spring Boot application that helps you automatically activate all available digital coupons from Switzerland's leading retailers, Migros (Cumulus) and Coop (SuperCard).
+**Automatically activates all available digital coupons for Migros (Cumulus) and Coop (Supercard)**
 
-## About The Project
+[![CI](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Java 25](https://img.shields.io/badge/Java-25-blue?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3120/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Docker Hub – coupon-booster](https://img.shields.io/docker/v/patbaumgartner/coupon-booster?label=coupon-booster&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/coupon-booster)
+[![Docker Hub – stealth-service](https://img.shields.io/docker/v/patbaumgartner/stealth-service?label=stealth-service&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/stealth-service)
 
-This project leverages web automation technology (Microsoft Playwright) to log into your Migros and Coop accounts, discover all available digital coupons, and activate them on your behalf. It saves you the time and hassle of manually checking for and activating each coupon, ensuring you never miss out on potential savings.
+</div>
 
-The application is built with a strong focus on code quality and security, incorporating a comprehensive suite of tools for static analysis, vulnerability scanning, and testing.
+---
 
-### Key Features
+## Table of Contents
 
-- 🎫 Automated coupon discovery and activation for Migros and Coop.
-- 🤖 Browser automation powered by Microsoft Playwright for robust interaction with modern web applications.
-- 📊 Detailed reporting on activated coupons.
-- 🔒 Integrated security vulnerability scanning with OWASP Dependency-Check.
-- 📈 High code coverage and mutation testing (PIT) to ensure reliability.
-- 🎯 Static code analysis with SpotBugs for identifying potential bugs early.
+- [Why this project?](#why-this-project)
+- [How it works](#how-it-works)
+- [Project structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Quick start — Docker Hub](#quick-start--docker-hub-recommended)
+- [Building from source](#building-from-source)
+- [Scheduling](#scheduling)
+- [Local development](#local-development)
+- [Configuration reference](#configuration-reference)
+- [Debug artifacts](#debug-artifacts)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Getting Started
+---
 
-Follow these steps to get a local copy up and running.
+## Why this project?
 
-### Prerequisites
+Both Migros and Coop publish dozens of digital discount coupons every week. Activating them
+manually one by one across their apps or websites is tedious — and easy to forget. This project
+automates the entire process: it logs in, discovers every available coupon, and activates them
+all in a single run. Set it up once on your home server or NAS and let it run on a schedule.
 
-- **Java 25** or higher
-- **Maven 3.6+**
+---
 
-### Installation & Running
+## How it works
 
-1. **Clone the repository:**
-
-    ```sh
-    git clone https://github.com/patbaumgartner/swiss-coupon-booster.git
-    cd swiss-coupon-booster
-    ```
-
-2. **Configure your credentials:**
-    Open the `src/main/resources/application.yml` file and provide your account credentials for Migros and Coop. See the [Configuration](#configuration) section for more details.
-
-3. **Build and run the application:**
-    You can run the application directly using the Spring Boot Maven plugin:
-
-    ```sh
-    mvn spring-boot:run
-    ```
-
-    Alternatively, you can build the project and run the JAR file:
-
-    ```sh
-    mvn clean install
-    java -jar target/swiss-coupon-booster-*.jar
-    ```
-
-## Configuration
-
-The application requires your personal account credentials to be configured in `src/main/resources/application.yml`.
-
-```yaml
-migros:
-  user:
-    email: "${MIGROS_USER_EMAIL}"
-    password: "${MIGROS_USER_PASSWORD}"
-
-coop:
-  user:
-    email: "${COOP_USER_EMAIL}"
-    password: "${COOP_USER_PASSWORD}"
-  playwright:
-    cookiesFilePath: "${COOP_COOKIES_FILE_PATH}"
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      docker compose up                          │
+│                                                                 │
+│  ┌────────────────────────┐      ┌───────────────────────────┐  │
+│  │    stealth-service     │      │      coupon-booster       │  │
+│  │  (Python 3.14/FastAPI) │◄─────│    (Java 25/Spring Boot)  │  │
+│  │                        │      │                           │  │
+│  │  POST /login/coop      │      │  1. Authenticate via      │  │
+│  │  POST /login/migros    │      │     stealth-service       │  │
+│  │                        │      │  2. Fetch available       │  │
+│  │  Patchright + Xvfb     │      │     coupons via REST API  │  │
+│  │  → bypasses DataDome   │      │  3. Activate all coupons  │  │
+│  └────────────────────────┘      └───────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Important:** The application uses regular environment variables (or a `.env` file) for configuration.
+**Why a sidecar?**  
+Both Migros and Coop protect their login pages with [DataDome](https://datadome.co) bot
+detection. A standard headless browser is instantly flagged. The **stealth-service** sidecar
+uses [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — a patched build of
+Chromium that removes all automation fingerprints at the C++ level — running inside a virtual
+Xvfb display. From DataDome's perspective this is indistinguishable from a real user.
 
-### Cookie Configuration for Coop
+> **Home network beats everything.** Swiss residential IPs are treated very differently from
+> cloud or datacenter addresses. Running this on your home server or NAS means you will
+> virtually never see a DataDome challenge — no paid proxy needed.
 
-For the initial authentication, you can optionally provide cookies in Netscape format (the same format used by curl).
+---
 
-**How to provide cookies:**
+## Project structure
 
-1. Export cookies from your browser using an extension like:
-   - "Get cookies.txt LOCALLY" for Chrome/Edge
-   - "cookies.txt" for Firefox
-   
-2. Set the path to the file in your `.env`:
-   ```bash
-   COOP_COOKIES_FILE_PATH=/path/to/your/cookies.txt
-   ```
+```
+swiss-coupon-booster/
+├── coupon-booster/          # Spring Boot application (Java 25 / Maven)
+│   ├── src/
+│   │   ├── main/java/       # Application sources
+│   │   └── test/java/       # Unit + integration tests
+│   ├── pom.xml
+│   └── Dockerfile           # Build context: repo root (needs .git for git info)
+├── stealth-service/         # Patchright login sidecar (Python 3.14 / FastAPI)
+│   ├── main.py              # FastAPI app — POST /login/coop, POST /login/migros, GET /health
+│   ├── test_*.py            # pytest test suite
+│   ├── entrypoint.sh        # Starts Xvfb and uvicorn
+│   ├── pyproject.toml       # uv dependency source + pytest config
+│   ├── uv.lock              # Locked Python dependencies for reproducible installs
+│   └── Dockerfile
+├── docker-compose.yml       # Production — pulls images from Docker Hub
+├── docker-compose.build.yml # Development — builds images from source
+├── .env.example             # Configuration template — copy to .env
+└── .github/
+    ├── workflows/
+    │   ├── ci.yml           # On push / PR: test Java + Python, validate Docker builds
+    │   └── release.yml      # On tag: build, test, push to Docker Hub, publish release
+    └── dependabot.yml       # Automated dependency updates (Maven, pip, Actions)
+```
 
-See [cookies.txt.example](cookies.txt.example) for the format specification.
+---
 
-**Note:** Providing cookies is **optional**. The application is designed to handle bot detection automatically using stealth measures. However, if you experience login issues or captchas, providing cookies can help bypass these checks. On the first successful run, the browser profile is cached locally, reducing the need for cookies in subsequent runs.
+## Prerequisites
 
-## Usage
+| Tool | Version | Notes |
+|---|---|---|
+| Docker | 24+ | With Compose v2 (comes bundled with Docker Desktop) |
+| Git | any | For cloning the repository |
+| Java 25 | JDK 25 | Only for local development without Docker |
+| Python 3.14 | 3.14+ | Only for local development without Docker |
 
-Once the application is running, the coupon activation process is triggered automatically on startup. The application will log its progress to the console, detailing the coupons it finds and activates. After the process is complete, the application will exit.
+---
+
+## Quick start — Docker Hub (recommended)
+
+```sh
+# 1. Clone the repository
+git clone https://github.com/patbaumgartner/swiss-coupon-booster.git
+cd swiss-coupon-booster
+
+# 2. Create and fill in your configuration
+cp .env.example .env
+$EDITOR .env   # set MIGROS_USER_EMAIL, MIGROS_USER_PASSWORD, COOP_USER_EMAIL, COOP_USER_PASSWORD
+
+# 3. Pull the pre-built images and run
+docker compose pull
+docker compose up
+```
+
+`stealth-service` starts first and waits until its health check passes (up to 40 s). Then
+`coupon-booster` authenticates, activates all available coupons, and exits cleanly.
+
+**Pinning a specific release:**
+
+```sh
+VERSION=1.2.0 docker compose up
+```
+
+---
+
+## Building from source
+
+Use `docker-compose.build.yml` when you want to run from local sources (e.g. after making
+changes):
+
+```sh
+# Build both images and start
+docker compose -f docker-compose.build.yml up --build
+
+# Build without starting
+docker compose -f docker-compose.build.yml build
+```
+
+---
+
+## Scheduling
+
+To activate coupons automatically every week, run the containers on a cron schedule.
+
+### With cron (Linux/NAS)
+
+```sh
+# Run every Monday at 07:00
+0 7 * * 1 cd /path/to/swiss-coupon-booster && docker compose pull -q && docker compose up --no-color >> /var/log/coupon-booster.log 2>&1
+```
+
+### With Docker restart policy
+
+The app exits with code `0` when done. Using `restart: on-failure` will not cause it to
+loop. For scheduling, a cron job calling `docker compose up` is the recommended approach.
+
+---
+
+## Local development
+
+### stealth-service (Python)
+
+```sh
+cd stealth-service
+
+# Install uv (if not already installed)
+# https://docs.astral.sh/uv/getting-started/installation/
+
+# Create/update .venv from lockfile (production + dev/test groups)
+uv sync --frozen --all-groups
+
+# Install the Patchright Chromium build
+uv run python -m patchright install chromium
+
+# Run the sidecar (a real display is enough on a desktop machine)
+COOP_USER_DATA_DIR=./coop-user-data \
+MIGROS_USER_DATA_DIR=./migros-user-data \
+  uv run uvicorn main:app --reload --port 8000
+
+# Run the test suite
+uv run pytest -v --tb=short
+```
+
+### coupon-booster (Java)
+
+```sh
+cd coupon-booster
+
+# First-time: install Playwright Chromium (used by the browser auth fallback)
+mvn exec:java -e \
+  -Dexec.mainClass="com.microsoft.playwright.CLI" \
+  -Dexec.args="install --with-deps"
+
+# Run the application
+# The ../.env file at the repo root is loaded automatically via spring.config.import
+mvn spring-boot:run
+
+# Unit tests only
+mvn test
+
+# Full verify: formatting, unit + integration tests, SpotBugs, JaCoCo coverage
+mvn verify
+```
+
+---
+
+## Configuration reference
+
+Copy `.env.example` to `.env` and fill in the required values.
+
+### Required
+
+| Variable | Description |
+|---|---|
+| `MIGROS_USER_EMAIL` | Migros / Cumulus account e-mail |
+| `MIGROS_USER_PASSWORD` | Migros / Cumulus account password |
+| `COOP_USER_EMAIL` | Coop / Supercard e-mail |
+| `COOP_USER_PASSWORD` | Coop / Supercard password |
+
+### Optional
+
+| Variable | Default | Description |
+|---|---|---|
+| `COOP_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
+| `MIGROS_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
+| `MIGROS_LOGIN_ENABLED` | `true` | Enable or disable the Migros flow |
+| `COOP_LOGIN_ENABLED` | `true` | Enable or disable the Coop flow |
+| `VERSION` | `latest` | Docker Hub image tag to pull |
+| `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
+| `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
+| `STEALTH_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
+| `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
+| `JAVA_OPTS` | `-XX:+UseZGC -Xmx512m` | JVM flags for coupon-booster |
+
+### Auth modes
+
+| Mode | When to use |
+|---|---|
+| `browser` **(local dev default)** | Login via Java Playwright directly. No sidecar required. Suitable for `mvn spring-boot:run` on a developer machine. May be challenged by DataDome on non-residential IPs. |
+| `sidecar` **(Docker / production)** | Login delegated to `stealth-service`. Uses Patchright + Xvfb to bypass DataDome bot detection. Set via `COOP_AUTH_MODE=sidecar` / `MIGROS_AUTH_MODE=sidecar` — both Docker Compose files do this automatically. |
+
+---
+
+## Debug artifacts
+
+When a login fails, screenshots and HTML page dumps are saved automatically.
+
+```sh
+# Copy screenshots out of the running (or stopped) container
+docker compose cp stealth-service:/data/screenshots ./debug-screenshots
+ls -la ./debug-screenshots/
+```
+
+Screenshots are also preserved in the `screenshots` Docker volume between runs.
+
+---
+
+## FAQ
+
+**Q: Will this get my account banned?**  
+A: The application activates coupons exactly as a human user would through the normal web
+interface. Both retailers explicitly publish these coupons for customers to use. There is no
+report of any account being penalised for activating their own coupons.
+
+**Q: Do I need a Swiss IP address?**  
+A: You need a residential IP — ideally a Swiss one. DataDome assigns risk scores based on
+IP reputation. Any residential broadband or home server/NAS works well. Cloud VPS addresses
+(AWS, GCP, Hetzner, etc.) will frequently trigger challenges even with Patchright.
+
+**Q: Why does the container need `--shm-size` or similar?**  
+A: The Dockerfiles already configure the correct shared memory settings for Chromium. No
+extra flags are needed with the provided `docker-compose.yml`.
+
+**Q: Can I disable one retailer?**  
+A: Yes. Set `MIGROS_LOGIN_ENABLED=false` or `COOP_LOGIN_ENABLED=false` in your `.env`.
+
+**Q: The login fails with a screenshot showing a CAPTCHA.**  
+A: This almost always means the IP has been flagged. Try running on a different network
+(home broadband vs. VPS). If you must run in a cloud environment, configure a residential
+proxy via the `PROXY_URL` variable.
+
+---
+
+## Docker Hub images
+
+| Image | Description |
+|---|---|
+| [`patbaumgartner/stealth-service`](https://hub.docker.com/r/patbaumgartner/stealth-service) | Python 3.14 / Patchright sidecar |
+| [`patbaumgartner/coupon-booster`](https://hub.docker.com/r/patbaumgartner/coupon-booster) | Java 25 / Spring Boot application |
+
+Images are built and pushed to Docker Hub automatically on every GitHub release via the
+[release workflow](.github/workflows/release.yml).
+
+---
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are very welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
+submitting a pull request.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Quick checklist:
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- All tests pass: `mvn verify` (Java) and `uv run pytest -v --tb=short` (Python)
+- Code is formatted: `mvn spring-javaformat:apply` (Java)
+- New environment variables are documented in `.env.example` and `README.md`
+
+---
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
