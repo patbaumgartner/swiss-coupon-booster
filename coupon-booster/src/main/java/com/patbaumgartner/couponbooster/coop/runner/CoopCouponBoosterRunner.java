@@ -26,7 +26,7 @@ import java.util.Objects;
  * @see com.patbaumgartner.couponbooster.coop.service.SupercardCouponService
  */
 @Component
-@ConditionalOnProperty(value = "coop.login.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(value = "coop.startup-run.enabled", havingValue = "true", matchIfMissing = true)
 public class CoopCouponBoosterRunner implements ApplicationRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(CoopCouponBoosterRunner.class);

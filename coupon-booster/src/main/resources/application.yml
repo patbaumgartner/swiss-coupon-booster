@@ -33,6 +33,8 @@ logging:
 coop:
   login:
     enabled: true
+  startup-run:
+    enabled: "${COOP_STARTUP_RUN_ENABLED:true}"
 
   # Authentication mode:
   #   browser  - Java Playwright login (default for local mvn spring-boot:run)
@@ -104,6 +106,8 @@ supercard:
 migros:
   login:
     enabled: true
+  startup-run:
+    enabled: "${MIGROS_STARTUP_RUN_ENABLED:true}"
 
   # Authentication mode:
   #   browser  - Java Playwright login (default for local mvn spring-boot:run)
