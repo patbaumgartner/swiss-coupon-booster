@@ -111,12 +111,12 @@ async def _handle_cookie_consent(page: Page) -> None:
 
 async def _find_first_visible(page: Page, selectors: tuple[str, ...], timeout_ms: int):
     per_selector_timeout = min(5000, max(1200, timeout_ms // max(len(selectors), 1)))
-    for selector in selectors:
+    for index, selector in enumerate(selectors, start=1):
         locator = page.locator(selector).first
         try:
             await locator.wait_for(timeout=per_selector_timeout)
             if await locator.is_visible():
-                log.debug("Using selector: %s", selector)
+                log.debug("Using selector at index %d of %d", index, len(selectors))
                 return locator
         except Exception:  # noqa: BLE001
             continue
