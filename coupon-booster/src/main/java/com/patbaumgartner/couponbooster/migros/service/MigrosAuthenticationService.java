@@ -2,7 +2,6 @@ package com.patbaumgartner.couponbooster.migros.service;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.LoadState;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
@@ -12,6 +11,7 @@ import com.patbaumgartner.couponbooster.migros.properties.MigrosUserProperties;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
+import com.patbaumgartner.couponbooster.service.PlaywrightProvider;
 import com.patbaumgartner.couponbooster.util.WebAuthnDisabler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +61,8 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 
 	private final WebAuthnDisabler webAuthnDisabler;
 
+	private final PlaywrightProvider playwrightProvider;
+
 	/**
 	 * Constructs a new {@code MigrosAuthenticationService} with the specified
 	 * dependencies.
@@ -69,17 +71,19 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 	 * @param elementSelectors the CSS selectors for locating elements on the page
 	 * @param browserCreator the factory for creating Playwright browser instances
 	 * @param webAuthnDisabler the utility to disable WebAuthn
+	 * @param playwrightProvider the provider for Playwright instances
 	 */
 	public MigrosAuthenticationService(MigrosUserProperties userCredentials,
 			MigrosPlaywrightProperties browserConfiguration, MigrosSelectorsProperties elementSelectors,
-			MigrosBrowserFactory browserCreator, WebAuthnDisabler webAuthnDisabler) {
-		super();
+			MigrosBrowserFactory browserCreator, WebAuthnDisabler webAuthnDisabler,
+			PlaywrightProvider playwrightProvider) {
 		this.userCredentials = Objects.requireNonNull(userCredentials, "User credentials cannot be null");
 		this.browserConfiguration = Objects.requireNonNull(browserConfiguration,
 				"Browser configuration cannot be null");
 		this.elementSelectors = Objects.requireNonNull(elementSelectors, "Element selectors cannot be null");
 		this.browserCreator = Objects.requireNonNull(browserCreator, "Browser factory cannot be null");
 		this.webAuthnDisabler = Objects.requireNonNull(webAuthnDisabler, "WebAuthn disabler cannot be null");
+		this.playwrightProvider = Objects.requireNonNull(playwrightProvider, "Playwright provider cannot be null");
 	}
 
 	/**
@@ -104,7 +108,7 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	private AuthenticationResult executeAuthenticationFlow(long startTime) {
-		try (var playwright = Playwright.create()) {
+		try (var playwright = playwrightProvider.create()) {
 
 			try (var browser = browserCreator.createBrowser(playwright); var context = browser.newContext()) {
 				var page = context.newPage();
@@ -118,7 +122,6 @@ public class MigrosAuthenticationService extends AbstractAuthenticationService {
 					log.debug("Browser language: {}", browserLanguage);
 				}
 
-				disableWebAuthn(page);
 				performLoginFlow(page);
 
 				var cookies = context.cookies();

@@ -30,6 +30,7 @@ env:
 permissions:
   contents: read
   actions: read
+  checks: write
 
 jobs:
   # ── 1. Validate the release version ────────────────────────────────────────
@@ -165,7 +166,16 @@ jobs:
         run: uv sync --frozen --all-groups
 
       - name: Run tests
-        run: uv run pytest -v --tb=short
+        run: uv run pytest -v --tb=short --junit-xml=test-results.xml
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: "Test Results – Python ${{ env.PYTHON_VERSION }}"
+          path: stealth-service/test-results.xml
+          reporter: java-junit
+          fail-on-error: true
 
   # ── 4. Build and push Docker images to Docker Hub ──────────────────────────
   docker-publish:

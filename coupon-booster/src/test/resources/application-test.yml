@@ -8,9 +8,6 @@ logging:
 
 # Disable actual browser automation in tests
 migros:
-  login:
-    enabled: false
-
   user:
     email: "test@example.com"
     password: "test-password"
@@ -32,9 +29,6 @@ migros:
     cookie-accept-button: "button:has-text('Accept')"
 
 coop:
-  login:
-    enabled: false
-
   user:
     email: "test@example.com"
     password: "test-password"
@@ -62,8 +56,6 @@ cumulus:
     activation-endpoint: "https://account.migros.ch/ma/api/user/cumulus/coupon/activation"
   api:
     request-delay: "PT0.5S"
-    max-retries: 3
-    timeout: "PT30S"
 
 supercard:
   urls:

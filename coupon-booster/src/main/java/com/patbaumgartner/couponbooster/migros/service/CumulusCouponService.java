@@ -200,14 +200,8 @@ public final class CumulusCouponService extends AbstractCouponService {
 				.header(ACCEPT, APPLICATION_JSON_VALUE)
 				.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
 				.header(COOKIE, cookieHeader)
-				.header(REFERER, this.configuration.urls().couponsEndpoint());
-
-			if (csrfToken != null && !csrfToken.isBlank()) {
-				activationRequest = activationRequest.header(MigrosConstants.HttpHeaders.CSRF_TOKEN_HEADER, csrfToken);
-			}
-			else {
-				log.warn("CSRF token not found in session cookies, proceeding without token");
-			}
+				.header(REFERER, this.configuration.urls().couponsEndpoint())
+				.header(MigrosConstants.HttpHeaders.CSRF_TOKEN_HEADER, csrfToken);
 
 			var apiResponse = activationRequest.body(Map.of("id", couponId)).retrieve().toEntity(String.class);
 
@@ -239,8 +233,8 @@ public final class CumulusCouponService extends AbstractCouponService {
 	}
 
 	private void applyInterRequestDelay() {
-		Duration delay = configuration.api() == null ? null : configuration.api().requestDelay();
-		if (delay == null || delay.isZero() || delay.isNegative()) {
+		Duration delay = configuration.api().requestDelay();
+		if (delay.isZero() || delay.isNegative()) {
 			return;
 		}
 		try {

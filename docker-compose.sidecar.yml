@@ -1,11 +1,17 @@
-# Sidecar-only compose file for local Spring Boot development.
-# Used by Spring Boot Docker Compose integration during `mvn spring-boot:run`.
+# ─────────────────────────────────────────────────────────────────────────────
+# Swiss Coupon Booster – local development sidecar
+#
+# Starts only the stealth-service sidecar for local Spring Boot development.
+# Used automatically by the Spring Boot Docker Compose integration when running
+# `mvn spring-boot:run` with COOP_AUTH_MODE=sidecar or MIGROS_AUTH_MODE=sidecar.
+# ─────────────────────────────────────────────────────────────────────────────
 
 services:
   stealth-service:
     build:
       context: ./stealth-service
     image: patbaumgartner/stealth-service:${VERSION:-latest}
+    container_name: stealth-service
     restart: "no"
     environment:
       COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"

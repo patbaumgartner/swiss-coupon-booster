@@ -72,8 +72,8 @@ services:
       MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
       COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
       PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
-      MIGROS_LOGIN_ENABLED: "${MIGROS_LOGIN_ENABLED:-true}"
-      COOP_LOGIN_ENABLED: "${COOP_LOGIN_ENABLED:-true}"
+      COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
+      MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
       JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
     volumes:
       - coop-user-data:/data/coop-user-data
