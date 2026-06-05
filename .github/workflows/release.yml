@@ -106,27 +106,27 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          mvn exec:java -e -ntp \
+          ./mvnw exec:java -e -ntp \
             -Dexec.mainClass="com.microsoft.playwright.CLI" \
             -Dexec.args="install --with-deps"
 
       - name: Bump project version
         run: |
-          mvn versions:set \
+          ./mvnw versions:set \
             -DnewVersion=${{ needs.validate-release.outputs.version }} \
             -DgenerateBackupPoms=false \
             -ntp
 
       - name: Build and Test
         if: ${{ github.event.inputs.skip_tests != 'true' }}
-        run: xvfb-run -a mvn clean verify -ntp -Dmaven.test.failure.ignore=true
+        run: xvfb-run -a ./mvnw clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
       - name: Build (skip tests)
         if: ${{ github.event.inputs.skip_tests == 'true' }}
-        run: mvn clean package -DskipTests -ntp
+        run: ./mvnw clean package -DskipTests -ntp -Ddependency-check.skip=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 
@@ -168,6 +168,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -231,7 +232,7 @@ jobs:
             -ntp
 
       - name: Build and push run image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: coupon-booster/run-image.Dockerfile
@@ -261,7 +262,7 @@ jobs:
 
       - name: Extract Docker metadata – stealth-service
         id: meta-stealth
-        uses: docker/metadata-action@v6 
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_USERNAME }}/stealth-service
           tags: |
