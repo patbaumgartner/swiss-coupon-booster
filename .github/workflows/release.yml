@@ -130,14 +130,16 @@ jobs:
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 
+      - name: List test report files
+        if: always()
+        run: find target/surefire-reports target/failsafe-reports -name '*.xml' 2>/dev/null || echo 'No XML report files found'
+
       - name: Publish test results
         uses: dorny/test-reporter@v3
         if: always()
         with:
           name: "Test Results – Java ${{ env.JAVA_VERSION }}"
-          path: |
-            coupon-booster/target/surefire-reports/*.xml
-            coupon-booster/target/failsafe-reports/TEST-*.xml
+          path: "coupon-booster/target/surefire-reports/*.xml,coupon-booster/target/failsafe-reports/TEST-*.xml"
           reporter: java-junit
           fail-on-error: true
 
