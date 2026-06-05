@@ -17,13 +17,10 @@ import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AbstractAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import com.patbaumgartner.couponbooster.service.PlaywrightProvider;
-import com.patbaumgartner.couponbooster.util.cookie.NetscapeCookieParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -131,9 +128,6 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 					log.debug("Browser user-agent: {}", userAgent);
 					log.debug("Browser language: {}", browserLanguage);
 				}
-
-				// Load cookies from file if configured (BEFORE navigation)
-				loadCookiesFromFileIfConfigured(context);
 
 				// Clean login requirement:
 				// The user wants to perform a fresh login every time but keep the
@@ -283,44 +277,6 @@ public class CoopAuthenticationService extends AbstractAuthenticationService {
 
 		addRandomDelay(SUBMIT_CLICK_MIN, SUBMIT_CLICK_MAX);
 		clickElement(page, elementSelectors.submitButton());
-	}
-
-	/**
-	 * Loads cookies from a file if configured in the Playwright properties. This method
-	 * reads cookies from a Netscape format cookies.txt file and adds them to the browser
-	 * context BEFORE any navigation occurs.
-	 * <p>
-	 * This is particularly useful for bypassing bot detection (DataDome) by reusing
-	 * previously obtained valid cookies.
-	 * @param context the browser context to add cookies to
-	 */
-	private void loadCookiesFromFileIfConfigured(BrowserContext context) {
-		String cookiesFilePath = browserConfiguration.cookiesFilePath();
-
-		if (cookiesFilePath == null || cookiesFilePath.isBlank()) {
-			log.debug("No cookies file path configured, skipping cookie loading");
-			return;
-		}
-
-		Path cookiesPath = Path.of(cookiesFilePath);
-		if (!Files.exists(cookiesPath)) {
-			log.warn("Cookies file does not exist: {}", cookiesFilePath);
-			return;
-		}
-
-		try {
-			log.info("Loading cookies from file: {}", cookiesFilePath);
-			List<Cookie> cookies = NetscapeCookieParser.parseFromFile(cookiesPath);
-			context.addCookies(cookies);
-			log.atInfo().addArgument(() -> cookies.size()).log("Successfully loaded {} cookies from file");
-
-			if (log.isDebugEnabled()) {
-				cookies.forEach(c -> log.debug("Loaded cookie: {} = {} (domain: {})", c.name, c.value, c.domain));
-			}
-		}
-		catch (Exception exception) {
-			log.error("Failed to load cookies from file: {}", exception.getMessage(), exception);
-		}
 	}
 
 }

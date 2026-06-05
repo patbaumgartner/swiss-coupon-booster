@@ -34,11 +34,6 @@ public interface CoopConstants {
 		String DATADOME_COOKIE = "datadome";
 
 		/**
-		 * Wildcard Domain for authentication cookies.
-		 */
-		String WILDCARD_COOKIE_DOMAIN = ".supercard.ch";
-
-		/**
 		 * Domain for authentication cookies.
 		 */
 		String AUTHENTICATION_DOMAIN = "www.supercard.ch";
