@@ -63,7 +63,7 @@ all in a single run. Set it up once on your home server or NAS and let it run on
 ```
 
 **Why a sidecar?**  
-Both Migros and Coop protect their login pages with [DataDome](https://datadome.co) bot
+Coops protect their login pages with [DataDome](https://datadome.co) bot
 detection. A standard headless browser is instantly flagged. The **stealth-service** sidecar
 uses [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — a patched build of
 Chromium that removes all automation fingerprints at the C++ level — running inside a virtual
