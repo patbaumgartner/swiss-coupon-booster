@@ -212,6 +212,8 @@ mvn exec:java -e \
 
 # Run the application
 # The ../.env file at the repo root is loaded automatically via spring.config.import
+# When COOP_AUTH_MODE=sidecar and/or MIGROS_AUTH_MODE=sidecar, Spring Boot
+# auto-starts docker-compose.sidecar.yml (stealth-service only).
 mvn spring-boot:run
 
 # Unit tests only
