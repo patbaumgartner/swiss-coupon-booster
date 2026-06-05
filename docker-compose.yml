@@ -90,8 +90,8 @@ services:
       # ── Feature toggles ───────────────────────────────────────────────────────
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
-      # ── JVM tuning (optional) ─────────────────────────────────────────────────
-      JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
+      COOP_SCHEDULER_CRON: "${COOP_SCHEDULER_CRON:-0 0 6 * * *}"
+      MIGROS_SCHEDULER_CRON: "${MIGROS_SCHEDULER_CRON:-0 10 6 * * *}"
     volumes:
       - coop-user-data:/data/coop-user-data
       - screenshots:/data/screenshots
