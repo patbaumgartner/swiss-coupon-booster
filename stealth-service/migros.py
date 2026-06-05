@@ -173,6 +173,17 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
 
         await _handle_cookie_consent(page)
 
+        # ── Already authenticated? ────────────────────────────────────────────
+        # If the persistent profile holds a valid session, login.migros.ch
+        # redirects immediately to account.migros.ch (or similar).  No login
+        # form is shown, so we can simply collect the cookies and return.
+        if "login.migros.ch" not in page.url:
+            log.info("Already authenticated — redirected to %s; reusing session", page.url)
+            cookies_raw = await context.cookies()
+            log.info("Collected %d session cookies (reused session)", len(cookies_raw))
+            return {"cookies": serialize_cookies(cookies_raw), "userAgent": user_agent, "language": language}
+        # ─────────────────────────────────────────────────────────────────────
+
         # Migros can open directly on passkey mode where no email field is present.
         # In that case switch to password mode first.
         if "/login/passkey" in page.url or await _is_visible(page, SEL_MIGROS_PASSWORD_LINK):
