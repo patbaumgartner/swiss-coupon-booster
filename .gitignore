@@ -1,40 +1,75 @@
+##############################################################################
+# Swiss Coupon Booster – .gitignore
+# Covers: Java/Maven (coupon-booster/) and Python (stealth-service/)
+##############################################################################
+
+# ── Secrets — never commit ────────────────────────────────────────────────────
 .env
-pom.xml.bak
-pom.xml.versionBackup
+*.env.local
+
+# ── Java / Maven (coupon-booster/) ───────────────────────────────────────────
+coupon-booster/target/
+coupon-booster/pom.xml.bak
+coupon-booster/pom.xml.versionBackup
 HELP.md
-cookies.txt
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Maven wrapper binary (downloaded on demand, not committed)
+coupon-booster/.mvn/wrapper/maven-wrapper.jar
 
-### IntelliJ IDEA ###
-.idea
+# IDE project files
+.idea/
 *.iws
 *.iml
 *.ipr
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+.apt_generated/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Build outputs inside src (Maven test-filtered resources)
+!**/src/main/**/target/
+!**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# ── Python (stealth-service/) ─────────────────────────────────────────────────
+stealth-service/.venv/
+stealth-service/__pycache__/
+stealth-service/**/__pycache__/
+stealth-service/.pytest_cache/
+stealth-service/*.egg-info/
+stealth-service/dist/
+stealth-service/build/
+stealth-service/.mypy_cache/
+stealth-service/.ruff_cache/
 
-migros-cookies.txt
+# Python byte-compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# ── Docker runtime artefacts ──────────────────────────────────────────────────
+# Local volume data (never commit browser sessions or screenshots)
 playwright-user-data/
+coop-user-data/
+migros-user-data/
+screenshots/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+cookies.txt
+migros-cookies.txt
+*.log

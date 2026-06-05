@@ -1,0 +1,66 @@
+name: Feature request
+description: Suggest an improvement for swiss-coupon-booster.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Please describe the problem and proposed solution as clearly as possible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+      placeholder: I want to ... because ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your preferred approach.
+      placeholder: We could add ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternatives or workarounds you considered.
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact area
+      options:
+        - Coop flow
+        - Migros flow
+        - Shared auth architecture
+        - Scheduling and runner behavior
+        - Docker/deployment
+        - Documentation
+        - Developer experience
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What would make this feature complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I searched existing issues and did not find a duplicate request.
+          required: true

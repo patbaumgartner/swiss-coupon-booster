@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Swiss Coupon Booster – production compose file
+#
+# Pulls pre-built images from Docker Hub. Use this file on your home
+# network / NAS to run the stack without building from source.
+#
+# Services
+# ──────────
+# stealth-service  Patchright (Python) sidecar — stealth login for both Coop
+#                  (DataDome bypass via Xvfb + full Chromium) and Migros.
+# coupon-booster   Spring Boot app — activates Migros Cumulus + Coop Supercard
+#                  coupons using cookies obtained from the stealth sidecar.
+#
+# Quick start
+# ───────────
+#   cp .env.example .env          # fill in your credentials
+#   docker compose pull           # pull latest images from Docker Hub
+#   docker compose up             # run the stack
+#
+# Run on your home network / NAS for a free Swiss residential IP.
+# Avoid cloud / datacenter hosts — their IPs are pre-flagged by DataDome.
+#
+# To build from source instead, use:
+#   docker compose -f docker-compose.build.yml up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Stealth login sidecar ───────────────────────────────────────────────────
+  stealth-service:
+    image: patbaumgartner/stealth-service:${VERSION:-latest}
+    container_name: stealth-service
+    restart: "no"
+    environment:
+      COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
+      COOP_USER_DATA_DIR: /data/coop-user-data
+      MIGROS_USER_DATA_DIR: /data/migros-user-data
+      SCREENSHOT_DIR: /data/screenshots
+      # HEADLESS is forced false by entrypoint.sh (Xvfb virtual display).
+      # chromium-headless-shell is detected by DataDome; full Chromium + Xvfb is not.
+      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      # Optional: route through a residential proxy (not usually needed on a home network)
+      # PROXY_URL: "${PROXY_URL}"
+    volumes:
+      - coop-user-data:/data/coop-user-data
+      - migros-user-data:/data/migros-user-data
+      - screenshots:/data/screenshots
+    ports:
+      # Exposed for local debugging only — not required for inter-service communication
+      - "127.0.0.1:8000:8000"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  # ── Spring Boot coupon booster ───────────────────────────────────────────────
+  coupon-booster:
+    image: patbaumgartner/coupon-booster:${VERSION:-latest}
+    container_name: coupon-booster
+    restart: "no"
+    depends_on:
+      stealth-service:
+        condition: service_healthy
+    environment:
+      # ── Migros (Cumulus) credentials ──────────────────────────────────────────
+      MIGROS_USER_EMAIL: "${MIGROS_USER_EMAIL}"
+      MIGROS_USER_PASSWORD: "${MIGROS_USER_PASSWORD}"
+      # ── Coop (Supercard) credentials ──────────────────────────────────────────
+      COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
+      COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
+      # ── Auth modes ────────────────────────────────────────────────────────────
+      # 'sidecar' (default) — delegates login to stealth-service (bypasses DataDome)
+      # 'browser'           — uses Java Playwright directly (legacy fallback)
+      COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
+      MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
+      # ── Stealth service URLs (resolved via internal Docker network) ───────────
+      COOP_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      # ── Playwright settings (only used with auth.mode=browser) ─────────────────
+      COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
+      PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
+      # ── Feature toggles ───────────────────────────────────────────────────────
+      MIGROS_LOGIN_ENABLED: "${MIGROS_LOGIN_ENABLED:-true}"
+      COOP_LOGIN_ENABLED: "${COOP_LOGIN_ENABLED:-true}"
+      # ── JVM tuning (optional) ─────────────────────────────────────────────────
+      JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
+    volumes:
+      - coop-user-data:/data/coop-user-data
+      - screenshots:/data/screenshots
+    networks:
+      - internal
+
+# ── Named volumes ──────────────────────────────────────────────────────────────
+volumes:
+  coop-user-data:
+    driver: local
+  migros-user-data:
+    driver: local
+  screenshots:
+    driver: local
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  internal:
+    driver: bridge

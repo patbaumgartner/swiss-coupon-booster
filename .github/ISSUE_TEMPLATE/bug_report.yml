@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a reproducible problem in swiss-coupon-booster.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide enough detail so we can reproduce and fix it quickly.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen.
+      placeholder: A clear and concise description of the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide exact steps so we can reproduce the issue.
+      placeholder: |
+        1. Run ...
+        2. Call endpoint ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Java app (coupon-booster)
+        - Python sidecar (stealth-service)
+        - Docker / deployment
+        - CI / GitHub Actions
+        - Documentation
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Project version, release tag, or commit SHA.
+      placeholder: main@abcdef1
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or stack traces
+      description: Paste any useful output.
+      render: shell
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Java version, Python version, Docker setup, and anything else relevant.
+      placeholder: Linux, Java 25, Python 3.14, Docker Compose v2.31
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I can reproduce this issue on the latest main branch.
+          required: false
