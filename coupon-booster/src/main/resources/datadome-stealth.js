@@ -333,9 +333,10 @@
     }
 
     // 25. Override userAgent if it contains "HeadlessChrome"
-    if (navigator.userAgent.includes('HeadlessChrome')) {
+    const originalUserAgent = navigator.userAgent;
+    if (originalUserAgent.includes('HeadlessChrome')) {
         Object.defineProperty(navigator, 'userAgent', {
-            get: () => navigator.userAgent.replace('HeadlessChrome', 'Chrome')
+            get: () => originalUserAgent.replace('HeadlessChrome', 'Chrome')
         });
     }
 
