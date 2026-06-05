@@ -142,12 +142,16 @@ async def _is_visible(page: Page, selector: str) -> bool:
 
 
 async def _switch_to_password_mode_if_available(page: Page) -> None:
-    for selector in _MIGROS_PASSWORD_LINK_SELECTORS:
+    for index, selector in enumerate(_MIGROS_PASSWORD_LINK_SELECTORS, start=1):
         locator = page.locator(selector).first
         try:
             await locator.wait_for(timeout=4000)
             if await locator.is_visible():
-                log.debug("Switching to password mode via selector: %s", selector)
+                log.debug(
+                    "Switching to password mode via selector candidate %d of %d",
+                    index,
+                    len(_MIGROS_PASSWORD_LINK_SELECTORS),
+                )
                 await locator.click()
                 await page.wait_for_load_state("load")
                 return
