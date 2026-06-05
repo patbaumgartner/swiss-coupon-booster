@@ -159,19 +159,52 @@ docker compose -f docker-compose.build.yml build
 
 ## Scheduling
 
-To activate coupons automatically every week, run the containers on a cron schedule.
+You have two options for automatic activation.
 
-### With cron (Linux/NAS)
+### Option 1: Built-in Spring scheduler (long-running server)
+
+Run coupon-booster as a long-running Spring app with profile `server`.
+
+```sh
+cd coupon-booster
+
+# Profile enables Spring MVC mode + @Scheduled jobs
+SPRING_PROFILES_ACTIVE=server mvn spring-boot:run
+```
+
+Default schedule (server profile):
+
+- Coop daily at 06:00 Europe/Zurich
+- Migros daily at 06:10 Europe/Zurich
+
+Startup runners are disabled by default in server profile to avoid duplicate runs.
+Enable one-time boot run explicitly with:
+
+- COOP_STARTUP_RUN_ENABLED=true
+- MIGROS_STARTUP_RUN_ENABLED=true
+
+Override via `.env` or environment variables:
+
+- `COOP_SCHEDULER_CRON`
+- `MIGROS_SCHEDULER_CRON`
+- `COUPONBOOSTER_SCHEDULER_ZONE`
+- `COOP_SCHEDULER_ENABLED`
+- `MIGROS_SCHEDULER_ENABLED`
+
+### Option 2: External cron (Linux/NAS)
+
+For containerized one-shot runs, keep using host cron.
 
 ```sh
 # Run every Monday at 07:00
 0 7 * * 1 cd /path/to/swiss-coupon-booster && docker compose pull -q && docker compose up --no-color >> /var/log/coupon-booster.log 2>&1
 ```
 
-### With Docker restart policy
+### Docker restart policy note
 
-The app exits with code `0` when done. Using `restart: on-failure` will not cause it to
-loop. For scheduling, a cron job calling `docker compose up` is the recommended approach.
+The one-shot app exits with code `0` when done. Using `restart: on-failure` will not cause it
+to loop. For one-shot container mode, a cron job calling `docker compose up` is the
+recommended approach.
 
 ---
 
@@ -246,6 +279,8 @@ Copy `.env.example` to `.env` and fill in the required values.
 | `MIGROS_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
 | `MIGROS_LOGIN_ENABLED` | `true` | Enable or disable the Migros flow |
 | `COOP_LOGIN_ENABLED` | `true` | Enable or disable the Coop flow |
+| `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
+| `COOP_STARTUP_RUN_ENABLED` | `true` | Run Coop once at application startup |
 | `VERSION` | `latest` | Docker Hub image tag to pull |
 | `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
 | `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |

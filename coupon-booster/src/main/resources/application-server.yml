@@ -1,0 +1,24 @@
+spring:
+  main:
+    web-application-type: servlet
+
+# Disable one-shot startup runners in server mode.
+coop:
+  startup-run:
+    enabled: ${COOP_STARTUP_RUN_ENABLED:false}
+  scheduler:
+    enabled: ${COOP_SCHEDULER_ENABLED:true}
+    # Every day at 06:00 Europe/Zurich
+    cron: "${COOP_SCHEDULER_CRON:0 0 6 * * *}"
+
+migros:
+  startup-run:
+    enabled: ${MIGROS_STARTUP_RUN_ENABLED:false}
+  scheduler:
+    enabled: ${MIGROS_SCHEDULER_ENABLED:true}
+    # Every day at 06:10 Europe/Zurich (staggered to reduce concurrent load)
+    cron: "${MIGROS_SCHEDULER_CRON:0 10 6 * * *}"
+
+couponbooster:
+  scheduler:
+    zone: "${COUPONBOOSTER_SCHEDULER_ZONE:Europe/Zurich}"
