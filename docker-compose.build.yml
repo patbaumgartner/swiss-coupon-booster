@@ -62,18 +62,27 @@ services:
       stealth-service:
         condition: service_healthy
     environment:
+      # ── Migros (Cumulus) credentials ──────────────────────────────────────────
       MIGROS_USER_EMAIL: "${MIGROS_USER_EMAIL}"
       MIGROS_USER_PASSWORD: "${MIGROS_USER_PASSWORD}"
+      # ── Coop (Supercard) credentials ──────────────────────────────────────────
       COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
       COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
+      # ── Auth modes ────────────────────────────────────────────────────────────
+      # 'sidecar' (default) — delegates login to stealth-service (bypasses DataDome)
+      # 'browser'           — uses Java Playwright directly (legacy fallback)
       COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
       MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
+      # ── Stealth service URLs (resolved via internal Docker network) ───────────
       COOP_STEALTH_SERVICE_URL: "http://stealth-service:8000"
       MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      # ── Playwright settings (only used with auth.mode=browser) ─────────────────
       COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
       PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
+      # ── Feature toggles ───────────────────────────────────────────────────────
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
+      # ── JVM tuning (optional) ─────────────────────────────────────────────────
       JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
     volumes:
       - coop-user-data:/data/coop-user-data

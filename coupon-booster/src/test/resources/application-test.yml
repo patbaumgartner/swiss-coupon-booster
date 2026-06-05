@@ -67,5 +67,3 @@ supercard:
     coupons-deactivation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/deactivate"
   coupon-filter:
     include-product-types: []
-
-
