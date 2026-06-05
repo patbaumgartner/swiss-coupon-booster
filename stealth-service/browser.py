@@ -12,6 +12,7 @@ import random
 import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from patchright.async_api import BrowserContext, Page, Playwright
 
@@ -42,14 +43,24 @@ async def random_delay(min_ms: int, max_ms: int) -> None:
 def is_datadome_challenge(page: Page) -> bool:
     """Return True if the current page is a DataDome challenge."""
     url = page.url
-    if "captcha-delivery.com" in url or "geo.captcha-delivery.com" in url:
+    if _is_datadome_url(url):
         log.warning("DataDome challenge detected via URL: %s", url)
         return True
     for frame in page.frames:
-        if "captcha-delivery.com" in frame.url:
+        if _is_datadome_url(frame.url):
             log.warning("DataDome challenge detected via iframe: %s", frame.url)
             return True
     return False
+
+
+def _is_datadome_url(url: str) -> bool:
+    """Return True when URL host is captcha-delivery.com or one of its subdomains."""
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return False
+
+    return host == "captcha-delivery.com" or host.endswith(".captcha-delivery.com")
 
 
 async def wait_for_datadome_resolution(page: Page, timeout_ms: int = 30000) -> bool:
