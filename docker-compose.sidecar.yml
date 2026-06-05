@@ -1,0 +1,46 @@
+# Sidecar-only compose file for local Spring Boot development.
+# Used by Spring Boot Docker Compose integration during `mvn spring-boot:run`.
+
+services:
+  stealth-service:
+    build:
+      context: ./stealth-service
+    image: patbaumgartner/stealth-service:${VERSION:-latest}
+    restart: "no"
+    environment:
+      COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
+      COOP_USER_DATA_DIR: /data/coop-user-data
+      MIGROS_USER_DATA_DIR: /data/migros-user-data
+      SCREENSHOT_DIR: /data/screenshots
+      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      # Optional: route through a residential proxy when needed.
+      # PROXY_URL: "${PROXY_URL}"
+    volumes:
+      - coop-user-data:/data/coop-user-data
+      - migros-user-data:/data/migros-user-data
+      - screenshots:/data/screenshots
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+volumes:
+  coop-user-data:
+    driver: local
+  migros-user-data:
+    driver: local
+  screenshots:
+    driver: local
