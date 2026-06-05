@@ -43,6 +43,40 @@ from config import (
 
 log = logging.getLogger("stealth-service.migros")
 
+_MIGROS_EMAIL_SELECTORS: tuple[str, ...] = (
+    SEL_MIGROS_EMAIL,
+    "#input-username",
+    "input[type='email']",
+    "input[autocomplete='username']",
+    "input[name='username']",
+    "input[name='email']",
+    "input[id*='email']",
+    "input[id*='user']",
+)
+
+_MIGROS_PASSWORD_SELECTORS: tuple[str, ...] = (
+    SEL_MIGROS_PASSWORD,
+    "input[type='password']",
+    "input[name='password']",
+    "input[id*='password']",
+)
+
+_MIGROS_SUBMIT_SELECTORS: tuple[str, ...] = (
+    SEL_MIGROS_SUBMIT,
+    "button[type='submit']",
+    "button:has-text('Weiter')",
+    "button:has-text('Continue')",
+    "button:has-text('Fortfahren')",
+    "button:has-text('Anmelden')",
+    "button:has-text('Login')",
+)
+
+_MIGROS_PASSWORD_LINK_SELECTORS: tuple[str, ...] = (
+    SEL_MIGROS_PASSWORD_LINK,
+    "a:has-text('Mit Passwort anmelden')",
+    "button:has-text('Mit Passwort anmelden')",
+)
+
 # Injected into every page before any page scripts run.
 # Removes WebAuthn APIs so the login page falls back to the password field.
 _WEBAUTHN_DISABLE_SCRIPT: str = """
@@ -75,6 +109,52 @@ async def _handle_cookie_consent(page: Page) -> None:
         log.debug("Cookie consent not shown or already dismissed")
 
 
+async def _find_first_visible(page: Page, selectors: tuple[str, ...], timeout_ms: int):
+    per_selector_timeout = min(5000, max(1200, timeout_ms // max(len(selectors), 1)))
+    for selector in selectors:
+        locator = page.locator(selector).first
+        try:
+            await locator.wait_for(timeout=per_selector_timeout)
+            if await locator.is_visible():
+                log.debug("Using selector: %s", selector)
+                return locator
+        except Exception:  # noqa: BLE001
+            continue
+    raise RuntimeError(f"No visible element found for selectors: {selectors}")
+
+
+async def _is_password_field_visible(page: Page) -> bool:
+    for selector in _MIGROS_PASSWORD_SELECTORS:
+        locator = page.locator(selector).first
+        try:
+            if await locator.is_visible():
+                return True
+        except Exception:  # noqa: BLE001
+            continue
+    return False
+
+
+async def _is_visible(page: Page, selector: str) -> bool:
+    try:
+        return await page.locator(selector).first.is_visible()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+async def _switch_to_password_mode_if_available(page: Page) -> None:
+    for selector in _MIGROS_PASSWORD_LINK_SELECTORS:
+        locator = page.locator(selector).first
+        try:
+            await locator.wait_for(timeout=4000)
+            if await locator.is_visible():
+                log.debug("Switching to password mode via selector: %s", selector)
+                await locator.click()
+                await page.wait_for_load_state("load")
+                return
+        except Exception:  # noqa: BLE001
+            continue
+
+
 async def _run_login_flow(context: BrowserContext, email: str, password: str) -> dict[str, Any]:
     page = await context.new_page()
     try:
@@ -89,27 +169,61 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
 
         await _handle_cookie_consent(page)
 
-        # Step 1: enter e-mail and submit
-        log.debug("Entering e-mail")
-        await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-        email_field = page.locator(SEL_MIGROS_EMAIL).first
-        await email_field.wait_for(timeout=TIMEOUT_MS)
-        await email_field.clear()
-        await email_field.press_sequentially(email, delay=TYPING_DELAY_MS)
+        # Migros can open directly on passkey mode where no email field is present.
+        # In that case switch to password mode first.
+        if "/login/passkey" in page.url or await _is_visible(page, SEL_MIGROS_PASSWORD_LINK):
+            log.debug("Passkey page detected; switching to password login")
+            await _switch_to_password_mode_if_available(page)
 
-        await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
-        submit_btn = page.locator(SEL_MIGROS_SUBMIT).first
-        await submit_btn.wait_for(timeout=TIMEOUT_MS)
-        await submit_btn.click()
-        await page.wait_for_load_state("load")
+            try:
+                await page.wait_for_url(f"{MIGROS_PASSWORD_URL}*", timeout=TIMEOUT_MS)
+                log.debug("Switched to password page")
+            except Exception:  # noqa: BLE001
+                log.warning("Timed out waiting for password page after passkey switch; continuing at %s", page.url)
 
-        # Step 2: choose "login with password" option
-        log.debug("Clicking password login option")
-        await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-        pwd_link = page.locator(SEL_MIGROS_PASSWORD_LINK).first
-        await pwd_link.wait_for(timeout=TIMEOUT_MS)
-        await pwd_link.click()
-        await page.wait_for_load_state("load")
+        # Some variants reveal the password option with a slight delay.
+        if not await _is_password_field_visible(page):
+            await _switch_to_password_mode_if_available(page)
+
+        # Step 1: enter e-mail and submit (unless password-only page is already shown)
+        password_only_flow = await _is_password_field_visible(page)
+        if password_only_flow:
+            log.debug("Password field already present; skipping e-mail step")
+        else:
+            log.debug("Entering e-mail")
+            await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
+            try:
+                email_field = await _find_first_visible(page, _MIGROS_EMAIL_SELECTORS, TIMEOUT_MS)
+            except RuntimeError:
+                log.warning(
+                    "No email field visible on %s; navigating directly to password URL %s",
+                    page.url,
+                    MIGROS_PASSWORD_URL,
+                )
+                await page.goto(MIGROS_PASSWORD_URL)
+                await page.wait_for_load_state("load")
+                await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
+                if await _is_password_field_visible(page):
+                    password_only_flow = True
+                else:
+                    email_field = await _find_first_visible(page, _MIGROS_EMAIL_SELECTORS, TIMEOUT_MS)
+
+            if not password_only_flow:
+                await email_field.clear()
+                await email_field.press_sequentially(email, delay=TYPING_DELAY_MS)
+
+                await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
+                submit_btn = await _find_first_visible(page, _MIGROS_SUBMIT_SELECTORS, TIMEOUT_MS)
+                await submit_btn.click()
+                await page.wait_for_load_state("load")
+
+        # Step 2: choose "login with password" option (if still needed)
+        if not password_only_flow and not await _is_password_field_visible(page):
+            log.debug("Clicking password login option")
+            await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
+            await _switch_to_password_mode_if_available(page)
+        else:
+            log.debug("Password field already visible; skipping password option click")
 
         try:
             await page.wait_for_url(f"{MIGROS_PASSWORD_URL}*", timeout=TIMEOUT_MS)
@@ -120,14 +234,12 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
         # Step 3: enter password and submit
         log.debug("Entering password")
         await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-        pwd_field = page.locator(SEL_MIGROS_PASSWORD).first
-        await pwd_field.wait_for(timeout=TIMEOUT_MS)
+        pwd_field = await _find_first_visible(page, _MIGROS_PASSWORD_SELECTORS, TIMEOUT_MS)
         await pwd_field.clear()
         await pwd_field.press_sequentially(password, delay=TYPING_DELAY_MS)
 
         await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
-        submit_btn2 = page.locator(SEL_MIGROS_SUBMIT).first
-        await submit_btn2.wait_for(timeout=TIMEOUT_MS)
+        submit_btn2 = await _find_first_visible(page, _MIGROS_SUBMIT_SELECTORS, TIMEOUT_MS)
         await submit_btn2.click()
         await page.wait_for_load_state("load")
 

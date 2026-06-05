@@ -8,6 +8,14 @@ spring:
     import:
       - "optional:file:../.env[.properties]"
       - "optional:file:.env[.properties]"
+  docker:
+    compose:
+      # Sidecar-only compose file used during local `mvn spring-boot:run`
+      # so Docker can start/stop stealth-service automatically.
+      file: "../docker-compose.sidecar.yml"
+      lifecycle-management: start-and-stop
+      skip:
+        in-tests: true
   main:
     web-application-type: none
     banner-mode: console

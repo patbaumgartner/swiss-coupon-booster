@@ -10,6 +10,12 @@ set -e
 export DISPLAY=:99
 export HEADLESS=false
 
+# Remove stale Xvfb lock/socket files from previous container starts.
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
+
+# Ensure no orphaned Xvfb process is still bound to DISPLAY=:99.
+pkill -f "Xvfb :99" 2>/dev/null || true
+
 # Remove Chrome singleton locks left by previous runs (e.g. container restart).
 for _dir in /data/coop-user-data /data/migros-user-data; do
     find "${_dir}" -maxdepth 2 \
@@ -21,6 +27,14 @@ done
 Xvfb "${DISPLAY}" -screen 0 1920x1080x24 -nolisten tcp &
 XVFB_PID=$!
 echo "Started Xvfb PID=${XVFB_PID} on ${DISPLAY}"
+
+# Forward shutdown to Xvfb so lock files are not left behind.
+cleanup() {
+    if kill -0 "${XVFB_PID}" 2>/dev/null; then
+        kill "${XVFB_PID}" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
 
 # Give Xvfb time to initialise
 sleep 2
