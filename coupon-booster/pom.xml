@@ -467,7 +467,7 @@
             <enabled>true</enabled>
           </layers>
           <image>
-            <name>docker.io/patbaumgartner/${project.artifactId}</name>
+            <name>docker.io/patbaumgartner/${project.artifactId}:${project.version}</name>
             <builder>paketobuildpacks/builder-noble-java-tiny:latest</builder>
             <runImage>patbaumgartner/coupon-booster-run:latest</runImage>
             <pullPolicy>IF_NOT_PRESENT</pullPolicy>
