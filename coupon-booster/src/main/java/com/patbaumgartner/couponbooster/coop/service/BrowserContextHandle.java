@@ -34,6 +34,10 @@ public record BrowserContextHandle(BrowserContext context, Browser browser) impl
 		return new BrowserContextHandle(context, browser);
 	}
 
+	/**
+	 * Returns the underlying {@link BrowserContext}.
+	 * @return the browser context
+	 */
 	public BrowserContext get() {
 		return context;
 	}
