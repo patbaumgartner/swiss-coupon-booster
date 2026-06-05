@@ -15,8 +15,6 @@ import java.util.List;
  * browser behaves during the Coop authentication process.
  *
  * @param loginUrl the URL of the Coop login page to navigate to initially
- * @param cookiesFilePath optional path to a Netscape format cookies.txt file to load
- * cookies from (e.g., cookies exported from curl or browser extensions)
  * @param typingDelayMs delay in milliseconds between individual keystrokes to simulate
  * human typing
  * @param slowMoMs general slowdown in milliseconds for all Playwright actions to appear
@@ -35,8 +33,6 @@ import java.util.List;
 public record CoopPlaywrightProperties(
 
 		@NotBlank(message = "Login URL is required") @URL(message = "Login URL must be a valid URL") String loginUrl,
-
-		String cookiesFilePath,
 
 		@Min(value = 0, message = "Typing delay cannot be negative") @Max(value = 1000,
 				message = "Typing delay cannot exceed 1000ms") int typingDelayMs,
