@@ -55,21 +55,23 @@ jobs:
           restore-keys: playwright-browsers-
 
       - name: Install system dependencies
-        run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends xvfb
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends xvfb
 
       - name: Install Playwright browsers
         run: |
-          mvn exec:java -e -ntp \
+          ./mvnw exec:java -e -ntp \
             -Dexec.mainClass="com.microsoft.playwright.CLI" \
             -Dexec.args="install --with-deps"
 
       - name: Check code formatting
-        run: mvn spring-javaformat:validate -ntp
+        run: ./mvnw spring-javaformat:validate -ntp
 
       - name: Build, test & verify
         # Skip OWASP dependency-check on every push (it takes ~20 min downloading NVD data).
         # Run it only via the release pipeline or a dedicated scheduled workflow.
-        run: xvfb-run -a mvn clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
+        run: xvfb-run -a ./mvnw clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
@@ -113,6 +115,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -159,7 +162,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build stealth-service image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./stealth-service
           file: ./stealth-service/Dockerfile
@@ -169,7 +172,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build coupon-booster run image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./coupon-booster/run-image.Dockerfile

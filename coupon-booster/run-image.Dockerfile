@@ -53,7 +53,7 @@ FROM paketobuildpacks/run-noble-base
 USER root
 
 # Chromium runtime dependencies required by Java Playwright (browser-mode fallback)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libnss3 \
     libnspr4 \
