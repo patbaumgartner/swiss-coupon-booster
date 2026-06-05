@@ -1,13 +1,20 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Swiss Coupon Booster – local build compose file
 #
-# Builds both Docker images from source. Use this file for development
-# or to produce the images that are pushed to Docker Hub.
+# Builds the stealth-service Docker image from source and runs it with a
+# locally built coupon-booster image (built via the Spring Boot Maven plugin).
 #
 # Usage
 # ─────
-#   docker compose -f docker-compose.build.yml build        # build only
-#   docker compose -f docker-compose.build.yml up --build   # build and run
+#   # 1. Build the custom Paketo run image (once, or when run-image.Dockerfile changes)
+#   docker build -f coupon-booster/run-image.Dockerfile \
+#                -t patbaumgartner/coupon-booster-run:latest .
+#
+#   # 2. Build the coupon-booster app image via Maven buildpacks
+#   cd coupon-booster && ./mvnw spring-boot:build-image
+#
+#   # 3. Start everything (stealth-service is built here; coupon-booster uses pre-built image)
+#   docker compose -f docker-compose.build.yml up --build
 #
 # To run pre-built images from Docker Hub instead, use:
 #   docker compose up
@@ -51,10 +58,7 @@ services:
 
   # ── Spring Boot coupon booster ───────────────────────────────────────────────
   coupon-booster:
-    build:
-      # Root context so the Dockerfile can access .git (required by git-commit-id-maven-plugin)
-      context: .
-      dockerfile: coupon-booster/Dockerfile
+    # Build via: cd coupon-booster && ./mvnw spring-boot:build-image
     image: patbaumgartner/coupon-booster:${VERSION:-latest}
     container_name: coupon-booster
     restart: "no"
@@ -83,7 +87,8 @@ services:
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
       # ── JVM tuning (optional) ─────────────────────────────────────────────────
-      JAVA_OPTS: "${JAVA_OPTS:--XX:+UseZGC -Xmx512m}"
+      # Paketo's CNB launcher reads JAVA_TOOL_OPTIONS (not JAVA_OPTS)
+      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:+UseZGC -Xmx512m}"
     volumes:
       - coop-user-data:/data/coop-user-data
       - screenshots:/data/screenshots

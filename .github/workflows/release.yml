@@ -206,6 +206,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -215,43 +222,60 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Bump project version
+        working-directory: coupon-booster
+        run: |
+          ./mvnw versions:set \
+            -DnewVersion=${{ needs.validate-release.outputs.version }} \
+            -DgenerateBackupPoms=false \
+            -ntp
+
+      - name: Build and push run image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: coupon-booster/run-image.Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ needs.validate-release.outputs.version }}
+            ${{ env.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and publish coupon-booster image
+        working-directory: coupon-booster
+        run: |
+          ./mvnw -B spring-boot:build-image \
+            -DskipTests \
+            -Dspring-boot.build-image.imageName="docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}" \
+            -Dspring-boot.build-image.publish=true \
+            -ntp
+
+      - name: Tag and push coupon-booster latest
+        if: needs.validate-release.outputs.is_prerelease == 'false'
+        run: |
+          docker tag \
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }} \
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest
+          docker push docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest
+
       - name: Extract Docker metadata – stealth-service
         id: meta-stealth
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6 
         with:
           images: ${{ env.DOCKERHUB_USERNAME }}/stealth-service
           tags: |
             type=raw,value=${{ needs.validate-release.outputs.version }}
             type=raw,value=latest,enable=${{ needs.validate-release.outputs.is_prerelease == 'false' }}
 
-      - name: Extract Docker metadata – coupon-booster
-        id: meta-coupon
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKERHUB_USERNAME }}/coupon-booster
-          tags: |
-            type=raw,value=${{ needs.validate-release.outputs.version }}
-            type=raw,value=latest,enable=${{ needs.validate-release.outputs.is_prerelease == 'false' }}
-
       - name: Build and push stealth-service
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./stealth-service
           file: ./stealth-service/Dockerfile
           push: true
           tags: ${{ steps.meta-stealth.outputs.tags }}
           labels: ${{ steps.meta-stealth.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push coupon-booster
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./coupon-booster/Dockerfile
-          push: true
-          tags: ${{ steps.meta-coupon.outputs.tags }}
-          labels: ${{ steps.meta-coupon.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
