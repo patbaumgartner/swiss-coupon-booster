@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  * @see com.patbaumgartner.couponbooster.migros.service.CumulusCouponService
  */
 @Component
-@ConditionalOnProperty(value = "migros.login.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(value = "migros.startup-run.enabled", havingValue = "true", matchIfMissing = true)
 public class MigrosCouponBoosterRunner implements ApplicationRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(MigrosCouponBoosterRunner.class);
