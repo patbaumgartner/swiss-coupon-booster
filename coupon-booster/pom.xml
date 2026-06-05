@@ -467,10 +467,15 @@
             <enabled>true</enabled>
           </layers>
           <image>
-            <buildpacks>
-              <buildpack>gcr.io/paketo-buildpacks/bellsoft-liberica</buildpack>
-              <buildpack>gcr.io/paketo-buildpacks/java</buildpack>
-            </buildpacks>
+            <name>docker.io/patbaumgartner/${project.artifactId}</name>
+            <builder>paketobuildpacks/builder-noble-java-tiny:latest</builder>
+            <runImage>patbaumgartner/coupon-booster-run:latest</runImage>
+            <pullPolicy>IF_NOT_PRESENT</pullPolicy>
+            <env>
+              <BP_JVM_VERSION>25</BP_JVM_VERSION>
+              <BPE_DELIM_JAVA_TOOL_OPTIONS xml:space="preserve"> </BPE_DELIM_JAVA_TOOL_OPTIONS>
+              <BPE_APPEND_JAVA_TOOL_OPTIONS>-Dstdout.encoding=UTF-8</BPE_APPEND_JAVA_TOOL_OPTIONS>
+            </env>
           </image>
         </configuration>
         <executions>
