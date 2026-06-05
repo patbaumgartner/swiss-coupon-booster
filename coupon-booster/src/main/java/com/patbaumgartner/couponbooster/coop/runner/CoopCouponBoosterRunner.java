@@ -17,7 +17,7 @@ import java.util.Objects;
  * <p>
  * This runner is responsible for orchestrating the authentication and coupon activation
  * process for Coop Supercard. It is conditionally enabled based on the
- * {@code coop.login.enabled} property. Authentication is delegated to whichever
+ * {@code coop.startup-run.enabled} property. Authentication is delegated to whichever
  * {@link AuthenticationService} bean is active (sidecar or browser mode, controlled by
  * {@code coop.auth.mode}).
  *

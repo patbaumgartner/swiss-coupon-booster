@@ -31,8 +31,6 @@ logging:
     root: INFO
 
 coop:
-  login:
-    enabled: true
   startup-run:
     enabled: "${COOP_STARTUP_RUN_ENABLED:true}"
 
@@ -104,8 +102,6 @@ supercard:
       - "36" # Vorräte
 
 migros:
-  login:
-    enabled: true
   startup-run:
     enabled: "${MIGROS_STARTUP_RUN_ENABLED:true}"
 
@@ -152,5 +148,3 @@ cumulus:
 
   api:
     request-delay: "PT0.5S"
-    max-retries: 3
-    timeout: "PT30S"

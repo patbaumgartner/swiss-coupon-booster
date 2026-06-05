@@ -1,8 +1,6 @@
 package com.patbaumgartner.couponbooster.migros.properties;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.URL;
@@ -44,17 +42,10 @@ public record CumulusProperties(@Valid @NotNull Urls urls, @Valid @NotNull Api a
 	}
 
 	/**
-	 * API timing and retry configuration.
+	 * API timing configuration.
 	 *
 	 * @param requestDelay delay between consecutive API requests to avoid rate limiting
-	 * @param maxRetries maximum number of retry attempts for failed API requests
-	 * @param timeout maximum time to wait for API request completion
 	 */
-	public record Api(@NotNull(message = "Request delay is required") Duration requestDelay,
-
-			@Min(value = 0, message = "Max retries cannot be negative") @Max(value = 10,
-					message = "Max retries cannot exceed 10") int maxRetries,
-
-			@NotNull(message = "Timeout is required") Duration timeout) {
+	public record Api(@NotNull(message = "Request delay is required") Duration requestDelay) {
 	}
 }

@@ -277,10 +277,8 @@ Copy `.env.example` to `.env` and fill in the required values.
 |---|---|---|
 | `COOP_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
 | `MIGROS_AUTH_MODE` | `browser` | `browser` (local dev) or `sidecar` (Docker / production) |
-| `MIGROS_LOGIN_ENABLED` | `true` | Enable or disable the Migros flow |
-| `COOP_LOGIN_ENABLED` | `true` | Enable or disable the Coop flow |
-| `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
 | `COOP_STARTUP_RUN_ENABLED` | `true` | Run Coop once at application startup |
+| `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
 | `VERSION` | `latest` | Docker Hub image tag to pull |
 | `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
 | `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
@@ -328,7 +326,7 @@ A: The Dockerfiles already configure the correct shared memory settings for Chro
 extra flags are needed with the provided `docker-compose.yml`.
 
 **Q: Can I disable one retailer?**  
-A: Yes. Set `MIGROS_LOGIN_ENABLED=false` or `COOP_LOGIN_ENABLED=false` in your `.env`.
+A: Yes. Set `COOP_STARTUP_RUN_ENABLED=false` or `MIGROS_STARTUP_RUN_ENABLED=false` in your `.env`.
 
 **Q: The login fails with a screenshot showing a CAPTCHA.**  
 A: This almost always means the IP has been flagged. Try running on a different network

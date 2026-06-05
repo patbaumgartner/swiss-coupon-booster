@@ -17,16 +17,11 @@ public class RestClientConfiguration {
 	private static final Logger log = LoggerFactory.getLogger(RestClientConfiguration.class);
 
 	@Bean
-	RestClient.Builder restClientBuilder() {
-		log.debug("Configuring REST client builder with request logging interceptor and default headers");
-		return RestClient.builder().requestInterceptor(createRequestLoggingInterceptor());
-	}
-
-	@Bean
 	RestClientCustomizer restClientCustomizer() {
-		log.debug("Configuring REST client customizer with compression and connection headers");
+		log.debug("Configuring REST client customizer with compression headers and request logging interceptor");
 		return restClientBuilder -> restClientBuilder.defaultHeader(ACCEPT_ENCODING, "gzip, deflate, br")
-			.defaultHeader(CONNECTION, "keep-alive");
+			.defaultHeader(CONNECTION, "keep-alive")
+			.requestInterceptor(createRequestLoggingInterceptor());
 	}
 
 	private ClientHttpRequestInterceptor createRequestLoggingInterceptor() {

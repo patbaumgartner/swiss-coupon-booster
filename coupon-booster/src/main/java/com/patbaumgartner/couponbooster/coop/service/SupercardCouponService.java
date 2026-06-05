@@ -65,8 +65,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	 */
 	public SupercardCouponService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
 			SupercardProperties supercardProperties) {
-		this.apiClient = restClientBuilder.build(); // Removed requestFactory
-													// customization
+		this.apiClient = restClientBuilder.build();
 		this.objectMapper = objectMapper;
 		this.supercardProperties = supercardProperties;
 	}
@@ -224,9 +223,13 @@ public class SupercardCouponService extends AbstractCouponService {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (collectionResponse.getStatusCode() != HttpStatus.OK
-				|| collectionResponse.getHeaders().getContentType() == MediaType.TEXT_HTML) {
+		if (collectionResponse.getStatusCode() != HttpStatus.OK) {
 			throw new CouponBoosterException("Digital bons retrieval failed.");
+		}
+		MediaType contentType = collectionResponse.getHeaders().getContentType();
+		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
+			throw new CouponBoosterException("Digital bons retrieval failed: received HTML instead of JSON. "
+					+ "Session may have expired or DataDome is still active.");
 		}
 
 		List<DigitalCoupon> digitalCouponCollection = new ArrayList<>();
@@ -260,13 +263,14 @@ public class SupercardCouponService extends AbstractCouponService {
 
 				digitalCouponCollection.add(new DigitalCoupon(code, status, shop, isNew, isRecommendation,
 						hasLogoProduct, productTypes, endDate, textDescription, textDiscountAmount));
-				log.info("Found digital coupon: {} - {}", code, status);
+				log.debug("Found digital coupon: {} - {}", code, status);
 			}
 		}
 
 		return digitalCouponCollection;
 	}
 
+	// Package-private to allow direct testing without exposing to the public API.
 	boolean filterProductTypes(DigitalCoupon coupon) {
 		List<String> includeList = supercardProperties.couponFilter().includeProductTypes();
 

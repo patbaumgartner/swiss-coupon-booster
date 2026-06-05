@@ -182,8 +182,8 @@ def serialize_cookies(cookies_raw: list[Any]) -> list[dict[str, Any]]:
         {
             "name": c["name"],
             "value": c["value"],
-            "domain": c.get("domain", ""),
-            "path": c.get("path", "/"),
+            "domain": c.get("domain") or None,
+            "path": c.get("path") or None,
             "expires": c.get("expires", -1),
             "httpOnly": c.get("httpOnly", False),
             "secure": c.get("secure", False),

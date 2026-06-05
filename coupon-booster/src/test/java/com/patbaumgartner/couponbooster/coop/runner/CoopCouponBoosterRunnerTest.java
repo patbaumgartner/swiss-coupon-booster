@@ -4,6 +4,7 @@ import com.patbaumgartner.couponbooster.coop.service.SupercardCouponService;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -26,6 +27,13 @@ class CoopCouponBoosterRunnerTest {
 	@Mock
 	private ApplicationArguments applicationArguments;
 
+	private CoopCouponBoosterRunner coopCouponBoosterRunner;
+
+	@BeforeEach
+	void setUp() {
+		coopCouponBoosterRunner = new CoopCouponBoosterRunner(coopAuthenticationService, supercardCouponService);
+	}
+
 	@Test
 	void run_withSuccessfulAuthentication_shouldActivateCoupons() throws Exception {
 		// Given
@@ -36,10 +44,8 @@ class CoopCouponBoosterRunnerTest {
 		when(supercardCouponService.activateAllAvailableCoupons(any(), any(), any()))
 			.thenReturn(couponActivationResult);
 
-		var runner = new CoopCouponBoosterRunner(coopAuthenticationService, supercardCouponService);
-
 		// When
-		runner.run(applicationArguments);
+		coopCouponBoosterRunner.run(applicationArguments);
 
 		// Then
 		verify(coopAuthenticationService).performAuthentication();
@@ -53,10 +59,8 @@ class CoopCouponBoosterRunnerTest {
 		var authenticationResult = AuthenticationResult.failed("Failure", 100L);
 		when(coopAuthenticationService.performAuthentication()).thenReturn(authenticationResult);
 
-		var runner = new CoopCouponBoosterRunner(coopAuthenticationService, supercardCouponService);
-
 		// When
-		runner.run(applicationArguments);
+		coopCouponBoosterRunner.run(applicationArguments);
 
 		// Then
 		verify(coopAuthenticationService).performAuthentication();

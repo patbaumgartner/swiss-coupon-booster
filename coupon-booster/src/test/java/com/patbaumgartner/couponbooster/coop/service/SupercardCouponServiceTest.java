@@ -104,4 +104,59 @@ class SupercardCouponServiceTest {
 		server.verify();
 	}
 
+	@Test
+	void activateAllAvailableCoupons_withIncludeFilter_onlyActivatesMatchingCoupons() throws Exception {
+		// Given: include filter restricts to "retail" only
+		List<Cookie> sessionCookies = List.of(new Cookie("test-cookie", "test-value").setDomain(".coop.ch"));
+
+		when(supercardProperties.couponFilter()).thenReturn(new SupercardProperties.CouponFilter(List.of("retail")));
+		when(supercardProperties.urls()).thenReturn(urls);
+		when(urls.configUrl()).thenReturn("https://api.coop.ch/config");
+		when(urls.couponsUrl()).thenReturn("https://api.coop.ch/coupons");
+		when(urls.couponsDeactivationUrl()).thenReturn("https://api.coop.ch/coupons/deactivation");
+		when(urls.couponsActivationUrl()).thenReturn("https://api.coop.ch/coupons/activation");
+
+		String jwtTokenResponse = "{\"jwtToken\":\"test-token\"}";
+		server.expect(requestTo("https://api.coop.ch/config"))
+			.andRespond(withSuccess(jwtTokenResponse, MediaType.APPLICATION_JSON));
+
+		// One coupon with "retail" productType (passes filter), one with "online"
+		// (blocked)
+		String couponsResponse = "{\"dc\":["
+				+ "{\"code\":\"r1\",\"status\":\"OPEN\",\"endDate\":\"2025-12-31T23:59:59\","
+				+ "\"formatIdMain\":\"retail\",\"textDescription\":\"Retail\",\"textDiscountAmount\":\"5%\","
+				+ "\"isNew\":false,\"isRecommendation\":false,\"logoProduct\":\"none\",\"productTypes\":[\"retail\"]},"
+				+ "{\"code\":\"o1\",\"status\":\"OPEN\",\"endDate\":\"2025-12-31T23:59:59\","
+				+ "\"formatIdMain\":\"online\",\"textDescription\":\"Online\",\"textDiscountAmount\":\"5%\","
+				+ "\"isNew\":false,\"isRecommendation\":false,\"logoProduct\":\"none\",\"productTypes\":[\"online\"]}"
+				+ "]}";
+		String activatedResponse = "{\"dc\":["
+				+ "{\"code\":\"r1\",\"status\":\"ACTIVE\",\"endDate\":\"2025-12-31T23:59:59\","
+				+ "\"formatIdMain\":\"retail\",\"textDescription\":\"Retail\",\"textDiscountAmount\":\"5%\","
+				+ "\"isNew\":false,\"isRecommendation\":false,\"logoProduct\":\"none\",\"productTypes\":[\"retail\"]},"
+				+ "{\"code\":\"o1\",\"status\":\"OPEN\",\"endDate\":\"2025-12-31T23:59:59\","
+				+ "\"formatIdMain\":\"online\",\"textDescription\":\"Online\",\"textDiscountAmount\":\"5%\","
+				+ "\"isNew\":false,\"isRecommendation\":false,\"logoProduct\":\"none\",\"productTypes\":[\"online\"]}"
+				+ "]}";
+
+		server.expect(requestTo("https://api.coop.ch/coupons"))
+			.andRespond(withSuccess(couponsResponse, MediaType.APPLICATION_JSON));
+		// No deactivation call: no ACTIVE coupons → deactivateDigitalCoupons() returns
+		// early
+		server.expect(requestTo("https://api.coop.ch/coupons"))
+			.andRespond(withSuccess(couponsResponse, MediaType.APPLICATION_JSON));
+		server.expect(requestTo("https://api.coop.ch/coupons/activation"))
+			.andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+		server.expect(requestTo("https://api.coop.ch/coupons"))
+			.andRespond(withSuccess(activatedResponse, MediaType.APPLICATION_JSON));
+
+		// When
+		CouponActivationResult result = supercardCouponService.activateAllAvailableCoupons(sessionCookies, "ua", "de");
+
+		// Then: all expected HTTP calls were made (filter only allows "retail" coupon
+		// through)
+		assertThat(result).isNotNull();
+		server.verify();
+	}
+
 }

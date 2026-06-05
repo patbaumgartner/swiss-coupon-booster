@@ -10,11 +10,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 /**
  * {@link ApplicationRunner} for Migros Cumulus coupon activation.
  * <p>
  * This runner orchestrates the authentication and coupon activation process for Migros
- * Cumulus. It is conditionally enabled based on the {@code migros.login.enabled}
+ * Cumulus. It is conditionally enabled based on the {@code migros.startup-run.enabled}
  * property.
  *
  * @see com.patbaumgartner.couponbooster.migros.service.MigrosAuthenticationService
@@ -37,8 +39,9 @@ public class MigrosCouponBoosterRunner implements ApplicationRunner {
 	 */
 	public MigrosCouponBoosterRunner(@Qualifier("migrosAuth") AuthenticationService migrosAuthenticationService,
 			CumulusCouponService cumulusCouponService) {
-		this.migrosAuthenticationService = migrosAuthenticationService;
-		this.cumulusCouponService = cumulusCouponService;
+		this.migrosAuthenticationService = Objects.requireNonNull(migrosAuthenticationService,
+				"MigrosAuthenticationService cannot be null");
+		this.cumulusCouponService = Objects.requireNonNull(cumulusCouponService, "CumulusCouponService cannot be null");
 	}
 
 	/**
@@ -57,8 +60,8 @@ public class MigrosCouponBoosterRunner implements ApplicationRunner {
 
 		if (authenticationResult.isSuccessful()) {
 			if (log.isInfoEnabled()) {
-				log.info("Authentication successful - captured {} session cookies in {}ms",
-						authenticationResult.sessionCookies().size(), authenticationResult.executionDurationMs());
+				log.info("Authentication successful - {} cookies in {}ms", authenticationResult.sessionCookies().size(),
+						authenticationResult.executionDurationMs());
 			}
 
 			var activationResult = cumulusCouponService.activateAllAvailableCoupons(
@@ -66,12 +69,12 @@ public class MigrosCouponBoosterRunner implements ApplicationRunner {
 					authenticationResult.browserLanguage());
 
 			if (log.isInfoEnabled()) {
-				log.info("Runner completed - {} coupons activated successfully, {} failed",
-						activationResult.successCount(), activationResult.failureCount());
+				log.info("Completed - {} activated, {} failed", activationResult.successCount(),
+						activationResult.failureCount());
 			}
 		}
 		else {
-			log.error("Authentication failed: {} (took {}ms)", authenticationResult.statusMessage(),
+			log.error("Authentication failed: {} ({}ms)", authenticationResult.statusMessage(),
 					authenticationResult.executionDurationMs());
 		}
 	}
