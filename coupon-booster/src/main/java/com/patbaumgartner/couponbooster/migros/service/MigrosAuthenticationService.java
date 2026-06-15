@@ -47,7 +47,7 @@ import java.util.Objects;
 @Service
 @Qualifier("migrosAuth")
 @ConditionalOnProperty(name = "migros.auth.mode", havingValue = "browser")
-public class MigrosAuthenticationService extends AbstractAuthenticationService {
+public final class MigrosAuthenticationService extends AbstractAuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(MigrosAuthenticationService.class);
 

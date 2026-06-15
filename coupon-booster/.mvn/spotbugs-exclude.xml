@@ -57,4 +57,23 @@
         <Class name="com.patbaumgartner.couponbooster.coop.service.SupercardCouponService"/>
         <Bug pattern="REC_CATCH_EXCEPTION"/>
     </Match>
+
+    <!-- Suppress CT_CONSTRUCTOR_THROW for abstract base classes -->
+    <!-- These classes use Objects.requireNonNull() in constructors as a defensive -->
+    <!-- programming practice. They cannot be made final because they are abstract -->
+    <!-- base classes designed for extension. -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.runner.AbstractCouponBoosterRunner"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.scheduler.AbstractCouponBoosterScheduler"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.service.AbstractStealthAuthenticationService"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>

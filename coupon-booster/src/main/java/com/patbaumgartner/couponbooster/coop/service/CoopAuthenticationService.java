@@ -53,7 +53,7 @@ import static com.patbaumgartner.couponbooster.coop.config.CoopConstants.Delays.
 @Service
 @Qualifier("coopAuth")
 @ConditionalOnProperty(name = "coop.auth.mode", havingValue = "browser")
-public class CoopAuthenticationService extends AbstractAuthenticationService {
+public final class CoopAuthenticationService extends AbstractAuthenticationService {
 
 	private static final Logger log = LoggerFactory.getLogger(CoopAuthenticationService.class);
 
