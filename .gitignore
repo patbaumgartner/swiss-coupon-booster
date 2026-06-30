@@ -1,6 +1,6 @@
 ##############################################################################
 # Swiss Coupon Booster – .gitignore
-# Covers: Java/Maven (coupon-booster/) and Python (stealth-service/)
+# Covers: Java/Maven (coupon-booster/) and Python (patchright/)
 ##############################################################################
 
 # ── Secrets — never commit ────────────────────────────────────────────────────
@@ -45,16 +45,16 @@ nbdist/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# ── Python (stealth-service/) ─────────────────────────────────────────────────
-stealth-service/.venv/
-stealth-service/__pycache__/
-stealth-service/**/__pycache__/
-stealth-service/.pytest_cache/
-stealth-service/*.egg-info/
-stealth-service/dist/
-stealth-service/build/
-stealth-service/.mypy_cache/
-stealth-service/.ruff_cache/
+# ── Python (patchright/) ─────────────────────────────────────────────────
+patchright/.venv/
+patchright/__pycache__/
+patchright/**/__pycache__/
+patchright/.pytest_cache/
+patchright/*.egg-info/
+patchright/dist/
+patchright/build/
+patchright/.mypy_cache/
+patchright/.ruff_cache/
 
 # Python byte-compiled files
 *.pyc

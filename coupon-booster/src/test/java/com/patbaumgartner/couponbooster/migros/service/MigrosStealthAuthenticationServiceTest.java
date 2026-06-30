@@ -1,6 +1,6 @@
 package com.patbaumgartner.couponbooster.migros.service;
 
-import com.patbaumgartner.couponbooster.migros.properties.MigrosStealthServiceProperties;
+import com.patbaumgartner.couponbooster.migros.properties.MigrosPatchrightProperties;
 import com.patbaumgartner.couponbooster.migros.properties.MigrosUserProperties;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,13 +36,13 @@ class MigrosStealthAuthenticationServiceTest {
 	private MigrosUserProperties userCredentials;
 
 	@MockitoBean
-	private MigrosStealthServiceProperties stealthServiceProperties;
+	private MigrosPatchrightProperties patchrightProperties;
 
 	@BeforeEach
 	void setUp() {
 		when(userCredentials.email()).thenReturn("user@example.com");
 		when(userCredentials.password()).thenReturn("secret");
-		when(stealthServiceProperties.url()).thenReturn("http://coop-stealth:8000");
+		when(patchrightProperties.url()).thenReturn("http://patchright:8000");
 	}
 
 	@Test

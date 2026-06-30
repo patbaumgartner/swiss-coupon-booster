@@ -11,7 +11,7 @@ spring:
   docker:
     compose:
       # Sidecar-only compose file used during local `mvn spring-boot:run`
-      # so Docker can start/stop stealth-service automatically.
+      # so Docker can start/stop patchright automatically.
       file: "../docker-compose.sidecar.yml"
       lifecycle-management: start-and-stop
       skip:
@@ -42,8 +42,8 @@ coop:
     mode: "${COOP_AUTH_MODE:browser}"
 
   # Stealth sidecar endpoint (only used when auth.mode=sidecar)
-  stealth-service:
-    url: "${COOP_STEALTH_SERVICE_URL:http://localhost:8000}"
+  patchright:
+    url: "${COOP_PATCHRIGHT_URL:http://localhost:8000}"
 
   user:
     email: "${COOP_USER_EMAIL:}"
@@ -112,8 +112,8 @@ migros:
   auth:
     mode: "${MIGROS_AUTH_MODE:browser}"
 
-  stealth-service:
-    url: "${MIGROS_STEALTH_SERVICE_URL:http://localhost:8000}"
+  patchright:
+    url: "${MIGROS_PATCHRIGHT_URL:http://localhost:8000}"
 
   user:
     email: "${MIGROS_USER_EMAIL:}"

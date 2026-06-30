@@ -8,12 +8,12 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Configuration properties for the Patchright stealth login sidecar (Migros).
  *
- * @param url base URL of the stealth sidecar (e.g. {@code http://stealth-service:8000})
+ * @param url base URL of the Patchright sidecar (e.g. {@code http://patchright:8000})
  */
-@ConfigurationProperties(prefix = "migros.stealth-service")
+@ConfigurationProperties(prefix = "migros.patchright")
 @Validated
-public record MigrosStealthServiceProperties(
+public record MigrosPatchrightProperties(
 
-		@NotBlank(message = "Stealth service URL is required") @URL(
-				message = "Stealth service URL must be a valid URL") String url) {
+		@NotBlank(message = "Patchright sidecar URL is required") @URL(
+				message = "Patchright sidecar URL must be a valid URL") String url) {
 }

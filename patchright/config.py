@@ -1,4 +1,4 @@
-"""Environment-variable configuration for the stealth-service.
+"""Environment-variable configuration for the patchright.
 
 All tuneable parameters are read from environment variables so that the
 service can be configured at container runtime without rebuilding the image.

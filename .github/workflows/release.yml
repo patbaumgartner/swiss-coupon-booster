@@ -174,7 +174,7 @@ jobs:
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: stealth-service
+        working-directory: patchright
 
     steps:
       - name: Checkout
@@ -190,7 +190,7 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-          cache-dependency-glob: stealth-service/uv.lock
+          cache-dependency-glob: patchright/uv.lock
 
       - name: Install dependencies (locked)
         run: uv sync --frozen --all-groups
@@ -203,7 +203,7 @@ jobs:
         if: always()
         with:
           name: "Test Results – Python ${{ env.PYTHON_VERSION }}"
-          path: stealth-service/test-results.xml
+          path: patchright/test-results.xml
           reporter: java-junit
           fail-on-error: true
 
@@ -274,23 +274,23 @@ jobs:
             --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}
 
-      - name: Extract Docker metadata – stealth-service
-        id: meta-stealth
+      - name: Extract Docker metadata – patchright
+        id: meta-patchright
         uses: docker/metadata-action@v6
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/stealth-service
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright
           tags: |
             type=raw,value=${{ needs.validate-release.outputs.version }}
             type=raw,value=latest,enable=${{ needs.validate-release.outputs.is_prerelease == 'false' }}
 
-      - name: Build and push stealth-service
+      - name: Build and push patchright
         uses: docker/build-push-action@v7
         with:
-          context: ./stealth-service
-          file: ./stealth-service/Dockerfile
+          context: ./patchright
+          file: ./patchright/Dockerfile
           push: true
-          tags: ${{ steps.meta-stealth.outputs.tags }}
-          labels: ${{ steps.meta-stealth.outputs.labels }}
+          tags: ${{ steps.meta-patchright.outputs.tags }}
+          labels: ${{ steps.meta-patchright.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -324,7 +324,7 @@ jobs:
             Pull the latest images from Docker Hub:
 
             ```sh
-            docker pull patbaumgartner/stealth-service:${{ needs.validate-release.outputs.version }}
+            docker pull patbaumgartner/coupon-booster-patchright:${{ needs.validate-release.outputs.version }}
             docker pull patbaumgartner/coupon-booster:${{ needs.validate-release.outputs.version }}
             ```
 

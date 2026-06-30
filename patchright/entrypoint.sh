@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-# Entrypoint for the coop-stealth sidecar.
+# Entrypoint for the patchright sidecar.
 #
 # Patchright's patched Chromium must run with a real rendering context to pass
 # DataDome's browser-verification fingerprinting.  We launch a virtual X display

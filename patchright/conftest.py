@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for the stealth-service test suite."""
+"""Shared pytest fixtures for the patchright test suite."""
 
 import pytest
 from fastapi.testclient import TestClient

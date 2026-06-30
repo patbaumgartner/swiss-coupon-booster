@@ -1,6 +1,6 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.patbaumgartner.couponbooster.coop.properties.CoopStealthServiceProperties;
+import com.patbaumgartner.couponbooster.coop.properties.CoopPatchrightProperties;
 import com.patbaumgartner.couponbooster.coop.properties.CoopUserProperties;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,13 +36,13 @@ class CoopStealthAuthenticationServiceTest {
 	private CoopUserProperties userCredentials;
 
 	@MockitoBean
-	private CoopStealthServiceProperties stealthServiceProperties;
+	private CoopPatchrightProperties patchrightProperties;
 
 	@BeforeEach
 	void setUp() {
 		when(userCredentials.email()).thenReturn("user@example.com");
 		when(userCredentials.password()).thenReturn("secret");
-		when(stealthServiceProperties.url()).thenReturn("http://coop-stealth:8000");
+		when(patchrightProperties.url()).thenReturn("http://patchright:8000");
 	}
 
 	@Test

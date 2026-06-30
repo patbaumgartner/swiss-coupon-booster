@@ -10,7 +10,7 @@
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3140/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Docker Hub – coupon-booster](https://img.shields.io/docker/v/patbaumgartner/coupon-booster?label=coupon-booster&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/coupon-booster)
-[![Docker Hub – stealth-service](https://img.shields.io/docker/v/patbaumgartner/stealth-service?label=stealth-service&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/stealth-service)
+[![Docker Hub – patchright](https://img.shields.io/docker/v/patbaumgartner/coupon-booster-patchright?label=patchright&logo=docker&color=blue)](https://hub.docker.com/r/patbaumgartner/coupon-booster-patchright)
 
 </div>
 
@@ -50,11 +50,11 @@ all in a single run. Set it up once on your home server or NAS and let it run on
 │                      docker compose up                          │
 │                                                                 │
 │  ┌────────────────────────┐      ┌───────────────────────────┐  │
-│  │    stealth-service     │      │      coupon-booster       │  │
+│  │    patchright     │      │      coupon-booster       │  │
 │  │  (Python 3.14/FastAPI) │◄─────│    (Java 25/Spring Boot)  │  │
 │  │                        │      │                           │  │
 │  │  POST /login/coop      │      │  1. Authenticate via      │  │
-│  │  POST /login/migros    │      │     stealth-service       │  │
+│  │  POST /login/migros    │      │     patchright       │  │
 │  │                        │      │  2. Fetch available       │  │
 │  │  Patchright + Xvfb     │      │     coupons via REST API  │  │
 │  │  → bypasses DataDome   │      │  3. Activate all coupons  │  │
@@ -64,7 +64,7 @@ all in a single run. Set it up once on your home server or NAS and let it run on
 
 **Why a sidecar?**  
 Coops protect their login pages with [DataDome](https://datadome.co) bot
-detection. A standard headless browser is instantly flagged. The **stealth-service** sidecar
+detection. A standard headless browser is instantly flagged. The **patchright** sidecar
 uses [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — a patched build of
 Chromium that removes all automation fingerprints at the C++ level — running inside a virtual
 Xvfb display. From DataDome's perspective this is indistinguishable from a real user.
@@ -85,7 +85,7 @@ swiss-coupon-booster/
 │   │   └── test/java/       # Unit + integration tests
 │   ├── pom.xml
 │   └── Dockerfile           # Build context: repo root (needs .git for git info)
-├── stealth-service/         # Patchright login sidecar (Python 3.14 / FastAPI)
+├── patchright/         # Patchright login sidecar (Python 3.14 / FastAPI)
 │   ├── main.py              # FastAPI app — POST /login/coop, POST /login/migros, GET /health
 │   ├── test_*.py            # pytest test suite
 │   ├── entrypoint.sh        # Starts Xvfb and uvicorn
@@ -94,7 +94,7 @@ swiss-coupon-booster/
 │   └── Dockerfile
 ├── docker-compose.yml        # Production — pulls images from Docker Hub
 ├── docker-compose.build.yml  # Development — builds images from source
-├── docker-compose.sidecar.yml # Local dev — Spring Boot auto-starts stealth-service only
+├── docker-compose.sidecar.yml # Local dev — Spring Boot auto-starts patchright only
 ├── .env.example              # Configuration template — copy to .env
 └── .github/
     ├── workflows/
@@ -132,7 +132,7 @@ docker compose pull
 docker compose up
 ```
 
-`stealth-service` starts first and waits until its health check passes (up to 40 s). Then
+`patchright` starts first and waits until its health check passes (up to 40 s). Then
 `coupon-booster` authenticates, activates all available coupons, and exits cleanly.
 
 **Pinning a specific release:**
@@ -241,10 +241,10 @@ recommended approach.
 
 ## Local development
 
-### stealth-service (Python)
+### patchright (Python)
 
 ```sh
-cd stealth-service
+cd patchright
 
 # Install uv (if not already installed)
 # https://docs.astral.sh/uv/getting-started/installation/
@@ -277,7 +277,7 @@ cd coupon-booster
 # Run the application
 # The ../.env file at the repo root is loaded automatically via spring.config.import
 # When COOP_AUTH_MODE=sidecar and/or MIGROS_AUTH_MODE=sidecar, Spring Boot
-# auto-starts docker-compose.sidecar.yml (stealth-service only).
+# auto-starts docker-compose.sidecar.yml (patchright only).
 ./mvnw spring-boot:run
 
 # Unit tests only
@@ -311,7 +311,7 @@ Copy `.env.example` to `.env` and fill in the required values.
 
 | Mode | When to use |
 |---|---|
-| `sidecar` **(Docker / production default)** | Login delegated to `stealth-service`. Uses Patchright + Xvfb to bypass DataDome. Both Docker Compose files default to this. Also used with `mvn spring-boot:run` — Spring Boot auto-starts `docker-compose.sidecar.yml`. |
+| `sidecar` **(Docker / production default)** | Login delegated to `patchright`. Uses Patchright + Xvfb to bypass DataDome. Both Docker Compose files default to this. Also used with `mvn spring-boot:run` — Spring Boot auto-starts `docker-compose.sidecar.yml`. |
 | `browser` **(local dev fallback)** | Login via Java Playwright directly. No sidecar required. Suitable for `mvn spring-boot:run` on a developer machine. May be challenged by DataDome on non-residential IPs. |
 
 ### Feature toggles
@@ -343,10 +343,10 @@ Activate with `SPRING_PROFILES_ACTIVE=server` to run as a long-lived Spring app 
 
 | Variable | Default | Description |
 |---|---|---|
-| `STEALTH_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
-| `STEALTH_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
-| `STEALTH_TYPING_DELAY_MS` | `80` | Delay between individual keystrokes (ms) |
-| `STEALTH_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
+| `PATCHRIGHT_SLOW_MO_MS` | `500` | Milliseconds between browser actions |
+| `PATCHRIGHT_TIMEOUT_MS` | `25000` | Browser element wait timeout (ms) |
+| `PATCHRIGHT_TYPING_DELAY_MS` | `80` | Delay between individual keystrokes (ms) |
+| `PATCHRIGHT_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
 | `COOP_LOGIN_URL` | _(Supercard SSO URL)_ | Override the Coop login URL |
 | `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
 
@@ -365,7 +365,7 @@ When a login fails, screenshots and HTML page dumps are saved automatically.
 
 ```sh
 # Copy screenshots out of the running (or stopped) container
-docker compose cp stealth-service:/data/screenshots ./debug-screenshots
+docker compose cp patchright:/data/screenshots ./debug-screenshots
 ls -la ./debug-screenshots/
 ```
 
@@ -403,7 +403,7 @@ proxy via the `PROXY_URL` variable.
 
 | Image | Description |
 |---|---|
-| [`patbaumgartner/stealth-service`](https://hub.docker.com/r/patbaumgartner/stealth-service) | Python 3.14 / Patchright sidecar |
+| [`patbaumgartner/coupon-booster-patchright`](https://hub.docker.com/r/patbaumgartner/coupon-booster-patchright) | Python 3.14 / Patchright sidecar |
 | [`patbaumgartner/coupon-booster`](https://hub.docker.com/r/patbaumgartner/coupon-booster) | Java 25 / Spring Boot application |
 
 Images are built and pushed to Docker Hub automatically on every GitHub release via the

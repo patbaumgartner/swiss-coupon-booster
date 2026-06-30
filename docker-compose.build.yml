@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Swiss Coupon Booster – local build compose file
 #
-# Builds the stealth-service Docker image from source and runs it with a
+# Builds the patchright Docker image from source and runs it with a
 # locally built coupon-booster image (built via the Spring Boot Maven plugin).
 #
 # Usage
@@ -13,7 +13,7 @@
 #   # 2. Build the coupon-booster app image via Maven buildpacks
 #   cd coupon-booster && ./mvnw spring-boot:build-image
 #
-#   # 3. Start everything (stealth-service is built here; coupon-booster uses pre-built image)
+#   # 3. Start everything (patchright is built here; coupon-booster uses pre-built image)
 #   docker compose -f docker-compose.build.yml up --build
 #
 # To run pre-built images from Docker Hub instead, use:
@@ -23,22 +23,22 @@
 services:
 
   # ── Stealth login sidecar ───────────────────────────────────────────────────
-  stealth-service:
+  patchright:
     build:
-      context: ./stealth-service
+      context: ./patchright
       dockerfile: Dockerfile
-    image: patbaumgartner/stealth-service:${VERSION:-latest}
-    container_name: stealth-service
+    image: patbaumgartner/coupon-booster-patchright:${VERSION:-latest}
+    container_name: patchright
     restart: "no"
     environment:
       COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
       COOP_USER_DATA_DIR: /data/coop-user-data
       MIGROS_USER_DATA_DIR: /data/migros-user-data
       SCREENSHOT_DIR: /data/screenshots
-      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
-      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
-      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
-      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      SLOW_MO_MS: "${PATCHRIGHT_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${PATCHRIGHT_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${PATCHRIGHT_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${PATCHRIGHT_LOG_LEVEL:-info}"
       # PROXY_URL: "${PROXY_URL}"
     volumes:
       - coop-user-data:/data/coop-user-data
@@ -63,7 +63,7 @@ services:
     container_name: coupon-booster
     restart: "no"
     depends_on:
-      stealth-service:
+      patchright:
         condition: service_healthy
     environment:
       # ── Migros (Cumulus) credentials ──────────────────────────────────────────
@@ -73,13 +73,13 @@ services:
       COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
       COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
       # ── Auth modes ────────────────────────────────────────────────────────────
-      # 'sidecar' (default) — delegates login to stealth-service (bypasses DataDome)
+      # 'sidecar' (default) — delegates login to patchright (bypasses DataDome)
       # 'browser'           — uses Java Playwright directly (legacy fallback)
       COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
       MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
-      # ── Stealth service URLs (resolved via internal Docker network) ───────────
-      COOP_STEALTH_SERVICE_URL: "http://stealth-service:8000"
-      MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      # ── Patchright sidecar URLs (resolved via internal Docker network) ────────
+      COOP_PATCHRIGHT_URL: "http://patchright:8000"
+      MIGROS_PATCHRIGHT_URL: "http://patchright:8000"
       # ── Playwright settings (only used with auth.mode=browser) ─────────────────
       COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
       PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"

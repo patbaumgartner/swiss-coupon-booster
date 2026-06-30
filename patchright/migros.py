@@ -46,7 +46,7 @@ from config import (
     TYPING_DELAY_MS,
 )
 
-log = logging.getLogger("stealth-service.migros")
+log = logging.getLogger("patchright.migros")
 
 _MIGROS_EMAIL_SELECTORS: tuple[str, ...] = (
     SEL_MIGROS_EMAIL,
