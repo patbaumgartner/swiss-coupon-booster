@@ -78,8 +78,8 @@ services:
       COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
       MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
       # ── Patchright sidecar URLs (resolved via internal Docker network) ────────
-      COOP_PATCHRIGHT_URL: "http://patchright:8000"
-      MIGROS_PATCHRIGHT_URL: "http://patchright:8000"
+      COOP_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
+      MIGROS_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
       # ── Playwright settings (only used with auth.mode=browser) ─────────────────
       COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
       PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"

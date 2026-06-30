@@ -186,7 +186,7 @@ jobs:
           context: ./patchright
           file: ./patchright/Dockerfile
           push: ${{ steps.publish.outputs.enabled == 'true' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/patchright:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
