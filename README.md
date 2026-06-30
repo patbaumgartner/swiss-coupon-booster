@@ -186,6 +186,42 @@ Enable one-time boot run explicitly with:
 
 Override via `.env` or environment variables — see the [Scheduler](#scheduler-server-profile-only) section in the configuration reference.
 
+#### Manual activation trigger (REST)
+
+In `server` profile the app also exposes REST endpoints to start a run on demand,
+using the same flow as the scheduler:
+
+| Method & path           | Action                          |
+| ----------------------- | ------------------------------- |
+| `POST /activations/coop`   | Run Coop coupon activation   |
+| `POST /activations/migros` | Run Migros coupon activation |
+
+The call blocks until the run finishes and returns the outcome as JSON:
+
+```json
+{ "provider": "Coop", "authenticated": true, "activated": 5, "failed": 0, "authDurationMs": 4210, "message": "Activation completed" }
+```
+
+Responses:
+
+- `200 OK` — run completed (see the JSON body for activated/failed counts).
+- `409 Conflict` — a run (scheduled or manual) is already in progress for that provider.
+- `503 Service Unavailable` — that provider's scheduler is disabled
+  (`COOP_SCHEDULER_ENABLED=false` / `MIGROS_SCHEDULER_ENABLED=false`).
+
+> [!WARNING]
+> The endpoint has no authentication and triggers a credential-backed login. The
+> `coupon-booster` container publishes no port by default, so it is reachable only
+> from inside the Docker network. Trigger it from there:
+>
+> ```sh
+> docker compose exec coupon-booster \
+>   curl -fsS -X POST http://localhost:8080/activations/coop
+> ```
+>
+> Add a port mapping (ideally bound to `127.0.0.1`) and put authentication in front
+> before exposing it to a host or network.
+
 ### Option 2: External cron (Linux/NAS)
 
 For containerized one-shot runs, keep using host cron.

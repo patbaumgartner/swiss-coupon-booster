@@ -1,6 +1,9 @@
 name: Release Pipeline
 
 on:
+  push:
+    tags:
+      - "v*.*.*"
   release:
     types: [published]
   workflow_dispatch:
@@ -20,12 +23,16 @@ on:
         required: false
         default: false
 
+# Never publish the same version twice in parallel (tag push + UI release).
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 env:
   JAVA_VERSION: "25"
   PYTHON_VERSION: "3.14"
   MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
   PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
-  DOCKERHUB_USERNAME: patbaumgartner
 
 permissions:
   contents: read
@@ -54,10 +61,19 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ github.event.inputs.version }}"
             IS_PRERELEASE="${{ github.event.inputs.pre_release }}"
-          else
+          elif [ "${{ github.event_name }}" = "release" ]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
             VERSION="${VERSION#refs/tags/}"
             IS_PRERELEASE="${{ github.event.release.prerelease }}"
+          else
+            # Triggered by a pushed tag (e.g. refs/tags/v1.2.3 or v1.2.3-rc1).
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION="${VERSION#refs/tags/}"
+            if [[ "$VERSION" == *-* ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
           fi
 
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
@@ -220,7 +236,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Bump project version
@@ -238,8 +254,8 @@ jobs:
           file: coupon-booster/run-image.Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ needs.validate-release.outputs.version }}
-            ${{ env.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ needs.validate-release.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -255,14 +271,14 @@ jobs:
         if: needs.validate-release.outputs.is_prerelease == 'false'
         run: |
           docker buildx imagetools create \
-            --tag docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:latest \
-            docker.io/${{ env.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}
+            --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}
 
       - name: Extract Docker metadata – stealth-service
         id: meta-stealth
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.DOCKERHUB_USERNAME }}/stealth-service
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/stealth-service
           tags: |
             type=raw,value=${{ needs.validate-release.outputs.version }}
             type=raw,value=latest,enable=${{ needs.validate-release.outputs.is_prerelease == 'false' }}
@@ -283,7 +299,7 @@ jobs:
     name: GitHub – Publish Release
     runs-on: ubuntu-latest
     needs: [validate-release, docker-publish]
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'push'
     timeout-minutes: 10
     permissions:
       contents: write

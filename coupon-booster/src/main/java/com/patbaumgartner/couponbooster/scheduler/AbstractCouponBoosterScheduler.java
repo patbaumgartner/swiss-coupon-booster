@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Abstract base class for coupon booster scheduled activation tasks.
@@ -29,6 +31,11 @@ public abstract class AbstractCouponBoosterScheduler {
 	private final String providerName;
 
 	/**
+	 * Guards against overlapping runs (e.g. a manual trigger during a scheduled run).
+	 */
+	private final AtomicBoolean activationInProgress = new AtomicBoolean(false);
+
+	/**
 	 * Constructs a new coupon booster scheduler.
 	 * @param authenticationService the authentication service for this provider
 	 * @param couponService the coupon activation service for this provider
@@ -45,31 +52,53 @@ public abstract class AbstractCouponBoosterScheduler {
 
 	/**
 	 * Executes the coupon activation flow for the provider. Intended to be called from
-	 * the subclass {@code @Scheduled} method.
+	 * the subclass {@code @Scheduled} method as well as the manual REST trigger.
+	 * <p>
+	 * Runs are mutually exclusive: if an activation is already in progress for this
+	 * provider, the call is ignored and an empty {@link Optional} is returned.
+	 * @return the {@link ActivationOutcome} of the run, or {@link Optional#empty()} if a
+	 * run was already in progress
 	 */
-	protected void runActivation() {
-		log.info("Starting scheduled {} coupon activation", providerName);
+	public Optional<ActivationOutcome> runActivation() {
+		if (!activationInProgress.compareAndSet(false, true)) {
+			log.warn("{} activation already in progress; ignoring new request", providerName);
+			return Optional.empty();
+		}
+		try {
+			return Optional.of(executeActivation());
+		}
+		finally {
+			activationInProgress.set(false);
+		}
+	}
+
+	private ActivationOutcome executeActivation() {
+		log.info("Starting {} coupon activation", providerName);
 
 		var authenticationResult = authenticationService.performAuthentication();
 
-		if (authenticationResult.isSuccessful()) {
-			if (log.isInfoEnabled()) {
-				log.info("Authentication successful - {} cookies in {}ms", authenticationResult.sessionCookies().size(),
-						authenticationResult.executionDurationMs());
-			}
-
-			var activationResult = couponService.activateAllAvailableCoupons(authenticationResult.sessionCookies(),
-					authenticationResult.userAgent(), authenticationResult.browserLanguage());
-
-			if (log.isInfoEnabled()) {
-				log.info("Completed - {} activated, {} failed", activationResult.successCount(),
-						activationResult.failureCount());
-			}
-		}
-		else {
+		if (!authenticationResult.isSuccessful()) {
 			log.error("Authentication failed: {} ({}ms)", authenticationResult.statusMessage(),
 					authenticationResult.executionDurationMs());
+			return new ActivationOutcome(providerName, false, 0, 0, authenticationResult.executionDurationMs(),
+					authenticationResult.statusMessage());
 		}
+
+		if (log.isInfoEnabled()) {
+			log.info("Authentication successful - {} cookies in {}ms", authenticationResult.sessionCookies().size(),
+					authenticationResult.executionDurationMs());
+		}
+
+		var activationResult = couponService.activateAllAvailableCoupons(authenticationResult.sessionCookies(),
+				authenticationResult.userAgent(), authenticationResult.browserLanguage());
+
+		if (log.isInfoEnabled()) {
+			log.info("Completed - {} activated, {} failed", activationResult.successCount(),
+					activationResult.failureCount());
+		}
+
+		return new ActivationOutcome(providerName, true, activationResult.successCount(),
+				activationResult.failureCount(), authenticationResult.executionDurationMs(), "Activation completed");
 	}
 
 }

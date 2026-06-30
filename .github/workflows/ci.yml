@@ -138,12 +138,14 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-  # ── Docker build validation ──────────────────────────────────────────────────
+  # ── Docker build + publish latest (push to main only) ───────────────────────
   docker:
-    name: Docker – Build Check
+    name: Docker – Build & Publish latest
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [java, python]
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -161,13 +163,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build stealth-service image
+      # Only authenticate + publish on direct pushes to main (not PRs / develop).
+      - name: Determine publish flag
+        id: publish
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to Docker Hub
+        if: steps.publish.outputs.enabled == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build${{ steps.publish.outputs.enabled == 'true' && ' & push' || '' }} stealth-service image
         uses: docker/build-push-action@v7
         with:
           context: ./stealth-service
           file: ./stealth-service/Dockerfile
-          push: false
-          tags: patbaumgartner/stealth-service:ci
+          push: ${{ steps.publish.outputs.enabled == 'true' }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/stealth-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -177,12 +196,26 @@ jobs:
           context: .
           file: ./coupon-booster/run-image.Dockerfile
           load: true
-          tags: patbaumgartner/coupon-booster-run:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Push coupon-booster run image (latest)
+        if: steps.publish.outputs.enabled == 'true'
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+
       - name: Build coupon-booster image
         working-directory: coupon-booster
-        run: ./mvnw -B spring-boot:build-image -DskipTests
+        run: ./mvnw -B spring-boot:build-image -DskipTests -ntp
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
+
+      - name: Tag & push coupon-booster image (latest)
+        if: steps.publish.outputs.enabled == 'true'
+        run: |
+          VERSION="$(./mvnw -q -ntp help:evaluate -Dexpression=project.version -DforceStdout)"
+          docker tag \
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:"$VERSION" \
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
+        working-directory: coupon-booster
