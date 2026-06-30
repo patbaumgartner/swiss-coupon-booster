@@ -76,4 +76,13 @@
         <Class name="com.patbaumgartner.couponbooster.service.AbstractStealthAuthenticationService"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
+
+    <!-- Suppress SPRING_ENDPOINT for ActivationController -->
+    <!-- This is an informational finding (REST controllers are HTTP entry points). -->
+    <!-- The endpoint runs only in the 'server' profile, is not published outside the -->
+    <!-- Docker network, and triggers the same flow as the scheduled jobs. -->
+    <Match>
+        <Class name="com.patbaumgartner.couponbooster.web.ActivationController"/>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
 </FindBugsFilter>
