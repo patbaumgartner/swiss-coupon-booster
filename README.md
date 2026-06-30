@@ -50,11 +50,11 @@ all in a single run. Set it up once on your home server or NAS and let it run on
 │                      docker compose up                          │
 │                                                                 │
 │  ┌────────────────────────┐      ┌───────────────────────────┐  │
-│  │    patchright     │      │      coupon-booster       │  │
+│  │  patchright            │      │    coupon-booster         │  │
 │  │  (Python 3.14/FastAPI) │◄─────│    (Java 25/Spring Boot)  │  │
 │  │                        │      │                           │  │
 │  │  POST /login/coop      │      │  1. Authenticate via      │  │
-│  │  POST /login/migros    │      │     patchright       │  │
+│  │  POST /login/migros    │      │     patchright            │  │
 │  │                        │      │  2. Fetch available       │  │
 │  │  Patchright + Xvfb     │      │     coupons via REST API  │  │
 │  │  → bypasses DataDome   │      │  3. Activate all coupons  │  │
