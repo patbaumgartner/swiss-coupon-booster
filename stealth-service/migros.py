@@ -11,7 +11,9 @@ scope.  This forces the password field to appear instead of a passkey dialog.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 from typing import Any
 
 from patchright.async_api import BrowserContext, Page, async_playwright
@@ -27,6 +29,9 @@ from config import (
     COOKIE_CONSENT_WAIT_MIN,
     INPUT_WAIT_MAX,
     INPUT_WAIT_MIN,
+    MIGROS_CF_AUTO_CLICK,
+    MIGROS_CF_MANUAL_SOLVE,
+    MIGROS_CF_WAIT_MS,
     MIGROS_LOGIN_URL,
     MIGROS_PASSWORD_URL,
     MIGROS_USER_DATA_DIR,
@@ -141,6 +146,102 @@ async def _is_visible(page: Page, selector: str) -> bool:
         return False
 
 
+async def _is_visible_any(page: Page, selectors: tuple[str, ...]) -> bool:
+    for selector in selectors:
+        if await _is_visible(page, selector):
+            return True
+    return False
+
+
+# ── Cloudflare Turnstile ──────────────────────────────────────────────────────
+# login.migros.ch is gated by a Cloudflare "managed challenge" (interactive
+# checkbox). The widget lives inside a challenges.cloudflare.com iframe; the
+# challenge page title is "Nur einen Moment…" / "Just a moment…".
+
+_CF_TITLE_HINTS: tuple[str, ...] = ("nur einen moment", "just a moment", "einen moment")
+_CF_IFRAME_SELECTOR: str = "iframe[src*='challenges.cloudflare.com']"
+
+
+async def _is_cloudflare_challenge(page: Page) -> bool:
+    """Return True when the current page is a Cloudflare Turnstile challenge."""
+    try:
+        title = (await page.title()).lower()
+    except Exception:  # noqa: BLE001
+        title = ""
+    if any(hint in title for hint in _CF_TITLE_HINTS):
+        return True
+    try:
+        return await page.locator(_CF_IFRAME_SELECTOR).count() > 0
+    except Exception:  # noqa: BLE001
+        return False
+
+
+async def _click_turnstile_checkbox(page: Page) -> bool:
+    """Best-effort click of the Turnstile checkbox. Returns True if a click landed."""
+    iframe = page.locator(_CF_IFRAME_SELECTOR).first
+    try:
+        await iframe.wait_for(timeout=8000)
+    except Exception:  # noqa: BLE001
+        return False
+
+    # 1) Reach into the challenge iframe and click the checkbox/label directly.
+    frame = page.frame_locator(_CF_IFRAME_SELECTOR)
+    for selector in ("input[type='checkbox']", "label", "#challenge-stage", "body"):
+        try:
+            locator = frame.locator(selector).first
+            await locator.wait_for(timeout=2500)
+            await locator.click(timeout=2500)
+            log.info("Clicked Turnstile element via frame selector %s", selector)
+            return True
+        except Exception:  # noqa: BLE001
+            continue
+
+    # 2) Fall back to clicking the checkbox area via the iframe bounding box.
+    try:
+        box = await iframe.bounding_box()
+        if box:
+            x = box["x"] + 30
+            y = box["y"] + box["height"] / 2
+            await page.mouse.click(x, y)
+            log.info("Clicked Turnstile checkbox via bounding-box at (%.0f, %.0f)", x, y)
+            return True
+    except Exception:  # noqa: BLE001
+        pass
+    return False
+
+
+async def _handle_cloudflare_turnstile(page: Page) -> bool:
+    """Detect and clear a Cloudflare Turnstile challenge.
+
+    Returns True if there was no challenge or it cleared; False on timeout.
+    """
+    if not await _is_cloudflare_challenge(page):
+        return True
+
+    log.warning("Cloudflare Turnstile challenge detected at %s", page.url)
+    deadline = time.monotonic() + MIGROS_CF_WAIT_MS / 1000.0
+    click_attempts = 0
+    while time.monotonic() < deadline:
+        if not await _is_cloudflare_challenge(page):
+            log.info("Cloudflare challenge cleared ✓")
+            try:
+                await page.wait_for_load_state("load")
+            except Exception:  # noqa: BLE001
+                pass
+            return True
+        if MIGROS_CF_AUTO_CLICK and click_attempts < 3:
+            if await _click_turnstile_checkbox(page):
+                click_attempts += 1
+                await asyncio.sleep(3)
+                continue
+        if MIGROS_CF_MANUAL_SOLVE:
+            log.warning("Waiting for MANUAL Turnstile solve in the headed window…")
+        await asyncio.sleep(2)
+
+    log.error("Cloudflare Turnstile challenge did NOT clear within %d ms", MIGROS_CF_WAIT_MS)
+    return False
+
+
 async def _switch_to_password_mode_if_available(page: Page) -> None:
     for index, selector in enumerate(_MIGROS_PASSWORD_LINK_SELECTORS, start=1):
         locator = page.locator(selector).first
@@ -159,6 +260,49 @@ async def _switch_to_password_mode_if_available(page: Page) -> None:
             continue
 
 
+async def _advance_from_email_to_password(page: Page, email: str) -> bool:
+    """Get from the e-mail form to the password field.
+
+    Tolerates the Cloudflare pattern where submitting the e-mail triggers a
+    challenge that, once cleared, bounces back to an empty e-mail form (losing
+    the submission). Re-submitting after cf_clearance is set usually reaches the
+    password page. Returns True if the password field becomes visible.
+    """
+    for attempt in range(1, 4):
+        await _handle_cloudflare_turnstile(page)
+
+        if await _is_password_field_visible(page):
+            return True
+
+        # A passkey / login-options page may need switching to password mode.
+        await _switch_to_password_mode_if_available(page)
+        if await _is_password_field_visible(page):
+            return True
+
+        if not await _is_visible_any(page, _MIGROS_EMAIL_SELECTORS):
+            # Neither password nor e-mail field present yet — let the page settle.
+            await asyncio.sleep(2)
+            continue
+
+        log.debug("E-mail submit attempt %d of 3", attempt)
+        await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
+        email_field = await _find_first_visible(page, _MIGROS_EMAIL_SELECTORS, TIMEOUT_MS)
+        await email_field.clear()
+        await email_field.press_sequentially(email, delay=TYPING_DELAY_MS)
+
+        await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
+        submit_btn = await _find_first_visible(page, _MIGROS_SUBMIT_SELECTORS, TIMEOUT_MS)
+        await submit_btn.click()
+        try:
+            await page.wait_for_load_state("load")
+        except Exception:  # noqa: BLE001
+            pass
+        # Give Cloudflare / navigation a moment before the next check.
+        await asyncio.sleep(2)
+
+    return await _is_password_field_visible(page)
+
+
 async def _run_login_flow(context: BrowserContext, email: str, password: str) -> dict[str, Any]:
     page = await context.new_page()
     try:
@@ -172,6 +316,9 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
         await random_delay(1000, 2000)
 
         await _handle_cookie_consent(page)
+
+        # Migros gates the login behind a Cloudflare Turnstile challenge.
+        await _handle_cloudflare_turnstile(page)
 
         # ── Already authenticated? ────────────────────────────────────────────
         # If the persistent profile holds a valid session, login.migros.ch
@@ -200,45 +347,20 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
         if not await _is_password_field_visible(page):
             await _switch_to_password_mode_if_available(page)
 
-        # Step 1: enter e-mail and submit (unless password-only page is already shown)
-        password_only_flow = await _is_password_field_visible(page)
-        if password_only_flow:
-            log.debug("Password field already present; skipping e-mail step")
-        else:
-            log.debug("Entering e-mail")
-            await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-            try:
-                email_field = await _find_first_visible(page, _MIGROS_EMAIL_SELECTORS, TIMEOUT_MS)
-            except RuntimeError:
+        # Step 1+2: advance from the e-mail form to the password field. This
+        # tolerates Cloudflare challenges that bounce the form back to an empty
+        # state — re-submitting once cf_clearance is set usually reaches the
+        # password page.
+        if not await _is_password_field_visible(page):
+            if not await _advance_from_email_to_password(page, email):
                 log.warning(
-                    "No email field visible on %s; navigating directly to password URL %s",
-                    page.url,
+                    "Password field not reached after retries; navigating directly to %s",
                     MIGROS_PASSWORD_URL,
                 )
                 await page.goto(MIGROS_PASSWORD_URL)
                 await page.wait_for_load_state("load")
-                await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-                if await _is_password_field_visible(page):
-                    password_only_flow = True
-                else:
-                    email_field = await _find_first_visible(page, _MIGROS_EMAIL_SELECTORS, TIMEOUT_MS)
-
-            if not password_only_flow:
-                await email_field.clear()
-                await email_field.press_sequentially(email, delay=TYPING_DELAY_MS)
-
-                await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
-                submit_btn = await _find_first_visible(page, _MIGROS_SUBMIT_SELECTORS, TIMEOUT_MS)
-                await submit_btn.click()
-                await page.wait_for_load_state("load")
-
-        # Step 2: choose "login with password" option (if still needed)
-        if not password_only_flow and not await _is_password_field_visible(page):
-            log.debug("Clicking password login option")
-            await random_delay(INPUT_WAIT_MIN, INPUT_WAIT_MAX)
-            await _switch_to_password_mode_if_available(page)
-        else:
-            log.debug("Password field already visible; skipping password option click")
+                await _handle_cloudflare_turnstile(page)
+                await _switch_to_password_mode_if_available(page)
 
         try:
             await page.wait_for_url(f"{MIGROS_PASSWORD_URL}*", timeout=TIMEOUT_MS)
