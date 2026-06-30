@@ -98,14 +98,14 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # ── Python / stealth-service ────────────────────────────────────────────────
+  # ── Python / patchright ────────────────────────────────────────────────
   python:
     name: Python – Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: stealth-service
+        working-directory: patchright
 
     steps:
       - name: Checkout
@@ -121,7 +121,7 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-          cache-dependency-glob: stealth-service/uv.lock
+          cache-dependency-glob: patchright/uv.lock
 
       - name: Install dependencies (locked)
         run: uv sync --frozen --all-groups
@@ -134,7 +134,7 @@ jobs:
         if: always()
         with:
           name: "Test Results – Python ${{ env.PYTHON_VERSION }}"
-          path: stealth-service/test-results.xml
+          path: patchright/test-results.xml
           reporter: java-junit
           fail-on-error: true
 
@@ -180,13 +180,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build${{ steps.publish.outputs.enabled == 'true' && ' & push' || '' }} stealth-service image
+      - name: Build${{ steps.publish.outputs.enabled == 'true' && ' & push' || '' }} patchright image
         uses: docker/build-push-action@v7
         with:
-          context: ./stealth-service
-          file: ./stealth-service/Dockerfile
+          context: ./patchright
+          file: ./patchright/Dockerfile
           push: ${{ steps.publish.outputs.enabled == 'true' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/stealth-service:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

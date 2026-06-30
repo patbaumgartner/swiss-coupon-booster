@@ -40,7 +40,7 @@ logging.basicConfig(
     level=logging.DEBUG if os.getenv("LOG_LEVEL", "info").lower() == "debug" else logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
 )
-log = logging.getLogger("stealth-service")
+log = logging.getLogger("patchright")
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
@@ -56,12 +56,12 @@ class LoginRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
-    log.info("Stealth service starting")
+    log.info("Patchright sidecar starting")
     yield
-    log.info("Stealth service shutting down")
+    log.info("Patchright sidecar shutting down")
 
 
-app = FastAPI(title="Stealth Login Service", lifespan=lifespan)
+app = FastAPI(title="Patchright Login Sidecar", lifespan=lifespan)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

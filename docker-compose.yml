@@ -6,7 +6,7 @@
 #
 # Services
 # ──────────
-# stealth-service  Patchright (Python) sidecar — stealth login for both Coop
+# patchright  Patchright (Python) sidecar — stealth login for both Coop
 #                  (DataDome bypass via Xvfb + full Chromium) and Migros.
 # coupon-booster   Spring Boot app — activates Migros Cumulus + Coop Supercard
 #                  coupons using cookies obtained from the stealth sidecar.
@@ -27,9 +27,9 @@
 services:
 
   # ── Stealth login sidecar ───────────────────────────────────────────────────
-  stealth-service:
-    image: patbaumgartner/stealth-service:${VERSION:-latest}
-    container_name: stealth-service
+  patchright:
+    image: patbaumgartner/coupon-booster-patchright:${VERSION:-latest}
+    container_name: patchright
     restart: "no"
     environment:
       COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
@@ -38,10 +38,10 @@ services:
       SCREENSHOT_DIR: /data/screenshots
       # HEADLESS is forced false by entrypoint.sh (Xvfb virtual display).
       # chromium-headless-shell is detected by DataDome; full Chromium + Xvfb is not.
-      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
-      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
-      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
-      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      SLOW_MO_MS: "${PATCHRIGHT_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${PATCHRIGHT_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${PATCHRIGHT_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${PATCHRIGHT_LOG_LEVEL:-info}"
       # Optional: route through a residential proxy (not usually needed on a home network)
       # PROXY_URL: "${PROXY_URL}"
     volumes:
@@ -67,7 +67,7 @@ services:
     container_name: coupon-booster
     restart: "no"
     depends_on:
-      stealth-service:
+      patchright:
         condition: service_healthy
     environment:
       # ── Migros (Cumulus) credentials ──────────────────────────────────────────
@@ -77,13 +77,13 @@ services:
       COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
       COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
       # ── Auth modes ────────────────────────────────────────────────────────────
-      # 'sidecar' (default) — delegates login to stealth-service (bypasses DataDome)
+      # 'sidecar' (default) — delegates login to patchright (bypasses DataDome)
       # 'browser'           — uses Java Playwright directly (legacy fallback)
       COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
       MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
-      # ── Stealth service URLs (resolved via internal Docker network) ───────────
-      COOP_STEALTH_SERVICE_URL: "http://stealth-service:8000"
-      MIGROS_STEALTH_SERVICE_URL: "http://stealth-service:8000"
+      # ── Patchright sidecar URLs (resolved via internal Docker network) ────────
+      COOP_PATCHRIGHT_URL: "http://patchright:8000"
+      MIGROS_PATCHRIGHT_URL: "http://patchright:8000"
       # ── Playwright settings (only used with auth.mode=browser) ─────────────────
       COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
       PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"

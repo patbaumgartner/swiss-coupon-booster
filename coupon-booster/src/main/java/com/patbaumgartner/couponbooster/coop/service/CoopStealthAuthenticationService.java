@@ -1,6 +1,6 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.patbaumgartner.couponbooster.coop.properties.CoopStealthServiceProperties;
+import com.patbaumgartner.couponbooster.coop.properties.CoopPatchrightProperties;
 import com.patbaumgartner.couponbooster.coop.properties.CoopUserProperties;
 import com.patbaumgartner.couponbooster.service.AbstractStealthAuthenticationService;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * {@link AuthenticationService} implementation that delegates Coop login to the
- * Patchright stealth sidecar service ({@code stealth-service}).
+ * Patchright stealth sidecar service ({@code patchright}).
  * <p>
  * The sidecar runs a hardened Chromium (Patchright) instance that bypasses DataDome bot
  * detection. This service calls {@code POST /login/coop} on the sidecar, receives session
@@ -26,7 +26,7 @@ import java.util.Objects;
  * development without Docker.
  *
  * @see CoopAuthenticationService
- * @see CoopStealthServiceProperties
+ * @see CoopPatchrightProperties
  */
 @Service
 @Qualifier("coopAuth")
@@ -36,17 +36,17 @@ public class CoopStealthAuthenticationService extends AbstractStealthAuthenticat
 	/**
 	 * Constructs a new {@code CoopStealthAuthenticationService}.
 	 * @param userCredentials Coop account credentials
-	 * @param stealthServiceProperties configuration for the sidecar endpoint
+	 * @param patchrightProperties configuration for the sidecar endpoint
 	 * @param restClientBuilder Spring REST client builder
 	 * @param objectMapper Jackson object mapper
 	 */
 	public CoopStealthAuthenticationService(CoopUserProperties userCredentials,
-			CoopStealthServiceProperties stealthServiceProperties, RestClient.Builder restClientBuilder,
+			CoopPatchrightProperties patchrightProperties, RestClient.Builder restClientBuilder,
 			ObjectMapper objectMapper) {
 		super(Objects.requireNonNull(userCredentials, "User credentials cannot be null")::email,
 				userCredentials::password,
 				"Coop credentials missing. Configure COOP_USER_EMAIL and COOP_USER_PASSWORD.", "/login/coop",
-				Objects.requireNonNull(stealthServiceProperties, "Stealth service properties cannot be null").url(),
+				Objects.requireNonNull(patchrightProperties, "Patchright properties cannot be null").url(),
 				restClientBuilder, objectMapper);
 	}
 

@@ -194,7 +194,7 @@ public class SupercardCouponService extends AbstractCouponService {
 		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
 			throw new CouponBoosterException("JWT extraction failed: config endpoint returned HTML instead of JSON. "
 					+ "This usually means the session is not authenticated or DataDome is still active. "
-					+ "Check stealth sidecar logs and screenshots in /data/screenshots.");
+					+ "Check Patchright sidecar logs and screenshots in /data/screenshots.");
 		}
 
 		JsonNode rootNode = objectMapper.readTree(configResponse.getBody());

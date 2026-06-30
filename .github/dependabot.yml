@@ -20,9 +20,9 @@ updates:
       - "dependencies"
       - "java"
 
-  # ── uv (stealth-service/) ──────────────────────────────────────────────────
+  # ── uv (patchright/) ──────────────────────────────────────────────────
   - package-ecosystem: "uv"
-    directory: "/stealth-service"
+    directory: "/patchright"
     schedule:
       interval: "weekly"
       day: "monday"

@@ -45,7 +45,7 @@ from config import (
     TYPING_DELAY_MS,
 )
 
-log = logging.getLogger("stealth-service.coop")
+log = logging.getLogger("patchright.coop")
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────

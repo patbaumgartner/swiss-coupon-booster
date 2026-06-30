@@ -1,27 +1,27 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Swiss Coupon Booster – local development sidecar
 #
-# Starts only the stealth-service sidecar for local Spring Boot development.
+# Starts only the patchright sidecar for local Spring Boot development.
 # Used automatically by the Spring Boot Docker Compose integration when running
 # `mvn spring-boot:run` with COOP_AUTH_MODE=sidecar or MIGROS_AUTH_MODE=sidecar.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
-  stealth-service:
+  patchright:
     build:
-      context: ./stealth-service
-    image: patbaumgartner/stealth-service:${VERSION:-latest}
-    container_name: stealth-service
+      context: ./patchright
+    image: patbaumgartner/coupon-booster-patchright:${VERSION:-latest}
+    container_name: patchright
     restart: "no"
     environment:
       COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"
       COOP_USER_DATA_DIR: /data/coop-user-data
       MIGROS_USER_DATA_DIR: /data/migros-user-data
       SCREENSHOT_DIR: /data/screenshots
-      SLOW_MO_MS: "${STEALTH_SLOW_MO_MS:-500}"
-      TIMEOUT_MS: "${STEALTH_TIMEOUT_MS:-25000}"
-      TYPING_DELAY_MS: "${STEALTH_TYPING_DELAY_MS:-80}"
-      LOG_LEVEL: "${STEALTH_LOG_LEVEL:-info}"
+      SLOW_MO_MS: "${PATCHRIGHT_SLOW_MO_MS:-500}"
+      TIMEOUT_MS: "${PATCHRIGHT_TIMEOUT_MS:-25000}"
+      TYPING_DELAY_MS: "${PATCHRIGHT_TYPING_DELAY_MS:-80}"
+      LOG_LEVEL: "${PATCHRIGHT_LOG_LEVEL:-info}"
       # Optional: route through a residential proxy when needed.
       # PROXY_URL: "${PROXY_URL}"
     volumes:

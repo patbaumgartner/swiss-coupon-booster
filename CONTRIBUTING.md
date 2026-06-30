@@ -49,7 +49,7 @@ git remote add upstream https://github.com/patbaumgartner/swiss-coupon-booster.g
 ### 2. Set up the Python sidecar
 
 ```sh
-cd stealth-service
+cd patchright
 uv sync --frozen --all-groups
 uv run python -m patchright install chromium
 ```
@@ -87,7 +87,7 @@ mvn spring-javaformat:apply   # auto-format before committing
 mvn verify                    # format check + tests + SpotBugs + JaCoCo
 
 # Python
-cd stealth-service
+cd patchright
 uv run pytest -v --tb=short
 
 # Commit and push
@@ -160,7 +160,7 @@ ci: add concurrency cancellation to CI workflow
 | Dependency management | All versions in `pom.xml` `<properties>` block |
 | Configuration properties | `@ConfigurationProperties` records with `@ConfigurationPropertiesScan` |
 
-### Python (`stealth-service/`)
+### Python (`patchright/`)
 
 | Convention | Tool |
 |---|---|
@@ -172,7 +172,7 @@ ci: add concurrency cancellation to CI workflow
 
 - `docker-compose.yml` — **production only**, pulls from Docker Hub.
 - `docker-compose.build.yml` — **development/CI**, builds from source.
-- `docker-compose.sidecar.yml` — **local dev**, Spring Boot Docker Compose integration auto-starts stealth-service only.
+- `docker-compose.sidecar.yml` — **local dev**, Spring Boot Docker Compose integration auto-starts patchright only.
 - Never add credentials or secrets to Dockerfiles or Compose files.
 
 ### Branch naming

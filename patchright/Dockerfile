@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # ─────────────────────────────────────────────────────────────────────────────
-# Coop Stealth Login Sidecar
+# Patchright Stealth Login Sidecar
 # Runs Patchright (hardened Chromium) + FastAPI to perform stealth login on
 # supercard.ch and return session cookies to the Java coupon-booster app.
 # ─────────────────────────────────────────────────────────────────────────────

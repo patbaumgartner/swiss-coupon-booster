@@ -36,7 +36,7 @@ body:
       label: Affected area
       options:
         - Java app (coupon-booster)
-        - Python sidecar (stealth-service)
+        - Python sidecar (patchright)
         - Docker / deployment
         - CI / GitHub Actions
         - Documentation

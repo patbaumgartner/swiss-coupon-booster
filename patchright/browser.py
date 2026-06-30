@@ -24,7 +24,7 @@ from config import (
     TIMEOUT_MS,
 )
 
-log = logging.getLogger("stealth-service.browser")
+log = logging.getLogger("patchright.browser")
 
 
 # ── Timing helpers ────────────────────────────────────────────────────────────
