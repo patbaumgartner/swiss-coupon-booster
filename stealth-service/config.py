@@ -67,3 +67,12 @@ SEL_MIGROS_COOKIE_ACCEPT: str = os.getenv(
     "SEL_MIGROS_COOKIE_ACCEPT",
     "button:has-text('Akzeptieren'), button:has-text('Accept')",
 )
+
+# Cloudflare Turnstile handling on the Migros login page (login.migros.ch).
+# Migros gates its login behind a Cloudflare "managed challenge" (interactive
+# checkbox). MIGROS_CF_AUTO_CLICK lets the service click the checkbox itself;
+# MIGROS_CF_MANUAL_SOLVE keeps it waiting so a human can solve it in a headed
+# window (useful for seeding cf_clearance); MIGROS_CF_WAIT_MS bounds the wait.
+MIGROS_CF_AUTO_CLICK: bool = os.getenv("MIGROS_CF_AUTO_CLICK", "true").lower() == "true"
+MIGROS_CF_MANUAL_SOLVE: bool = os.getenv("MIGROS_CF_MANUAL_SOLVE", "false").lower() == "true"
+MIGROS_CF_WAIT_MS: int = int(os.getenv("MIGROS_CF_WAIT_MS", "45000"))
