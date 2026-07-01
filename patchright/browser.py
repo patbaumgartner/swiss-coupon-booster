@@ -178,6 +178,48 @@ async def _cdp_human_drag(page: Page, x0: float, y0: float, x1: float) -> None:
         await cdp.detach()
 
 
+async def cdp_human_click(page: Page, x: float, y: float) -> None:
+    """Move to (x, y) with a human trajectory and click, via trusted CDP events.
+
+    Cloudflare's Turnstile rejects Playwright's ``locator.click`` (it lands as an
+    instantaneous, motion-less event). Driving ``Input.dispatchMouseEvent`` with
+    a curved approach + realistic press/release timing produces a trusted click
+    with genuine pointer movement, which is what Turnstile expects.
+    """
+    cdp = await page.context.new_cdp_session(page)
+
+    async def move(mx: float, my: float) -> None:
+        await cdp.send("Input.dispatchMouseEvent", {"type": "mouseMoved", "x": mx, "y": my})
+
+    try:
+        # Curved approach from up-and-left of the target.
+        start_x = x - random.uniform(60, 110)
+        start_y = y - random.uniform(35, 70)
+        steps = random.randint(22, 34)
+        for i in range(1, steps + 1):
+            t = i / steps
+            ease = t * t * (3 - 2 * t)  # smoothstep ease-in-out
+            mx = start_x + (x - start_x) * ease + random.uniform(-1.2, 1.2)
+            my = start_y + (y - start_y) * ease + random.uniform(-1.2, 1.2)
+            await move(mx, my)
+            await asyncio.sleep(random.uniform(0.008, 0.022))
+
+        # Settle on the target, small pause, then a realistic press/release.
+        await move(x, y)
+        await asyncio.sleep(random.uniform(0.10, 0.24))
+        await cdp.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mousePressed", "x": x, "y": y, "button": "left", "buttons": 1, "clickCount": 1},
+        )
+        await asyncio.sleep(random.uniform(0.05, 0.13))
+        await cdp.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mouseReleased", "x": x, "y": y, "button": "left", "buttons": 0, "clickCount": 1},
+        )
+    finally:
+        await cdp.detach()
+
+
 async def _find_slider_handle(page: Page) -> dict[str, float] | None:
     """Return the bounding box (page coords) of the slider handle, or None."""
     frame = page.frame_locator(_DATADOME_IFRAME)

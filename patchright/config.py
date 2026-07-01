@@ -83,4 +83,4 @@ MIGROS_CF_WAIT_MS: int = int(os.getenv("MIGROS_CF_WAIT_MS", "45000"))
 # exists, the login flow uses passkey auth (no password, no SMS 2FA prompt)
 # by importing the credential into a virtual authenticator that signs the
 # challenge automatically. Treat this file as a SECRET.
-MIGROS_PASSKEY_FILE: Path = Path(os.getenv("MIGROS_PASSKEY_FILE", "/data/migros-passkey.json"))
+MIGROS_PASSKEY_FILE: Path = Path(os.getenv("MIGROS_PASSKEY_FILE", "/data/passkeys/migros-passkey.json"))

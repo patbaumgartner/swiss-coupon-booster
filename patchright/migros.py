@@ -15,12 +15,14 @@ import asyncio
 import json
 import logging
 import os
+import random
 import time
 from typing import Any
 
 from patchright.async_api import BrowserContext, Page, async_playwright
 
 from browser import (
+    cdp_human_click,
     create_persistent_context,
     dump_debug_artifacts,
     enable_virtual_authenticator,
@@ -179,8 +181,57 @@ _CF_TITLE_HINTS: tuple[str, ...] = ("nur einen moment", "just a moment", "einen 
 _CF_IFRAME_SELECTOR: str = "iframe[src*='challenges.cloudflare.com']"
 
 
+async def _find_turnstile_frame(page: Page):
+    """Return the challenges.cloudflare.com child frame, if present.
+
+    The Turnstile widget iframe is injected dynamically by Cloudflare's script
+    (often inside a shadow root), so a CSS ``iframe[src*=...]`` locator misses
+    it. Cross-origin child frames always appear in ``page.frames`` regardless of
+    shadow DOM, which makes this the reliable way to find the widget.
+    """
+    for frame in page.frames:
+        try:
+            if "challenges.cloudflare.com" in (frame.url or ""):
+                return frame
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+async def _turnstile_widget_box(page: Page):
+    """On-screen bounding box of the Turnstile widget iframe, or None."""
+    frame = await _find_turnstile_frame(page)
+    if frame is None:
+        return None
+    try:
+        element = await frame.frame_element()
+        if not await element.is_visible():
+            return None
+        return await element.bounding_box()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+async def _is_interactive_turnstile(page: Page) -> bool:
+    """Return True only for a *visible* Turnstile checkbox that needs clicking.
+
+    Unlike ``_is_cloudflare_challenge`` this ignores the page title — Migros'
+    passkey processing screen shows an "Einen Moment…" loading title that must
+    NOT be mistaken for a Cloudflare interstitial. Only a rendered, sized
+    Turnstile widget iframe counts as a solvable challenge.
+    """
+    box = await _turnstile_widget_box(page)
+    return bool(box and box.get("width", 0) > 10 and box.get("height", 0) > 10)
+
+
 async def _is_cloudflare_challenge(page: Page) -> bool:
-    """Return True when the current page is a Cloudflare Turnstile challenge."""
+    """Return True only for a *blocking* Cloudflare challenge.
+
+    A full-page interstitial (title "Just a moment…") always blocks. An embedded
+    Turnstile iframe only blocks when it is actually VISIBLE with a real size —
+    Migros also embeds an *invisible* background Turnstile on the passkey pages
+    that auto-verifies and must NOT be treated as a challenge to solve.
+    """
     try:
         title = (await page.title()).lower()
     except Exception:  # noqa: BLE001
@@ -188,43 +239,61 @@ async def _is_cloudflare_challenge(page: Page) -> bool:
     if any(hint in title for hint in _CF_TITLE_HINTS):
         return True
     try:
-        return await page.locator(_CF_IFRAME_SELECTOR).count() > 0
+        iframe = page.locator(_CF_IFRAME_SELECTOR).first
+        if await iframe.count() == 0:
+            return False
+        if not await iframe.is_visible():
+            return False
+        box = await iframe.bounding_box()
+        # A real interactive checkbox widget is ~300x65; invisible/background
+        # Turnstiles report no box or a 0-sized one.
+        return bool(box and box.get("width", 0) > 40 and box.get("height", 0) > 20)
     except Exception:  # noqa: BLE001
         return False
 
 
 async def _click_turnstile_checkbox(page: Page) -> bool:
-    """Best-effort click of the Turnstile checkbox. Returns True if a click landed."""
-    iframe = page.locator(_CF_IFRAME_SELECTOR).first
-    try:
-        await iframe.wait_for(timeout=8000)
-    except Exception:  # noqa: BLE001
+    """Best-effort click of the Turnstile checkbox. Returns True if a click landed.
+
+    Turnstile rejects Playwright's synthetic ``locator.click`` (no pointer
+    motion), so we compute the checkbox coordinates from the outer widget iframe
+    and drive a trusted CDP click with a human trajectory (same technique that
+    solves the DataDome slider).
+    """
+    # Prefer the frame-based box (works through shadow DOM / dynamic injection);
+    # fall back to a CSS-located iframe if for some reason the frame is absent.
+    box = await _turnstile_widget_box(page)
+    if not box:
+        iframe = page.locator(_CF_IFRAME_SELECTOR).first
+        try:
+            await iframe.wait_for(timeout=8000)
+            box = await iframe.bounding_box()
+        except Exception:  # noqa: BLE001
+            box = None
+    if not box or box.get("width", 0) <= 0:
+        log.debug("Turnstile widget not present / has no usable bounding box")
         return False
 
-    # 1) Reach into the challenge iframe and click the checkbox/label directly.
-    frame = page.frame_locator(_CF_IFRAME_SELECTOR)
-    for selector in ("input[type='checkbox']", "label", "#challenge-stage", "body"):
-        try:
-            locator = frame.locator(selector).first
-            await locator.wait_for(timeout=2500)
-            await locator.click(timeout=2500)
-            log.info("Clicked Turnstile element via frame selector %s", selector)
-            return True
-        except Exception:  # noqa: BLE001
-            continue
-
-    # 2) Fall back to clicking the checkbox area via the iframe bounding box.
+    # The checkbox sits ~28px from the left edge of the widget, vertically
+    # centred. Add a little jitter so repeat clicks are not pixel-identical.
+    x = box["x"] + random.uniform(24, 34)
+    y = box["y"] + box["height"] / 2 + random.uniform(-3, 3)
+    log.info(
+        "Clicking Turnstile checkbox via trusted CDP click at (%.0f, %.0f) "
+        "[iframe box x=%.0f y=%.0f w=%.0f h=%.0f]",
+        x,
+        y,
+        box["x"],
+        box["y"],
+        box["width"],
+        box["height"],
+    )
     try:
-        box = await iframe.bounding_box()
-        if box:
-            x = box["x"] + 30
-            y = box["y"] + box["height"] / 2
-            await page.mouse.click(x, y)
-            log.info("Clicked Turnstile checkbox via bounding-box at (%.0f, %.0f)", x, y)
-            return True
-    except Exception:  # noqa: BLE001
-        pass
-    return False
+        await cdp_human_click(page, x, y)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Trusted CDP Turnstile click failed: %s", exc)
+        return False
 
 
 async def _handle_cloudflare_turnstile(page: Page) -> bool:
@@ -443,6 +512,31 @@ def save_passkey_credential(credential: dict[str, Any]) -> None:
     log.info("Saved Migros passkey credential to %s", MIGROS_PASSKEY_FILE)
 
 
+_MIGROS_LOGOUT_SELECTORS: tuple[str, ...] = (
+    "a:has-text('Abmelden')",
+    "button:has-text('Abmelden')",
+    "a:has-text('Logout')",
+    "[href*='logout']",
+)
+
+
+async def _looks_authenticated(page: Page) -> bool:
+    """Return True if the page exposes signs of an authenticated session.
+
+    After a successful passkey ceremony Migros may land on a login.migros.ch
+    page that already carries a session (e.g. an error page that still offers a
+    "Abmelden"/logout action). Presence of a logout control is a reliable
+    indicator that the session cookies are set.
+    """
+    for selector in _MIGROS_LOGOUT_SELECTORS:
+        try:
+            if await page.locator(selector).first.is_visible():
+                return True
+        except Exception:  # noqa: BLE001
+            continue
+    return False
+
+
 async def _trigger_passkey(page: Page) -> None:
     """Click a passkey sign-in control if the page exposes one.
 
@@ -480,7 +574,7 @@ async def _run_passkey_login_flow(
         await random_delay(1000, 2000)
 
         await _handle_cookie_consent(page)
-        await _handle_cloudflare_turnstile(page)
+        log.info("Passkey flow: landed on %s", page.url)
 
         # Already authenticated via the persistent profile?
         if "login.migros.ch" not in page.url:
@@ -499,26 +593,33 @@ async def _run_passkey_login_flow(
             await submit_btn.click()
             await page.wait_for_load_state("load")
             await random_delay(1500, 2500)
-            await _handle_cloudflare_turnstile(page)
+            log.info("Passkey flow: after e-mail submit, on %s", page.url)
 
-        # Trigger the passkey ceremony; the virtual authenticator auto-signs it.
-        # A Cloudflare Turnstile can appear at (or immediately after) the click,
-        # so loop: clear any challenge, re-trigger if we bounce back, and stop as
-        # soon as Migros redirects us off the login host.
+        # The passkey-direct page auto-invokes navigator.credentials.get() on
+        # load; the virtual authenticator signs it silently. Give it a moment,
+        # then trigger explicitly too in case a button variant is shown.
         await _trigger_passkey(page)
 
+        # Wait for the ceremony to resolve. The page may sit on an "Einen Moment…"
+        # processing screen (NOT a Cloudflare challenge) while the assertion is
+        # verified, so we wait patiently and only act on a genuinely visible
+        # Turnstile checkbox. Success = redirect off login OR an authenticated
+        # session indicator (logout link) appears.
         deadline = time.monotonic() + max(TIMEOUT_MS, MIGROS_CF_WAIT_MS) / 1000.0
         while time.monotonic() < deadline:
             if "login.migros.ch" not in page.url:
                 break
-            if await _is_cloudflare_challenge(page):
-                await _handle_cloudflare_turnstile(page)
-                await random_delay(1000, 2000)
-                if "login.migros.ch" in page.url and "/login/passkey" in page.url:
-                    await _trigger_passkey(page)
-            await asyncio.sleep(2)
+            if await _looks_authenticated(page):
+                log.info("Passkey flow: authenticated session detected at %s", page.url)
+                break
+            if await _is_interactive_turnstile(page):
+                log.info("Passkey flow: interactive Turnstile at %s — clicking", page.url)
+                await _click_turnstile_checkbox(page)
+                await random_delay(2000, 3500)
+            await asyncio.sleep(1.5)
 
-        if "login.migros.ch" in page.url:
+        authenticated = "login.migros.ch" not in page.url or await _looks_authenticated(page)
+        if not authenticated:
             await dump_debug_artifacts(page, "migros_passkey_error")
             raise RuntimeError(f"Migros passkey authentication failed — still on login page: {page.url}")
 
