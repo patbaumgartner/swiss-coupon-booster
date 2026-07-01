@@ -63,6 +63,34 @@ def _is_datadome_url(url: str) -> bool:
     return host == "captcha-delivery.com" or host.endswith(".captcha-delivery.com")
 
 
+# Markers shown on DataDome's terminal "hard block" page (not a solvable
+# challenge — the IP/session has been banned and must cool down or change).
+_HARD_BLOCK_MARKERS = (
+    "Der Zugriff ist vorübergehend eingeschränkt",
+    "Access is temporarily restricted",
+    "übermenschlicher Geschwindigkeit",
+    "superhuman speed",
+)
+
+
+async def is_datadome_hard_block(page: Page) -> bool:
+    """Return True if DataDome is serving a terminal block page (IP banned).
+
+    This is distinct from a solvable slider/verification challenge: no
+    browser-side automation can clear it — the IP must cool down or change.
+    """
+    for frame in page.frames:
+        if not _is_datadome_url(frame.url):
+            continue
+        try:
+            text = await frame.locator("body").inner_text(timeout=1500)
+        except Exception:  # noqa: BLE001
+            continue
+        if any(marker in text for marker in _HARD_BLOCK_MARKERS):
+            return True
+    return False
+
+
 async def wait_for_datadome_resolution(page: Page, timeout_ms: int = 30000) -> bool:
     """
     Wait for a DataDome browser-verification (t=bv) challenge to auto-resolve.
@@ -84,6 +112,141 @@ async def wait_for_datadome_resolution(page: Page, timeout_ms: int = 30000) -> b
             return True
         log.debug("Challenge still active, %.0f s remaining…", max(deadline - time.monotonic(), 0))
     log.warning("DataDome challenge did NOT auto-resolve within %d ms", timeout_ms)
+    return False
+
+
+# ── DataDome slider (t=fe) solver ─────────────────────────────────────────────
+
+# Handle element inside the captcha iframe (DataDome ships a few variants).
+_SLIDER_HANDLE_SELECTORS = (".slider", ".sliderIcon", ".slider-icon")
+_SLIDER_CONTAINER_SELECTORS = (".sliderContainer", ".slidercontainer")
+_DATADOME_IFRAME = 'iframe[src*="captcha-delivery.com"]'
+
+
+async def _cdp_human_drag(page: Page, x0: float, y0: float, x1: float) -> None:
+    """Drag from (x0, y0) to (x1, y0) with a human momentum profile.
+
+    Uses a raw CDP session so the trajectory is smooth regardless of the
+    context ``slow_mo`` setting. Playwright's ``mouse.move`` also dispatches
+    ``Input.dispatchMouseEvent`` under the hood — the only difference is that
+    ``slow_mo`` inserts a pause before every call, turning the drag into a
+    series of teleport-then-wait jumps that DataDome rejects. Here we control
+    the timing ourselves for a realistic ease-in-out slide.
+    """
+    cdp = await page.context.new_cdp_session(page)
+
+    async def move(x: float, y: float, buttons: int = 0) -> None:
+        await cdp.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mouseMoved", "x": x, "y": y, "buttons": buttons},
+        )
+
+    try:
+        # Curved approach, then grab the handle.
+        await move(x0 - 20, y0 - 12)
+        await asyncio.sleep(random.uniform(0.09, 0.18))
+        await move(x0, y0)
+        await asyncio.sleep(random.uniform(0.14, 0.28))
+        await cdp.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mousePressed", "x": x0, "y": y0, "button": "left", "buttons": 1},
+        )
+        await asyncio.sleep(random.uniform(0.09, 0.19))
+
+        dist = x1 - x0
+        steps = random.randint(45, 65)
+        cur_x = x0
+        for i in range(1, steps + 1):
+            t = i / steps
+            ease = t * t * (3 - 2 * t)  # smoothstep ease-in-out
+            target_x = x0 + dist * ease
+            cur_x += (target_x - cur_x) * random.uniform(0.6, 0.95)
+            y = y0 + random.uniform(-1.8, 1.8)
+            await move(cur_x, y, buttons=1)
+            await asyncio.sleep(random.uniform(0.008, 0.024))
+
+        # Settle exactly on target with tiny corrections.
+        await move(x1 - random.uniform(1, 3), y0, buttons=1)
+        await asyncio.sleep(random.uniform(0.06, 0.13))
+        await move(x1, y0, buttons=1)
+        await asyncio.sleep(random.uniform(0.12, 0.22))
+        await cdp.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mouseReleased", "x": x1, "y": y0, "button": "left", "buttons": 0},
+        )
+    finally:
+        await cdp.detach()
+
+
+async def _find_slider_handle(page: Page) -> dict[str, float] | None:
+    """Return the bounding box (page coords) of the slider handle, or None."""
+    frame = page.frame_locator(_DATADOME_IFRAME)
+    for sel in _SLIDER_HANDLE_SELECTORS:
+        loc = frame.locator(sel).first
+        try:
+            await loc.wait_for(state="visible", timeout=4000)
+            box = await loc.bounding_box()
+            if box and box["width"] > 0:
+                log.debug("Slider handle found via %s: %s", sel, box)
+                return box
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+async def _find_slider_travel(page: Page, handle: dict[str, float]) -> float:
+    """Return the target x (page coords) to slide the handle to (right edge)."""
+    frame = page.frame_locator(_DATADOME_IFRAME)
+    for sel in _SLIDER_CONTAINER_SELECTORS:
+        loc = frame.locator(sel).first
+        try:
+            box = await loc.bounding_box()
+            if box and box["width"] > 0:
+                return box["x"] + box["width"] - handle["width"] / 2
+        except Exception:  # noqa: BLE001
+            continue
+    # Fallback: slide a fixed generous distance to the right.
+    return handle["x"] + 260
+
+
+async def solve_datadome_slider(page: Page, max_attempts: int = 3) -> bool:
+    """Attempt to solve a DataDome slider ("t=fe") challenge.
+
+    Returns True when the challenge disappears, False otherwise.
+    """
+    for attempt in range(1, max_attempts + 1):
+        if await is_datadome_hard_block(page):
+            log.error(
+                "DataDome served a terminal block page (IP banned) — no slider to solve. "
+                "The IP must cool down or change."
+            )
+            return False
+        handle = await _find_slider_handle(page)
+        if not handle:
+            log.warning("Slider attempt %d: handle not found, waiting for reload…", attempt)
+            await asyncio.sleep(2.5)
+            if await is_datadome_hard_block(page):
+                log.error("DataDome escalated to a terminal block page (IP banned).")
+                return False
+            handle = await _find_slider_handle(page)
+            if not handle:
+                continue
+
+        x0 = handle["x"] + handle["width"] / 2
+        y0 = handle["y"] + handle["height"] / 2
+        x1 = await _find_slider_travel(page, handle)
+        log.info("Slider attempt %d: dragging %.0f → %.0f @ y=%.0f", attempt, x0, x1, y0)
+        await _cdp_human_drag(page, x0, y0, x1)
+        await asyncio.sleep(1.8)
+
+        if not is_datadome_challenge(page):
+            log.info("DataDome slider solved on attempt %d ✓", attempt)
+            return True
+        log.warning("Slider attempt %d did not clear the challenge", attempt)
+        # Give DataDome time to render the reloaded challenge before retrying.
+        await asyncio.sleep(random.uniform(2.0, 3.5))
+
+    log.warning("DataDome slider not solved after %d attempts", max_attempts)
     return False
 
 
@@ -110,13 +273,17 @@ async def dump_debug_artifacts(page: Page, label: str) -> None:
 def build_launch_options() -> dict[str, Any]:
     """Return Patchright launch options.
 
-    IMPORTANT: Do NOT add --disable-blink-features=AutomationControlled or any
-    other flag that reveals automation — those undo Patchright's stealth patches.
+    IMPORTANT: --disable-blink-features=AutomationControlled is required to keep
+    navigator.webdriver === false. Because Chromium is driven over the CDP pipe,
+    webdriver stays true unless this flag is set. Patchright is supposed to add
+    it automatically, but on the launch_persistent_context path it does not, so
+    we set it explicitly here. Do NOT add other flags that reveal automation.
     """
     opts: dict[str, Any] = {
         "headless": HEADLESS,
         "slow_mo": SLOW_MO_MS,
         "args": [
+            "--disable-blink-features=AutomationControlled",
             "--disable-dev-shm-usage",
             "--no-first-run",
             "--no-default-browser-check",
@@ -171,6 +338,67 @@ async def create_persistent_context(
     if init_script:
         await context.add_init_script(init_script)
     return context
+
+
+# ── WebAuthn virtual authenticator ────────────────────────────────────────────
+# Chromium's CDP WebAuthn domain lets us attach a software authenticator that
+# holds a passkey's private key (unlike hardware authenticators, virtual ones
+# expose the key so it can be exported and re-imported). This is how the Migros
+# passkey login is automated: register once, export the credential, then import
+# it before each login so the passkey challenge is signed automatically.
+
+_VIRTUAL_AUTHENTICATOR_OPTIONS: dict[str, Any] = {
+    "protocol": "ctap2",
+    "transport": "internal",
+    "hasResidentKey": True,
+    "hasUserVerification": True,
+    "isUserVerified": True,
+    "automaticPresenceSimulation": True,
+}
+
+
+async def enable_virtual_authenticator(cdp: Any) -> str:
+    """Enable WebAuthn and attach a virtual platform authenticator.
+
+    Args:
+        cdp: A CDP session (``context.new_cdp_session(page)``).
+
+    Returns:
+        The authenticator id, needed for add/get credential calls.
+    """
+    await cdp.send("WebAuthn.enable", {"enableUI": False})
+    result = await cdp.send(
+        "WebAuthn.addVirtualAuthenticator",
+        {"options": _VIRTUAL_AUTHENTICATOR_OPTIONS},
+    )
+    authenticator_id = result["authenticatorId"]
+    log.info("Virtual authenticator attached: %s", authenticator_id)
+    return authenticator_id
+
+
+async def get_virtual_credentials(cdp: Any, authenticator_id: str) -> list[dict[str, Any]]:
+    """Return the credentials currently held by the virtual authenticator."""
+    result = await cdp.send("WebAuthn.getCredentials", {"authenticatorId": authenticator_id})
+    return result.get("credentials", [])
+
+
+async def import_virtual_credential(cdp: Any, authenticator_id: str, credential: dict[str, Any]) -> None:
+    """Import a previously-exported passkey credential into the authenticator."""
+    await cdp.send(
+        "WebAuthn.addCredential",
+        {
+            "authenticatorId": authenticator_id,
+            "credential": {
+                "credentialId": credential["credentialId"],
+                "isResidentCredential": credential.get("isResidentCredential", True),
+                "rpId": credential["rpId"],
+                "privateKey": credential["privateKey"],
+                "userHandle": credential.get("userHandle"),
+                "signCount": credential.get("signCount", 0),
+            },
+        },
+    )
+    log.info("Imported passkey credential for rpId=%s", credential.get("rpId"))
 
 
 # ── Cookie serialization ──────────────────────────────────────────────────────

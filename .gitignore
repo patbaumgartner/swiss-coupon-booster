@@ -69,6 +69,10 @@ coop-user-data/
 migros-user-data/
 screenshots/
 
+# Passkey credentials contain a private key — never commit them
+migros-passkey.json
+*passkey*.json
+
 # ── Misc ─────────────────────────────────────────────────────────────────────
 cookies.txt
 migros-cookies.txt

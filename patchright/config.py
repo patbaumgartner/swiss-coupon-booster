@@ -76,3 +76,11 @@ SEL_MIGROS_COOKIE_ACCEPT: str = os.getenv(
 MIGROS_CF_AUTO_CLICK: bool = os.getenv("MIGROS_CF_AUTO_CLICK", "true").lower() == "true"
 MIGROS_CF_MANUAL_SOLVE: bool = os.getenv("MIGROS_CF_MANUAL_SOLVE", "false").lower() == "true"
 MIGROS_CF_WAIT_MS: int = int(os.getenv("MIGROS_CF_WAIT_MS", "45000"))
+
+# Passkey (WebAuthn) login. The Migros account is passkey-primary; a passkey
+# registered once via a CDP virtual authenticator is exported to this file
+# (credentialId + private key + rpId + userHandle + signCount). When the file
+# exists, the login flow uses passkey auth (no password, no SMS 2FA prompt)
+# by importing the credential into a virtual authenticator that signs the
+# challenge automatically. Treat this file as a SECRET.
+MIGROS_PASSKEY_FILE: Path = Path(os.getenv("MIGROS_PASSKEY_FILE", "/data/migros-passkey.json"))
