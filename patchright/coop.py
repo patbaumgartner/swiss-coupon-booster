@@ -19,8 +19,10 @@ from browser import (
     create_persistent_context,
     dump_debug_artifacts,
     is_datadome_challenge,
+    is_datadome_hard_block,
     random_delay,
     serialize_cookies,
+    solve_datadome_slider,
     wait_for_datadome_resolution,
 )
 from config import (
@@ -131,11 +133,21 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
         await random_delay(DATADOME_WAIT_MIN, DATADOME_WAIT_MAX)
 
         if is_datadome_challenge(page):
-            resolved = await wait_for_datadome_resolution(page, timeout_ms=30000)
+            resolved = await wait_for_datadome_resolution(page, timeout_ms=8000)
+            if not resolved:
+                # Browser-verification did not auto-clear — try the slider (t=fe).
+                resolved = await solve_datadome_slider(page)
             if not resolved:
                 await dump_debug_artifacts(page, "coop_datadome_challenge")
+                if await is_datadome_hard_block(page):
+                    raise RuntimeError(
+                        "DataDome served a terminal block page — the IP has been "
+                        "temporarily banned (too many automated requests). Wait for the "
+                        "block to expire or run from a different residential IP. "
+                        "Debug artifacts saved."
+                    )
                 raise RuntimeError(
-                    "DataDome challenge detected and did not auto-resolve. "
+                    "DataDome challenge detected and could not be solved. "
                     "Run on a residential IP or seed the persistent profile with cookies. "
                     "Debug artifacts saved."
                 )
@@ -148,7 +160,9 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
             log.info("Already logged in via persistent session")
 
         if is_datadome_challenge(page):
-            resolved = await wait_for_datadome_resolution(page, timeout_ms=15000)
+            resolved = await wait_for_datadome_resolution(page, timeout_ms=8000)
+            if not resolved:
+                resolved = await solve_datadome_slider(page)
             if not resolved:
                 await dump_debug_artifacts(page, "coop_datadome_challenge_post_login")
                 raise RuntimeError("DataDome challenge appeared after login and did not resolve.")
