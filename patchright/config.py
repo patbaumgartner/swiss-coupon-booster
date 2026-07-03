@@ -46,6 +46,15 @@ COOP_LOGIN_URL: str = os.getenv(
     "https://www.supercard.ch/content/supercard/de.html?sso-check=1",
 )
 
+# Navigating to the Coop login page is the slow, flaky step: a cold SSO redirect
+# combined with a DataDome interstitial routinely pushes past Playwright's
+# default 30 s navigation timeout. Use a dedicated, generous navigation timeout
+# (kept separate from the shared element TIMEOUT_MS) and retry a bounded number
+# of times with linear backoff so one slow load doesn't abort the whole login.
+COOP_NAV_TIMEOUT_MS: int = int(os.getenv("COOP_NAV_TIMEOUT_MS", "60000"))
+COOP_NAV_MAX_ATTEMPTS: int = int(os.getenv("COOP_NAV_MAX_ATTEMPTS", "3"))
+COOP_NAV_RETRY_BACKOFF_MS: int = int(os.getenv("COOP_NAV_RETRY_BACKOFF_MS", "3000"))
+
 # Selectors — must match CoopSelectorsProperties in the Java application.
 SEL_COOP_LOGIN_LINK: str = os.getenv("SEL_LOGIN_LINK", "#a-accountLogin-desktop")
 SEL_COOP_USERNAME: str = os.getenv("SEL_USERNAME", "#username")

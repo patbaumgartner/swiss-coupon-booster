@@ -42,12 +42,17 @@ services:
       TIMEOUT_MS: "${PATCHRIGHT_TIMEOUT_MS:-25000}"
       TYPING_DELAY_MS: "${PATCHRIGHT_TYPING_DELAY_MS:-80}"
       LOG_LEVEL: "${PATCHRIGHT_LOG_LEVEL:-info}"
+      # Migros passkey credential (WebAuthn). Mounted from the repo root below so
+      # local development uses passkey login instead of the password fallback.
+      MIGROS_PASSKEY_FILE: /data/passkeys/migros-passkey.json
       # Optional: route through a residential proxy (not usually needed on a home network)
       # PROXY_URL: "${PROXY_URL}"
     volumes:
       - coop-user-data:/data/coop-user-data
       - migros-user-data:/data/migros-user-data
       - screenshots:/data/screenshots
+      # Read-only bind mount of the passkey secret from the repo root.
+      - ./migros-passkey.json:/data/passkeys/migros-passkey.json:ro
     ports:
       # Exposed for local debugging only — not required for inter-service communication
       - "127.0.0.1:8000:8000"
