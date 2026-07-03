@@ -10,10 +10,12 @@ challenge on subsequent executions.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 from patchright.async_api import BrowserContext, Page, async_playwright
+from patchright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from browser import (
     create_persistent_context,
@@ -27,6 +29,9 @@ from browser import (
 )
 from config import (
     COOP_LOGIN_URL,
+    COOP_NAV_MAX_ATTEMPTS,
+    COOP_NAV_RETRY_BACKOFF_MS,
+    COOP_NAV_TIMEOUT_MS,
     COOP_USER_DATA_DIR,
     COOKIE_CONSENT_WAIT_MAX,
     COOKIE_CONSENT_WAIT_MIN,
@@ -52,6 +57,68 @@ log = logging.getLogger("patchright.coop")
 
 # ── Private helpers ───────────────────────────────────────────────────────────
 
+
+async def _navigate_to_login(page: Page) -> None:
+    """Navigate to the Coop login URL with bounded retries.
+
+    Uses ``wait_until="domcontentloaded"`` (not the default ``"load"``) so a slow
+    SSO redirect or a DataDome interstitial that keeps sub-resources loading does
+    not abort the navigation mid-flight. A dedicated, generous per-navigation
+    timeout (``COOP_NAV_TIMEOUT_MS``) replaces the shared 30 s default, and the
+    navigation is retried up to ``COOP_NAV_MAX_ATTEMPTS`` times with linear
+    backoff.
+
+    When a navigation attempt times out but the page has already landed on a
+    DataDome interstitial, we stop retrying and return so the caller's DataDome
+    handling can wait for the post-challenge navigation — retrying the ``goto``
+    would only discard challenge progress.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(1, COOP_NAV_MAX_ATTEMPTS + 1):
+        try:
+            log.info(
+                "Navigating to Coop login URL (attempt %d/%d, timeout %d ms): %s",
+                attempt,
+                COOP_NAV_MAX_ATTEMPTS,
+                COOP_NAV_TIMEOUT_MS,
+                COOP_LOGIN_URL,
+            )
+            await page.goto(
+                COOP_LOGIN_URL,
+                wait_until="domcontentloaded",
+                timeout=COOP_NAV_TIMEOUT_MS,
+            )
+            log.info("Coop login DOM ready (landed on %s)", page.url)
+            return
+        except PlaywrightTimeoutError as exc:
+            last_exc = exc
+            # A DataDome interstitial keeps the page "loading" forever, which
+            # surfaces here as a navigation timeout even though we did reach the
+            # challenge. Hand off to the caller instead of retrying the goto.
+            if is_datadome_challenge(page):
+                log.info(
+                    "Navigation timed out on a DataDome interstitial (url=%s); "
+                    "proceeding to challenge handling",
+                    page.url,
+                )
+                return
+            log.warning(
+                "Coop navigation attempt %d/%d timed out after %d ms (url=%s)",
+                attempt,
+                COOP_NAV_MAX_ATTEMPTS,
+                COOP_NAV_TIMEOUT_MS,
+                page.url,
+            )
+            if attempt < COOP_NAV_MAX_ATTEMPTS:
+                backoff_ms = COOP_NAV_RETRY_BACKOFF_MS * attempt
+                log.info("Backing off %d ms before retrying navigation", backoff_ms)
+                await asyncio.sleep(backoff_ms / 1000.0)
+
+    raise RuntimeError(
+        f"Coop navigation to {COOP_LOGIN_URL} failed after {COOP_NAV_MAX_ATTEMPTS} "
+        f"attempts (last error: {last_exc}). The SSO redirect or DataDome challenge "
+        "did not settle in time."
+    )
 
 async def _handle_cookie_consent(page: Page) -> None:
     await random_delay(COOKIE_CONSENT_WAIT_MIN, COOKIE_CONSENT_WAIT_MAX)
@@ -125,9 +192,7 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
                 await context.add_cookies([dd_cookie])
                 log.debug("Restored DataDome cookie")
 
-        log.info("Navigating to Coop login URL: %s", COOP_LOGIN_URL)
-        await page.goto(COOP_LOGIN_URL)
-        await page.wait_for_load_state("load")
+        await _navigate_to_login(page)
 
         # Critical: allow DataDome fingerprinting to complete before interacting.
         await random_delay(DATADOME_WAIT_MIN, DATADOME_WAIT_MAX)
@@ -137,6 +202,15 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
             if not resolved:
                 # Browser-verification did not auto-clear — try the slider (t=fe).
                 resolved = await solve_datadome_slider(page)
+            if resolved:
+                # The challenge cleared by redirecting back to the login page.
+                # Wait for that post-challenge navigation to settle before we
+                # start interacting, otherwise selectors resolve against the
+                # interstitial's stale DOM.
+                try:
+                    await page.wait_for_load_state("domcontentloaded", timeout=COOP_NAV_TIMEOUT_MS)
+                except PlaywrightTimeoutError:
+                    log.warning("Post-challenge navigation did not settle within %d ms", COOP_NAV_TIMEOUT_MS)
             if not resolved:
                 await dump_debug_artifacts(page, "coop_datadome_challenge")
                 if await is_datadome_hard_block(page):

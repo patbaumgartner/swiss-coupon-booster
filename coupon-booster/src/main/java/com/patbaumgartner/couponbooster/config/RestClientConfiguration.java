@@ -1,7 +1,12 @@
 package com.patbaumgartner.couponbooster.config;
 
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,18 +17,41 @@ import static org.springframework.http.HttpHeaders.ACCEPT_ENCODING;
 import static org.springframework.http.HttpHeaders.CONNECTION;
 
 /**
- * Configures the default {@link RestClient} with compression headers and a request
- * logging interceptor.
+ * Configures the default {@link RestClient} with compression headers, connect/read
+ * timeouts, and a request logging interceptor.
+ * <p>
+ * The read timeout must exceed the stealth sidecar's worst-case login time. A cold Coop
+ * login can take several minutes (slow SSO redirect plus a DataDome challenge, navigation
+ * retries with backoff), so the default (~3 min) previously cut off logins that would
+ * otherwise have succeeded. The read timeout is intentionally generous and tunable via
+ * {@code couponbooster.sidecar.read-timeout}.
  */
 @Configuration
 public class RestClientConfiguration {
 
 	private static final Logger log = LoggerFactory.getLogger(RestClientConfiguration.class);
 
+	private final Duration connectTimeout;
+
+	private final Duration readTimeout;
+
+	RestClientConfiguration(@Value("${couponbooster.sidecar.connect-timeout:10s}") Duration connectTimeout,
+			@Value("${couponbooster.sidecar.read-timeout:300s}") Duration readTimeout) {
+		this.connectTimeout = connectTimeout;
+		this.readTimeout = readTimeout;
+	}
+
 	@Bean
 	RestClientCustomizer restClientCustomizer() {
-		log.debug("Configuring REST client customizer with compression headers and request logging interceptor");
-		return restClientBuilder -> restClientBuilder.defaultHeader(ACCEPT_ENCODING, "gzip, deflate, br")
+		log.debug(
+				"Configuring REST client customizer (connect-timeout={}, read-timeout={}) with compression headers and request logging interceptor",
+				connectTimeout, readTimeout);
+		var requestFactorySettings = HttpClientSettings.defaults()
+			.withConnectTimeout(connectTimeout)
+			.withReadTimeout(readTimeout);
+		return restClientBuilder -> restClientBuilder
+			.requestFactory(ClientHttpRequestFactoryBuilder.detect().build(requestFactorySettings))
+			.defaultHeader(ACCEPT_ENCODING, "gzip, deflate, br")
 			.defaultHeader(CONNECTION, "keep-alive")
 			.requestInterceptor(createRequestLoggingInterceptor());
 	}
