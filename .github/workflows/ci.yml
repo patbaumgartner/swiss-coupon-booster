@@ -146,6 +146,10 @@ jobs:
     needs: [java, python]
     permissions:
       contents: read
+    env:
+      # Fall back to a local namespace when the Docker Hub secret is unavailable
+      # (e.g. Dependabot / fork PRs) so image tags stay valid and builds succeed.
+      IMAGE_OWNER: ${{ secrets.DOCKERHUB_USERNAME || 'local' }}
 
     steps:
       - name: Checkout
@@ -186,7 +190,7 @@ jobs:
           context: ./patchright
           file: ./patchright/Dockerfile
           push: ${{ steps.publish.outputs.enabled == 'true' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
+          tags: ${{ env.IMAGE_OWNER }}/coupon-booster-patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -196,13 +200,13 @@ jobs:
           context: .
           file: ./coupon-booster/run-image.Dockerfile
           load: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+          tags: ${{ env.IMAGE_OWNER }}/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Push coupon-booster run image (latest)
         if: steps.publish.outputs.enabled == 'true'
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+        run: docker push ${{ env.IMAGE_OWNER }}/coupon-booster-run:latest
 
       - name: Build coupon-booster image
         working-directory: coupon-booster
