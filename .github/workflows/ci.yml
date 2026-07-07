@@ -123,3 +123,71 @@ jobs:
           path: patchright/test-results.xml
           reporter: java-junit
           fail-on-error: true
+
+  # ── Docker: publish :latest native image (main pushes only) ─────────────────
+  # Runs only on direct pushes to main (never on PRs / forks, where the Docker Hub
+  # secrets are unavailable). Publishes the GraalVM native application image plus
+  # its run image and the patchright sidecar under the :latest tag.
+  docker:
+    name: Docker – Publish latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [java, python]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: coupon-booster
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Must be pushed before the native image build: the buildpack pulls it via
+      # runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
+      - name: Build & push run image (latest)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./coupon-booster/run-image.Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push patchright sidecar (latest)
+        uses: docker/build-push-action@v7
+        with:
+          context: ./patchright
+          file: ./patchright/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image.
+      # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
+      - name: Build & publish native image (latest)
+        run: |
+          ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \
+            -Dspring-boot.build-image.publish=true \
+            -Dspring-boot.build-image.imageName=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
+        env:
+          MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
