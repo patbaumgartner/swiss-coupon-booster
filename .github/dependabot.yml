@@ -8,6 +8,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
+      timezone: "Europe/Zurich"
     open-pull-requests-limit: 10
     reviewers:
       - "patbaumgartner"
@@ -20,13 +21,14 @@ updates:
       - "dependencies"
       - "java"
 
-  # ── uv (patchright/) ──────────────────────────────────────────────────
+  # ── uv / Python (patchright/) ──────────────────────────────────────────────
   - package-ecosystem: "uv"
     directory: "/patchright"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "06:00"
+      timezone: "Europe/Zurich"
     open-pull-requests-limit: 10
     reviewers:
       - "patbaumgartner"
@@ -46,6 +48,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
+      timezone: "Europe/Zurich"
     open-pull-requests-limit: 5
     reviewers:
       - "patbaumgartner"
@@ -57,4 +60,3 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
-

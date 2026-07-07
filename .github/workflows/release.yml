@@ -1,96 +1,34 @@
-name: Release Pipeline
+name: Release
 
 on:
   push:
     tags:
       - "v*.*.*"
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g. 1.0.0)'
+        description: "Release version (e.g. 1.0.0)"
         required: true
-        default: '1.0.0'
-      pre_release:
-        description: 'Pre-release?'
-        type: boolean
-        required: false
-        default: false
-      skip_tests:
-        description: 'Skip tests (not recommended)'
-        type: boolean
-        required: false
-        default: false
 
-# Never publish the same version twice in parallel (tag push + UI release).
+# Never publish the same version twice in parallel (tag push + manual dispatch).
 concurrency:
   group: release-${{ github.ref_name }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 env:
   JAVA_VERSION: "25"
-  PYTHON_VERSION: "3.14"
   MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
-  PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
-
-permissions:
-  contents: read
-  actions: read
-  checks: write
+  # Native images target the NAS CPU baseline (Intel J3455 supports x86-64-v2).
+  # Configured in pom.xml (BP_NATIVE_IMAGE_BUILD_ARGUMENTS=-march=x86-64-v2).
 
 jobs:
-  # ── 1. Validate the release version ────────────────────────────────────────
-  validate-release:
-    name: Validate Release
+  release:
+    name: Build & Publish Native Image
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      version: ${{ steps.set-version.outputs.version }}
-      is_prerelease: ${{ steps.set-version.outputs.is_prerelease }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Set release version
-        id: set-version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-            IS_PRERELEASE="${{ github.event.inputs.pre_release }}"
-          elif [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${GITHUB_REF#refs/tags/v}"
-            VERSION="${VERSION#refs/tags/}"
-            IS_PRERELEASE="${{ github.event.release.prerelease }}"
-          else
-            # Triggered by a pushed tag (e.g. refs/tags/v1.2.3 or v1.2.3-rc1).
-            VERSION="${GITHUB_REF#refs/tags/v}"
-            VERSION="${VERSION#refs/tags/}"
-            if [[ "$VERSION" == *-* ]]; then
-              IS_PRERELEASE="true"
-            else
-              IS_PRERELEASE="false"
-            fi
-          fi
-
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
-            echo "Invalid version format: $VERSION"
-            exit 1
-          fi
-
-          echo "version=$VERSION"       >> $GITHUB_OUTPUT
-          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION, Pre-release: $IS_PRERELEASE"
-
-  # ── 2. Java: build, test, package ──────────────────────────────────────────
-  java-build-and-test:
-    name: Java – Build & Test
-    runs-on: ubuntu-latest
-    needs: validate-release
-    timeout-minutes: 45
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: coupon-booster
@@ -101,127 +39,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: temurin
-          cache: maven
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: playwright-browsers-${{ hashFiles('coupon-booster/pom.xml') }}
-          restore-keys: playwright-browsers-
-
-      - name: Install system dependencies
+      - name: Determine version
+        id: version
+        working-directory: .
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends xvfb
-
-      - name: Install Playwright browsers
-        run: |
-          ./mvnw exec:java -e -ntp \
-            -Dexec.mainClass="com.microsoft.playwright.CLI" \
-            -Dexec.args="install --with-deps"
-
-      - name: Bump project version
-        run: |
-          ./mvnw versions:set \
-            -DnewVersion=${{ needs.validate-release.outputs.version }} \
-            -DgenerateBackupPoms=false \
-            -ntp
-
-      - name: Build and Test
-        if: ${{ github.event.inputs.skip_tests != 'true' }}
-        run: xvfb-run -a ./mvnw clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
-        env:
-          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-
-      - name: Build (skip tests)
-        if: ${{ github.event.inputs.skip_tests == 'true' }}
-        run: ./mvnw clean package -DskipTests -ntp -Ddependency-check.skip=true
-        env:
-          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-
-      - name: List test report files
-        if: always()
-        run: find target/surefire-reports target/failsafe-reports -name '*.xml' 2>/dev/null || echo 'No XML report files found'
-
-      - name: Publish test results
-        uses: dorny/test-reporter@v3
-        if: always()
-        with:
-          name: "Test Results – Java ${{ env.JAVA_VERSION }}"
-          path: "coupon-booster/target/surefire-reports/*.xml,coupon-booster/target/failsafe-reports/TEST-*.xml"
-          reporter: java-junit
-          fail-on-error: true
-
-      - name: Upload JAR
-        uses: actions/upload-artifact@v7
-        with:
-          name: coupon-booster-jar-${{ needs.validate-release.outputs.version }}
-          path: coupon-booster/target/coupon-booster-*.jar
-          retention-days: 7
-
-  # ── 3. Python: lint and test ────────────────────────────────────────────────
-  python-build-and-test:
-    name: Python – Lint & Test
-    runs-on: ubuntu-latest
-    needs: validate-release
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: patchright
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "latest"
-          enable-cache: true
-          cache-dependency-glob: patchright/uv.lock
-
-      - name: Install dependencies (locked)
-        run: uv sync --frozen --all-groups
-
-      - name: Run tests
-        run: uv run pytest -v --tb=short --junit-xml=test-results.xml
-
-      - name: Publish test results
-        uses: dorny/test-reporter@v3
-        if: always()
-        with:
-          name: "Test Results – Python ${{ env.PYTHON_VERSION }}"
-          path: patchright/test-results.xml
-          reporter: java-junit
-          fail-on-error: true
-
-  # ── 4. Build and push Docker images to Docker Hub ──────────────────────────
-  docker-publish:
-    name: Docker – Build & Push
-    runs-on: ubuntu-latest
-    needs: [validate-release, java-build-and-test, python-build-and-test]
-    timeout-minutes: 60
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Version: $VERSION"
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
@@ -239,107 +75,62 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Bump project version
-        working-directory: coupon-booster
-        run: |
-          ./mvnw versions:set \
-            -DnewVersion=${{ needs.validate-release.outputs.version }} \
-            -DgenerateBackupPoms=false \
-            -ntp
-
-      - name: Build and push run image
+      # ── Custom run image (Chromium libs for browser-mode fallback) ────────────
+      # Must be pushed before the native image build: the buildpack pulls it via
+      # runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
+      - name: Build & push run image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: coupon-booster/run-image.Dockerfile
+          file: ./coupon-booster/run-image.Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ needs.validate-release.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ steps.version.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and publish coupon-booster image
-        working-directory: coupon-booster
-        # -Pnative compiles a GraalVM native image via the Paketo native buildpack.
-        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
-        run: |
-          ./mvnw -B -Pnative spring-boot:build-image \
-            -DskipTests \
-            -Dspring-boot.build-image.publish=true \
-            -ntp
-
-      - name: Tag and push coupon-booster latest
-        if: needs.validate-release.outputs.is_prerelease == 'false'
-        run: |
-          docker buildx imagetools create \
-            --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ needs.validate-release.outputs.version }}
-
-      - name: Extract Docker metadata – patchright
-        id: meta-patchright
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright
-          tags: |
-            type=raw,value=${{ needs.validate-release.outputs.version }}
-            type=raw,value=latest,enable=${{ needs.validate-release.outputs.is_prerelease == 'false' }}
-
-      - name: Build and push patchright
+      # ── Patchright stealth-login sidecar ──────────────────────────────────────
+      - name: Build & push patchright sidecar
         uses: docker/build-push-action@v7
         with:
           context: ./patchright
           file: ./patchright/Dockerfile
           push: true
-          tags: ${{ steps.meta-patchright.outputs.tags }}
-          labels: ${{ steps.meta-patchright.outputs.labels }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:${{ steps.version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── 5. Publish GitHub Release ───────────────────────────────────────────────
-  publish-github-release:
-    name: GitHub – Publish Release
-    runs-on: ubuntu-latest
-    needs: [validate-release, docker-publish]
-    if: github.event_name == 'release' || github.event_name == 'push'
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      - name: Set release version
+        run: ./mvnw versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false -ntp
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      # ── Native application image (GraalVM via Paketo buildpack) ────────────────
+      - name: Build & publish native image
+        # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image.
+        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
+        run: |
+          ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \
+            -Dspring-boot.build-image.publish=true \
+            -Dspring-boot.build-image.imageName=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
+        env:
+          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 
-      - name: Update GitHub Release notes
+      - name: Tag native image as latest
+        if: steps.version.outputs.prerelease == 'false'
+        working-directory: .
+        run: |
+          docker buildx imagetools create \
+            --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
+
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
+        if: github.event_name == 'push'
         with:
           tag_name: ${{ github.ref_name }}
-          prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
           generate_release_notes: true
-          body: |
-            ## Swiss Coupon Booster ${{ needs.validate-release.outputs.version }}
-
-            ### Docker Images
-
-            Pull the latest images from Docker Hub:
-
-            ```sh
-            docker pull patbaumgartner/coupon-booster-patchright:${{ needs.validate-release.outputs.version }}
-            docker pull patbaumgartner/coupon-booster:${{ needs.validate-release.outputs.version }}
-            ```
-
-            ### Quick Start
-
-            ```sh
-            # 1. Copy and fill in your credentials
-            cp .env.example .env
-
-            # 2. Run with the versioned images
-            VERSION=${{ needs.validate-release.outputs.version }} docker compose up
-            ```
-
-            See the [README](https://github.com/${{ github.repository }}#readme) for full setup instructions.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
