@@ -18,6 +18,7 @@ import os
 import random
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 from patchright.async_api import BrowserContext, Page, async_playwright
 
@@ -181,6 +182,16 @@ _CF_TITLE_HINTS: tuple[str, ...] = ("nur einen moment", "just a moment", "einen 
 _CF_IFRAME_SELECTOR: str = "iframe[src*='challenges.cloudflare.com']"
 
 
+def _is_cloudflare_challenge_url(url: str) -> bool:
+    """Return True when URL host is challenges.cloudflare.com or one of its subdomains."""
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return False
+
+    return host == "challenges.cloudflare.com" or host.endswith(".challenges.cloudflare.com")
+
+
 async def _find_turnstile_frame(page: Page):
     """Return the challenges.cloudflare.com child frame, if present.
 
@@ -191,7 +202,7 @@ async def _find_turnstile_frame(page: Page):
     """
     for frame in page.frames:
         try:
-            if "challenges.cloudflare.com" in (frame.url or ""):
+            if _is_cloudflare_challenge_url(frame.url or ""):
                 return frame
         except Exception:  # noqa: BLE001
             continue
