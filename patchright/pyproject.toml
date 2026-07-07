@@ -10,7 +10,7 @@ description = "Patchright stealth login sidecar for Swiss Coupon Booster"
 dependencies = [
 	"fastapi==0.139.0",
 	"patchright==1.61.2",
-	"uvicorn[standard]==0.50.0",
+	"uvicorn[standard]==0.50.2",
 	"pydantic[email]==2.13.4",
 ]
 
