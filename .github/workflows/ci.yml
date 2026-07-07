@@ -124,19 +124,22 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-  # ── Docker: publish :latest native image (main pushes only) ─────────────────
-  # Runs only on direct pushes to main (never on PRs / forks, where the Docker Hub
-  # secrets are unavailable). Publishes the GraalVM native application image plus
-  # its run image and the patchright sidecar under the :latest tag.
+  # ── Docker: publish native image as snapshot + latest (main pushes only) ────
+  # Runs only on direct pushes to main / manual dispatch (never on PRs or forks,
+  # where the Docker Hub secrets are unavailable). Publishes the GraalVM native
+  # application image, its run image and the patchright sidecar, each tagged with
+  # the current project version (e.g. 0.2.0-SNAPSHOT) and :latest.
   docker:
-    name: Docker – Publish latest
+    name: Docker – Publish snapshot & latest
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     needs: [java, python]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     defaults:
       run:
         working-directory: coupon-booster
+    env:
+      MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
 
     steps:
       - name: Checkout
@@ -160,34 +163,43 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Must be pushed before the native image build: the buildpack pulls it via
-      # runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
-      - name: Build & push run image (latest)
+      - name: Resolve project version
+        id: version
+        run: echo "version=$(./mvnw -q -ntp help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
+
+      # Run image must be pushed before the native build: the buildpack pulls it
+      # via runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
+      - name: Build & push run image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./coupon-booster/run-image.Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ steps.version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build & push patchright sidecar (latest)
+      - name: Build & push patchright sidecar
         uses: docker/build-push-action@v7
         with:
           context: ./patchright
           file: ./patchright/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:${{ steps.version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image.
+      # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image (x86-64-v2).
       # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
-      - name: Build & publish native image (latest)
+      - name: Build & publish native image (snapshot & latest)
         run: |
           ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \
             -Dspring-boot.build-image.publish=true \
-            -Dspring-boot.build-image.imageName=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
-        env:
-          MAVEN_OPTS: "-Xmx2048m -XX:+UseG1GC"
+            -Dspring-boot.build-image.imageName=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
+          docker buildx imagetools create \
+            --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
