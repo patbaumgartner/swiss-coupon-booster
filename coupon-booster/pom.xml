@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -505,10 +507,16 @@
       GraalVM native-image build (activate with -Pnative). Extends the `native`
       profile inherited from spring-boot-starter-parent.
 
-      Spring evaluates @ConditionalOnProperty at AOT (build) time, so the auth mode
-      (coop/migros.auth.mode) is frozen into the native image. The production
-      container runs in `sidecar` mode, so AOT processing is pinned to `sidecar`
-      here; otherwise the (browser) default from application.yml would be baked in.
+      Spring evaluates @ConditionalOnProperty and the web-application-type at AOT
+      (build) time, so both are frozen into the native image:
+        * spring.profiles.active=server activates application-server.yml, whose
+          `spring.main.web-application-type: servlet` makes AOT build a servlet
+          web context. Without it the default application.yml (web-application-type:
+          none) is used and the native image starts with no ServletWebServerFactory
+          ("Unable to start web server"). This matches the production container,
+          which runs with SPRING_PROFILES_ACTIVE=server.
+        * coop/migros.auth.mode=sidecar pins the auth mode; the production container
+          runs in `sidecar` mode, otherwise the (browser) default would be baked in.
     -->
     <profile>
       <id>native</id>
@@ -541,7 +549,8 @@
               <execution>
                 <id>process-aot</id>
                 <configuration>
-                  <jvmArguments>-Dcoop.auth.mode=sidecar -Dmigros.auth.mode=sidecar</jvmArguments>
+                  <jvmArguments>-Dspring.profiles.active=server -Dcoop.auth.mode=sidecar
+                    -Dmigros.auth.mode=sidecar</jvmArguments>
                 </configuration>
               </execution>
             </executions>
