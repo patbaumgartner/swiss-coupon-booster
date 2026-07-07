@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -61,7 +63,7 @@
     <!-- OpenRewrite Plugins -->
     <rewrite-logging-frameworks.version>3.29.2</rewrite-logging-frameworks.version>
     <rewrite-maven-plugin.version>6.43.0</rewrite-maven-plugin.version>
-    <rewrite-spring.version>0.37.0</rewrite-spring.version>
+    <rewrite-spring.version>6.34.0</rewrite-spring.version>
     <rewrite-static-analysis.version>2.38.0</rewrite-static-analysis.version>
     <rewrite-testing-frameworks.version>3.41.0</rewrite-testing-frameworks.version>
 
@@ -409,13 +411,12 @@
             <recipe>org.openrewrite.staticanalysis.CodeCleanup</recipe>
             <recipe>org.openrewrite.java.logging.slf4j.Slf4jBestPractices</recipe>
             <recipe>org.openrewrite.java.testing.junit5.JUnit5BestPractices</recipe>
-            <recipe>io.moderne.java.spring.boot3.UpgradeSpringBoot_3_5</recipe>
-            <recipe>io.moderne.java.spring.boot3.SpringBoot3BestPractices</recipe>
+            <recipe>org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0</recipe>
           </activeRecipes>
         </configuration>
         <dependencies>
           <dependency>
-            <groupId>io.moderne.recipe</groupId>
+            <groupId>org.openrewrite.recipe</groupId>
             <artifactId>rewrite-spring</artifactId>
             <version>${rewrite-spring.version}</version>
           </dependency>
@@ -515,8 +516,28 @@
       <build>
         <plugins>
           <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <configuration>
+              <buildArgs>
+                <!-- Target the NAS CPU baseline (Intel J3455 supports x86-64-v2). -->
+                <buildArg>-march=x86-64-v2</buildArg>
+              </buildArgs>
+            </configuration>
+          </plugin>
+          <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+              <image>
+                <env>
+                  <!-- Force a native image build inside the buildpack. -->
+                  <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
+                  <!-- Emit x86-64-v2 instructions so the image runs on the NAS (Intel J3455). -->
+                  <BP_NATIVE_IMAGE_BUILD_ARGUMENTS>-march=x86-64-v2</BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
+                </env>
+              </image>
+            </configuration>
             <executions>
               <execution>
                 <id>process-aot</id>

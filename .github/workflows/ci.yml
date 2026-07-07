@@ -14,7 +14,6 @@ concurrency:
 
 permissions:
   contents: read
-  actions: read
   checks: write
   pull-requests: write
 
@@ -69,16 +68,12 @@ jobs:
         run: ./mvnw spring-javaformat:validate -ntp
 
       - name: Build, test & verify
-        # Skip OWASP dependency-check on every push (it takes ~20 min downloading NVD data).
-        # Run it only via the release pipeline or a dedicated scheduled workflow.
+        # OWASP dependency-check is skipped here (it downloads the full NVD feed).
+        # Run it from the release pipeline or a dedicated scheduled workflow instead.
         run: xvfb-run -a ./mvnw clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
           PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-
-      - name: List test report files
-        if: always()
-        run: find target/surefire-reports target/failsafe-reports -name '*.xml' 2>/dev/null || echo 'No XML report files found'
 
       - name: Publish test results
         uses: dorny/test-reporter@v3
@@ -89,16 +84,7 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-      - name: Upload JaCoCo coverage report
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: jacoco-report
-          path: coupon-booster/target/site/jacoco/
-          retention-days: 7
-          if-no-files-found: ignore
-
-  # ── Python / patchright ────────────────────────────────────────────────
+  # ── Python / patchright sidecar ─────────────────────────────────────────────
   python:
     name: Python – Test
     runs-on: ubuntu-latest
@@ -137,91 +123,3 @@ jobs:
           path: patchright/test-results.xml
           reporter: java-junit
           fail-on-error: true
-
-  # ── Docker build + publish latest (push to main only) ───────────────────────
-  docker:
-    name: Docker – Build & Publish latest
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [java, python]
-    permissions:
-      contents: read
-    env:
-      # Fall back to a local namespace when the Docker Hub secret is unavailable
-      # (e.g. Dependabot / fork PRs) so image tags stay valid and builds succeed.
-      IMAGE_OWNER: ${{ secrets.DOCKERHUB_USERNAME || 'local' }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: temurin
-          cache: maven
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      # Only authenticate + publish on direct pushes to main (not PRs / develop).
-      - name: Determine publish flag
-        id: publish
-        run: |
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Log in to Docker Hub
-        if: steps.publish.outputs.enabled == 'true'
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build${{ steps.publish.outputs.enabled == 'true' && ' & push' || '' }} patchright image
-        uses: docker/build-push-action@v7
-        with:
-          context: ./patchright
-          file: ./patchright/Dockerfile
-          push: ${{ steps.publish.outputs.enabled == 'true' }}
-          tags: ${{ env.IMAGE_OWNER }}/coupon-booster-patchright:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build coupon-booster run image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./coupon-booster/run-image.Dockerfile
-          load: true
-          tags: ${{ env.IMAGE_OWNER }}/coupon-booster-run:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Push coupon-booster run image (latest)
-        if: steps.publish.outputs.enabled == 'true'
-        run: docker push ${{ env.IMAGE_OWNER }}/coupon-booster-run:latest
-
-      - name: Build coupon-booster image
-        working-directory: coupon-booster
-        # -Pnative compiles a GraalVM native image via the Paketo native buildpack.
-        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
-        run: ./mvnw -B -Pnative spring-boot:build-image -DskipTests -ntp
-        env:
-          MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-
-      - name: Tag & push coupon-booster image (latest)
-        if: steps.publish.outputs.enabled == 'true'
-        run: |
-          VERSION="$(./mvnw -q -ntp help:evaluate -Dexpression=project.version -DforceStdout)"
-          docker tag \
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:"$VERSION" \
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest
-        working-directory: coupon-booster

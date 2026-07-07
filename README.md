@@ -5,6 +5,8 @@
 **Automatically activates all available digital coupons for Migros (Cumulus) and Coop (Supercard)**
 
 [![CI](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml)
+[![Release](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/release.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/release.yml)
+[![CodeQL](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/codeql.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java 25](https://img.shields.io/badge/Java-25-blue?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3140/)
