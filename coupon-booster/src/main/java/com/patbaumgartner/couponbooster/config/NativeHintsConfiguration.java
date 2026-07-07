@@ -13,7 +13,7 @@ import org.springframework.context.annotation.ImportRuntimeHints;
  */
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints({ PlaywrightRuntimeHints.class, JacksonBindingRuntimeHints.class,
-		ConfigurationPropertiesRuntimeHints.class })
+		ConfigurationPropertiesRuntimeHints.class, HibernateValidatorRuntimeHints.class })
 public class NativeHintsConfiguration {
 
 }
