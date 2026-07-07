@@ -142,7 +142,7 @@ jobs:
   docker:
     name: Docker – Build & Publish latest
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: [java, python]
     permissions:
       contents: read
@@ -210,7 +210,9 @@ jobs:
 
       - name: Build coupon-booster image
         working-directory: coupon-booster
-        run: ./mvnw -B spring-boot:build-image -DskipTests -ntp
+        # -Pnative compiles a GraalVM native image via the Paketo native buildpack.
+        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
+        run: ./mvnw -B -Pnative spring-boot:build-image -DskipTests -ntp
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
 

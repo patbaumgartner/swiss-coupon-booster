@@ -261,8 +261,10 @@ jobs:
 
       - name: Build and publish coupon-booster image
         working-directory: coupon-booster
+        # -Pnative compiles a GraalVM native image via the Paketo native buildpack.
+        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
         run: |
-          ./mvnw -B spring-boot:build-image \
+          ./mvnw -B -Pnative spring-boot:build-image \
             -DskipTests \
             -Dspring-boot.build-image.publish=true \
             -ntp
