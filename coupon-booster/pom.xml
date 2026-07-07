@@ -448,6 +448,7 @@
           <sortProperties>false</sortProperties>
           <keepBlankLines>true</keepBlankLines>
           <sortDependencies>scope</sortDependencies>
+          <createBackupFile>false</createBackupFile>
         </configuration>
         <executions>
           <execution>
