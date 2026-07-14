@@ -1,62 +1,56 @@
 version: 2
 updates:
-
-  # ── Maven (coupon-booster/) ────────────────────────────────────────────────
-  - package-ecosystem: "maven"
-    directory: "/coupon-booster"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "patbaumgartner"
-    assignees:
-      - "patbaumgartner"
-    commit-message:
-      prefix: "deps(java)"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "java"
-
-  # ── uv / Python (patchright/) ──────────────────────────────────────────────
-  - package-ecosystem: "uv"
-    directory: "/patchright"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "patbaumgartner"
-    assignees:
-      - "patbaumgartner"
-    commit-message:
-      prefix: "deps(python)"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "python"
-
-  # ── GitHub Actions ─────────────────────────────────────────────────────────
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "Europe/Zurich"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "patbaumgartner"
-    assignees:
-      - "patbaumgartner"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
+- package-ecosystem: maven
+  directory: /coupon-booster
+  schedule:
+    interval: weekly
+    day: monday
+    time: 06:00
+    timezone: Europe/Zurich
+  open-pull-requests-limit: 10
+  reviewers:
+  - patbaumgartner
+  assignees:
+  - patbaumgartner
+  commit-message:
+    prefix: deps(java)
+    include: scope
+  labels:
+  - dependencies
+  - java
+- package-ecosystem: uv
+  directory: /patchright
+  schedule:
+    interval: weekly
+    day: monday
+    time: 06:00
+    timezone: Europe/Zurich
+  open-pull-requests-limit: 10
+  reviewers:
+  - patbaumgartner
+  assignees:
+  - patbaumgartner
+  commit-message:
+    prefix: deps(python)
+    include: scope
+  labels:
+  - dependencies
+  - python
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 06:00
+    timezone: Europe/Zurich
+  open-pull-requests-limit: 5
+  reviewers:
+  - patbaumgartner
+  assignees:
+  - patbaumgartner
+  commit-message:
+    prefix: ci
+    include: scope
+  labels:
+  - dependencies
+  - github-actions
