@@ -25,6 +25,14 @@ import static org.springframework.http.HttpHeaders.CONNECTION;
  * retries with backoff), so the default (~3 min) previously cut off logins that would
  * otherwise have succeeded. The read timeout is intentionally generous and tunable via
  * {@code couponbooster.sidecar.read-timeout}.
+ * <p>
+ * The Apache HttpComponents request factory is selected explicitly instead of
+ * {@code ClientHttpRequestFactoryBuilder.detect()}: in the GraalVM native image the
+ * classpath probe used by {@code detect()} cannot see HttpClient 5 (it is only reachable
+ * when referenced directly), so detection silently fell back to the JDK HttpClient. That
+ * client defaults to HTTP/2 and sends an {@code Upgrade: h2c} handshake on plain HTTP,
+ * which the uvicorn sidecar answers without ever passing the request body to FastAPI —
+ * every login failed with 422 "body Field required".
  */
 @Configuration
 public class RestClientConfiguration {
@@ -50,7 +58,7 @@ public class RestClientConfiguration {
 			.withConnectTimeout(connectTimeout)
 			.withReadTimeout(readTimeout);
 		return restClientBuilder -> restClientBuilder
-			.requestFactory(ClientHttpRequestFactoryBuilder.detect().build(requestFactorySettings))
+			.requestFactory(ClientHttpRequestFactoryBuilder.httpComponents().build(requestFactorySettings))
 			.defaultHeader(ACCEPT_ENCODING, "gzip, deflate, br")
 			.defaultHeader(CONNECTION, "keep-alive")
 			.requestInterceptor(createRequestLoggingInterceptor());
