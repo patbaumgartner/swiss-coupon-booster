@@ -37,7 +37,8 @@ nbdist/
 .nb-gradle/
 
 # VS Code
-.vscode/
+.vscode/*
+!.vscode/settings.json
 
 # Build outputs inside src (Maven test-filtered resources)
 !**/src/main/**/target/
