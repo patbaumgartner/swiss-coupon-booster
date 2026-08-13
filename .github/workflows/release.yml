@@ -75,22 +75,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── Custom run image (Chromium libs for browser-mode fallback) ────────────
-      # Must be pushed before the native image build: the buildpack pulls it via
-      # runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
-      - name: Build & push run image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          file: ./coupon-booster/run-image.Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ── Patchright stealth-login sidecar ──────────────────────────────────────
+      # ── Patchright login sidecar ──────────────────────────────────────────────
       - name: Build & push patchright sidecar
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -109,7 +94,6 @@ jobs:
       # ── Native application image (GraalVM via Paketo buildpack) ────────────────
       - name: Build & publish native image
         # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image.
-        # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
         run: |
           ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \
             -Dspring-boot.build-image.publish=true \

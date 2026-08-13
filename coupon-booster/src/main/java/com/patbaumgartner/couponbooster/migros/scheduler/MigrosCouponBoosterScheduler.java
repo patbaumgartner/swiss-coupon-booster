@@ -19,8 +19,7 @@ public class MigrosCouponBoosterScheduler extends AbstractCouponBoosterScheduler
 
 	/**
 	 * Constructs a new {@code MigrosCouponBoosterScheduler} with the specified services.
-	 * @param migrosAuthenticationService the authentication service to use (sidecar or
-	 * browser mode)
+	 * @param migrosAuthenticationService the authentication service to use
 	 * @param cumulusCouponService the service to use for coupon activation
 	 */
 	public MigrosCouponBoosterScheduler(@Qualifier("migrosAuth") AuthenticationService migrosAuthenticationService,

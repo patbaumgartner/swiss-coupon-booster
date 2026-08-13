@@ -6,14 +6,10 @@
 #
 # Usage
 # ─────
-#   # 1. Build the custom Paketo run image (once, or when run-image.Dockerfile changes)
-#   docker build -f coupon-booster/run-image.Dockerfile \
-#                -t patbaumgartner/coupon-booster-run:latest .
-#
-#   # 2. Build the coupon-booster app image via Maven buildpacks
+#   # 1. Build the coupon-booster app image via Maven buildpacks
 #   cd coupon-booster && ./mvnw spring-boot:build-image
 #
-#   # 3. Start everything (patchright is built here; coupon-booster uses pre-built image)
+#   # 2. Start everything (patchright is built here; coupon-booster uses pre-built image)
 #   docker compose -f docker-compose.build.yml up --build
 #
 # To run pre-built images from Docker Hub instead, use:
@@ -78,23 +74,12 @@ services:
       # ── Coop (Supercard) credentials ──────────────────────────────────────────
       COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
       COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
-      # ── Auth modes ────────────────────────────────────────────────────────────
-      # 'sidecar' (default) — delegates login to patchright (bypasses DataDome)
-      # 'browser'           — uses Java Playwright directly (legacy fallback)
-      COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
-      MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
       # ── Patchright sidecar URLs (resolved via internal Docker network) ────────
       COOP_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
       MIGROS_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
-      # ── Playwright settings (only used with auth.mode=browser) ─────────────────
-      COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
-      PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
       # ── Feature toggles ───────────────────────────────────────────────────────
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
-    volumes:
-      - coop-user-data:/data/coop-user-data
-      - screenshots:/data/screenshots
     networks:
       - internal
 

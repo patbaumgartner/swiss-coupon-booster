@@ -2,51 +2,18 @@
 logging:
   level:
     com.patbaumgartner: WARN
-    com.microsoft.playwright: WARN
     org.springframework: WARN
     root: WARN
-
-# Disable actual browser automation in tests
-migros:
-  user:
-    email: "test@example.com"
-    password: "test-password"
-
-  playwright:
-    login-url: "https://login.migros.ch/"
-    password-url: "https://login.migros.ch/login/password"
-    headless: true
-    timeout-ms: 5000
-    typing-delay-ms: 0
-    slow-mo-ms: 0
-    chrome-args: []
-
-  selectors:
-    email-input: "#input-email"
-    password-input: "#input-password"
-    submit-button: "#button-submit"
-    password-login-link: "#link-login-option-PASSWORD"
-    cookie-accept-button: "button:has-text('Accept')"
 
 coop:
   user:
     email: "test@example.com"
     password: "test-password"
 
-  playwright:
-    login-url: "https://www.supercard.ch/content/supercard/de.html"
-    headless: true
-    timeout-ms: 5000
-    typing-delay-ms: 0
-    slow-mo-ms: 0
-    chrome-args: []
-
-  selectors:
-    cookie-accept-button: '[data-testid="uc-accept-all-button"]'
-    login-link: "#a-accountLogin-desktop"
-    username-input: "#username"
-    password-input: "#password"
-    submit-button: "#btnSubmit"
+migros:
+  user:
+    email: "test@example.com"
+    password: "test-password"
 
 cumulus:
   urls:

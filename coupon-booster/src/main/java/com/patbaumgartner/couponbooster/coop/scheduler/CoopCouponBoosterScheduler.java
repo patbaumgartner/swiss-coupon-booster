@@ -19,8 +19,7 @@ public class CoopCouponBoosterScheduler extends AbstractCouponBoosterScheduler {
 
 	/**
 	 * Constructs a new {@code CoopCouponBoosterScheduler} with the specified services.
-	 * @param coopAuthenticationService the authentication service to use (sidecar or
-	 * browser mode)
+	 * @param coopAuthenticationService the authentication service to use
 	 * @param supercardCouponService the service to use for coupon activation
 	 */
 	public CoopCouponBoosterScheduler(@Qualifier("coopAuth") AuthenticationService coopAuthenticationService,

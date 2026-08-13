@@ -12,11 +12,10 @@ import org.springframework.stereotype.Component;
  * {@link ApplicationRunner} for Coop Supercard coupon activation.
  * <p>
  * Conditionally enabled based on the {@code coop.startup-run.enabled} property.
- * Authentication is delegated to whichever {@link AuthenticationService} bean is active
- * (sidecar or browser mode, controlled by {@code coop.auth.mode}).
+ * Authentication is delegated to the {@link AuthenticationService} qualified as
+ * {@code coopAuth}.
  *
- * @see com.patbaumgartner.couponbooster.coop.service.CoopStealthAuthenticationService
- * @see com.patbaumgartner.couponbooster.coop.service.CoopAuthenticationService
+ * @see com.patbaumgartner.couponbooster.coop.service.CoopSidecarAuthenticationService
  * @see com.patbaumgartner.couponbooster.coop.service.SupercardCouponService
  */
 @Component

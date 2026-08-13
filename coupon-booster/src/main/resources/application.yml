@@ -26,56 +26,27 @@ spring:
 logging:
   level:
     org.springframework: INFO
-    com.microsoft.playwright: INFO
     com.patbaumgartner: DEBUG
     root: INFO
+
+couponbooster:
+  sidecar:
+    # A cold login can be slow: SSO redirects plus a DataDome challenge in the
+    # Patchright sidecar. The read timeout must exceed that worst case.
+    connect-timeout: "${COUPONBOOSTER_SIDECAR_CONNECT_TIMEOUT:10s}"
+    read-timeout: "${COUPONBOOSTER_SIDECAR_READ_TIMEOUT:300s}"
 
 coop:
   startup-run:
     enabled: "${COOP_STARTUP_RUN_ENABLED:true}"
 
-  # Authentication mode:
-  #   browser  - Java Playwright login (default for local mvn spring-boot:run)
-  #   sidecar  - Patchright stealth sidecar login (recommended in Docker/production)
-  # Note: root .env is imported and can override this default via COOP_AUTH_MODE.
-  auth:
-    mode: "${COOP_AUTH_MODE:browser}"
-
-  # Stealth sidecar endpoint (only used when auth.mode=sidecar)
+  # Patchright stealth sidecar endpoint. Login is always delegated to the sidecar.
   patchright:
     url: "${COOP_PATCHRIGHT_URL:http://localhost:8000}"
 
   user:
     email: "${COOP_USER_EMAIL:}"
     password: "${COOP_USER_PASSWORD:}"
-
-  # Browser automation settings — only used when coop.auth.mode=browser
-  playwright:
-    login-url: "https://www.supercard.ch/content/supercard/de.html?sso-check=1"
-    typing-delay-ms: 100
-    slow-mo-ms: 1000
-    headless: "${PLAYWRIGHT_HEADLESS:false}"
-    chrome-args:
-      - "--disable-blink-features=AutomationControlled"
-      - "--disable-features=IsolateOrigins,site-per-process,VizDisplayCompositor"
-      - "--disable-site-isolation-trials"
-      - "--disable-dev-shm-usage"
-      - "--no-first-run"
-      - "--no-default-browser-check"
-      - "--disable-infobars"
-      - "--window-size=1920,1080"
-      - "--exclude-switches=enable-automation"
-      - "--window-position=0,0"
-    timeout-ms: 20000
-    # Directory to store browser user data (cookies, local storage) for persistent sessions
-    user-data-dir: "${COOP_PLAYWRIGHT_USER_DATA_DIR:playwright-user-data}"
-
-  selectors:
-    cookie-accept-button: '[data-testid="uc-accept-all-button"]'
-    login-link: "#a-accountLogin-desktop"
-    username-input: "#username"
-    password-input: "#password"
-    submit-button: "#btnSubmit"
 
 supercard:
   urls:
@@ -105,39 +76,12 @@ migros:
   startup-run:
     enabled: "${MIGROS_STARTUP_RUN_ENABLED:true}"
 
-  # Authentication mode:
-  #   browser  - Java Playwright login (default for local mvn spring-boot:run)
-  #   sidecar  - Patchright stealth sidecar login (recommended in Docker/production)
-  # Note: root .env is imported and can override this default via MIGROS_AUTH_MODE.
-  auth:
-    mode: "${MIGROS_AUTH_MODE:browser}"
-
   patchright:
     url: "${MIGROS_PATCHRIGHT_URL:http://localhost:8000}"
 
   user:
     email: "${MIGROS_USER_EMAIL:}"
     password: "${MIGROS_USER_PASSWORD:}"
-
-  playwright:
-    login-url: "https://login.migros.ch/"
-    password-url: "https://login.migros.ch/login/password"
-    typing-delay-ms: 50
-    slow-mo-ms: 500
-    headless: "${PLAYWRIGHT_HEADLESS:false}"
-    chrome-args:
-      - "--no-sandbox"
-      - "--disable-web-security"
-      - "--disable-features=VizDisplayCompositor,WebAuthenticationAPI"
-      - "--disable-blink-features=WebAuthenticationAPI"
-    timeout-ms: 15000
-
-  selectors:
-    email-input: "#input-email"
-    password-input: "#input-password"
-    submit-button: "#button-submit"
-    password-login-link: "#link-login-option-PASSWORD"
-    cookie-accept-button: "button:has-text('Accept'), button:has-text('Akzeptieren')"
 
 cumulus:
   urls:
