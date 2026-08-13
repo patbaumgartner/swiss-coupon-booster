@@ -37,10 +37,10 @@
 
     <!-- External Library Versions -->
     <logback.version>1.5.34</logback.version>
+    <!-- Playwright supplies only the Cookie value type; removed with the SessionCookie migration. -->
     <playwright.version>1.62.0</playwright.version>
 
     <!-- Maven Core Plugins -->
-    <exec-maven-plugin.version>3.6.3</exec-maven-plugin.version>
     <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
     <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
@@ -470,7 +470,6 @@
           <image>
             <name>docker.io/patbaumgartner/${project.artifactId}:${project.version}</name>
             <builder>paketobuildpacks/builder-noble-java-tiny:latest</builder>
-            <runImage>patbaumgartner/coupon-booster-run:latest</runImage>
             <pullPolicy>IF_NOT_PRESENT</pullPolicy>
             <env>
               <BP_JVM_VERSION>25</BP_JVM_VERSION>
@@ -487,16 +486,6 @@
           </execution>
         </executions>
       </plugin>
-
-      <!-- Playwright CLI Access -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>${exec-maven-plugin.version}</version>
-        <configuration>
-          <mainClass>com.microsoft.playwright.CLI</mainClass>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
@@ -505,16 +494,14 @@
       GraalVM native-image build (activate with -Pnative). Extends the `native`
       profile inherited from spring-boot-starter-parent.
 
-      Spring evaluates @ConditionalOnProperty and the web-application-type at AOT
-      (build) time, so both are frozen into the native image:
-        * spring.profiles.active=server activates application-server.yml, whose
-          `spring.main.web-application-type: servlet` makes AOT build a servlet
-          web context. Without it the default application.yml (web-application-type:
-          none) is used and the native image starts with no ServletWebServerFactory
-          ("Unable to start web server"). This matches the production container,
-          which runs with SPRING_PROFILES_ACTIVE=server.
-        * coop/migros.auth.mode=sidecar pins the auth mode; the production container
-          runs in `sidecar` mode, otherwise the (browser) default would be baked in.
+      Spring evaluates the web-application-type at AOT (build) time, so it is
+      frozen into the native image: spring.profiles.active=server activates
+      application-server.yml, whose `spring.main.web-application-type: servlet`
+      makes AOT build a servlet web context. Without it the default
+      application.yml (web-application-type: none) is used and the native image
+      starts with no ServletWebServerFactory ("Unable to start web server").
+      This matches the production container, which runs with
+      SPRING_PROFILES_ACTIVE=server.
     -->
     <profile>
       <id>native</id>
@@ -547,8 +534,7 @@
               <execution>
                 <id>process-aot</id>
                 <configuration>
-                  <jvmArguments>-Dspring.profiles.active=server -Dcoop.auth.mode=sidecar
-                    -Dmigros.auth.mode=sidecar</jvmArguments>
+                  <jvmArguments>-Dspring.profiles.active=server</jvmArguments>
                 </configuration>
               </execution>
             </executions>

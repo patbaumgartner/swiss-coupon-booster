@@ -81,25 +81,14 @@ services:
       # ── Coop (Supercard) credentials ──────────────────────────────────────────
       COOP_USER_EMAIL: "${COOP_USER_EMAIL}"
       COOP_USER_PASSWORD: "${COOP_USER_PASSWORD}"
-      # ── Auth modes ────────────────────────────────────────────────────────────
-      # 'sidecar' (default) — delegates login to patchright (bypasses DataDome)
-      # 'browser'           — uses Java Playwright directly (legacy fallback)
-      COOP_AUTH_MODE: "${COOP_AUTH_MODE:-sidecar}"
-      MIGROS_AUTH_MODE: "${MIGROS_AUTH_MODE:-sidecar}"
       # ── Patchright sidecar URLs (resolved via internal Docker network) ────────
       COOP_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
       MIGROS_PATCHRIGHT_URL: "http://coupon-booster-patchright:8000"
-      # ── Playwright settings (only used with auth.mode=browser) ─────────────────
-      COOP_PLAYWRIGHT_USER_DATA_DIR: /data/coop-user-data
-      PLAYWRIGHT_HEADLESS: "${PLAYWRIGHT_HEADLESS:-true}"
       # ── Feature toggles ───────────────────────────────────────────────────────
       COOP_STARTUP_RUN_ENABLED: "${COOP_STARTUP_RUN_ENABLED:-true}"
       MIGROS_STARTUP_RUN_ENABLED: "${MIGROS_STARTUP_RUN_ENABLED:-true}"
       COOP_SCHEDULER_CRON: "${COOP_SCHEDULER_CRON:-0 0 6 * * *}"
       MIGROS_SCHEDULER_CRON: "${MIGROS_SCHEDULER_CRON:-0 10 6 * * *}"
-    volumes:
-      - coop-user-data:/data/coop-user-data
-      - screenshots:/data/screenshots
     networks:
       - internal
 

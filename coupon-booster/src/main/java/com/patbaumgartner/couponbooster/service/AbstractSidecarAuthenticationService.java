@@ -17,19 +17,19 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Abstract base class for stealth sidecar authentication services.
+ * Abstract base class for Patchright sidecar authentication services.
  * <p>
- * Encapsulates the shared logic for delegating login to the Patchright stealth sidecar
- * service: credential validation, HTTP request to the sidecar, cookie parsing, and error
- * handling. Subclasses supply the provider-specific login URI and the missing-credentials
- * message via constructor arguments.
+ * Encapsulates the shared logic for delegating login to the Patchright sidecar service:
+ * credential validation, HTTP request to the sidecar, cookie parsing, and error handling.
+ * Subclasses supply the provider-specific login URI and the missing-credentials message
+ * via constructor arguments.
  *
- * @see com.patbaumgartner.couponbooster.coop.service.CoopStealthAuthenticationService
- * @see com.patbaumgartner.couponbooster.migros.service.MigrosStealthAuthenticationService
+ * @see com.patbaumgartner.couponbooster.coop.service.CoopSidecarAuthenticationService
+ * @see com.patbaumgartner.couponbooster.migros.service.MigrosSidecarAuthenticationService
  */
-public abstract class AbstractStealthAuthenticationService implements AuthenticationService {
+public abstract class AbstractSidecarAuthenticationService implements AuthenticationService {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractStealthAuthenticationService.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractSidecarAuthenticationService.class);
 
 	private final Supplier<String> emailSupplier;
 
@@ -53,7 +53,7 @@ public abstract class AbstractStealthAuthenticationService implements Authentica
 	 * @param restClientBuilder Spring REST client builder
 	 * @param objectMapper Jackson object mapper
 	 */
-	protected AbstractStealthAuthenticationService(Supplier<String> emailSupplier, Supplier<String> passwordSupplier,
+	protected AbstractSidecarAuthenticationService(Supplier<String> emailSupplier, Supplier<String> passwordSupplier,
 			String credentialsMissingMessage, String loginUri, String sidecarUrl, RestClient.Builder restClientBuilder,
 			ObjectMapper objectMapper) {
 		this.emailSupplier = Objects.requireNonNull(emailSupplier, "emailSupplier cannot be null");

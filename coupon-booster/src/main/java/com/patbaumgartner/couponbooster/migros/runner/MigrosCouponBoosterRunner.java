@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * <p>
  * Conditionally enabled based on the {@code migros.startup-run.enabled} property.
  *
- * @see com.patbaumgartner.couponbooster.migros.service.MigrosAuthenticationService
+ * @see com.patbaumgartner.couponbooster.migros.service.MigrosSidecarAuthenticationService
  * @see com.patbaumgartner.couponbooster.migros.service.CumulusCouponService
  */
 @Component

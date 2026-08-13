@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.restclient.test.autoconfigure.RestClientTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
 import tools.jackson.databind.ObjectMapper;
@@ -19,12 +18,11 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-@RestClientTest(CoopStealthAuthenticationService.class)
-@TestPropertySource(properties = "coop.auth.mode=sidecar")
-class CoopStealthAuthenticationServiceTest {
+@RestClientTest(CoopSidecarAuthenticationService.class)
+class CoopSidecarAuthenticationServiceTest {
 
 	@Autowired
-	private CoopStealthAuthenticationService service;
+	private CoopSidecarAuthenticationService service;
 
 	@Autowired
 	private MockRestServiceServer server;

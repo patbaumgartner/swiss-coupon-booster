@@ -20,10 +20,10 @@ import static org.springframework.http.HttpHeaders.CONNECTION;
  * Configures the default {@link RestClient} with compression headers, connect/read
  * timeouts, and a request logging interceptor.
  * <p>
- * The read timeout must exceed the stealth sidecar's worst-case login time. A cold Coop
- * login can take several minutes (slow SSO redirect plus a DataDome challenge, navigation
- * retries with backoff), so the default (~3 min) previously cut off logins that would
- * otherwise have succeeded. The read timeout is intentionally generous and tunable via
+ * The read timeout must exceed the sidecar's worst-case login time. A cold Coop login can
+ * take several minutes (slow SSO redirect plus a DataDome challenge, navigation retries
+ * with backoff), so the default (~3 min) previously cut off logins that would otherwise
+ * have succeeded. The read timeout is intentionally generous and tunable via
  * {@code couponbooster.sidecar.read-timeout}.
  * <p>
  * The Apache HttpComponents request factory is selected explicitly instead of

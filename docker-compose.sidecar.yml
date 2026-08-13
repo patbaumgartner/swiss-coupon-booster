@@ -3,7 +3,7 @@
 #
 # Starts only the patchright sidecar for local Spring Boot development.
 # Used automatically by the Spring Boot Docker Compose integration when running
-# `mvn spring-boot:run` with COOP_AUTH_MODE=sidecar or MIGROS_AUTH_MODE=sidecar.
+# `mvn spring-boot:run`, which always delegates login to the sidecar.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:

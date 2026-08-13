@@ -54,17 +54,7 @@ uv sync --frozen --all-groups
 uv run python -m patchright install chromium
 ```
 
-### 3. Set up the Java application
-
-```sh
-cd coupon-booster
-# First-time: install Playwright browsers
-mvn exec:java -e \
-  -Dexec.mainClass="com.microsoft.playwright.CLI" \
-  -Dexec.args="install --with-deps"
-```
-
-### 4. Configure your environment
+### 3. Configure your environment
 
 ```sh
 cp .env.example .env

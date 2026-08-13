@@ -21,7 +21,6 @@ env:
   JAVA_VERSION: "25"
   PYTHON_VERSION: "3.14"
   MAVEN_OPTS: "-Xmx1024m -XX:+UseG1GC"
-  PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
 
 jobs:
   # ── Java / Spring Boot ──────────────────────────────────────────────────────
@@ -46,34 +45,15 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: playwright-browsers-${{ hashFiles('coupon-booster/pom.xml') }}
-          restore-keys: playwright-browsers-
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends xvfb
-
-      - name: Install Playwright browsers
-        run: |
-          ./mvnw exec:java -e -ntp \
-            -Dexec.mainClass="com.microsoft.playwright.CLI" \
-            -Dexec.args="install --with-deps"
-
       - name: Check code formatting
         run: ./mvnw spring-javaformat:validate -ntp
 
       - name: Build, test & verify
         # OWASP dependency-check is skipped here (it downloads the full NVD feed).
         # Run it from the release pipeline or a dedicated scheduled workflow instead.
-        run: xvfb-run -a ./mvnw clean verify -ntp -Dmaven.test.failure.ignore=true -Ddependency-check.skip=true
+        run: ./mvnw clean verify -ntp -Ddependency-check.skip=true
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
-          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
       - name: Publish test results
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -167,20 +147,6 @@ jobs:
         id: version
         run: echo "version=$(./mvnw -q -ntp help:evaluate -Dexpression=project.version -DforceStdout)" >> "$GITHUB_OUTPUT"
 
-      # Run image must be pushed before the native build: the buildpack pulls it
-      # via runImage/pullPolicy=IF_NOT_PRESENT configured in pom.xml.
-      - name: Build & push run image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          file: ./coupon-booster/run-image.Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-run:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Build & push patchright sidecar
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -194,7 +160,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image (x86-64-v2).
-      # AOT pins the auth mode to 'sidecar' (see pom.xml native profile).
       - name: Build & publish native image (snapshot & latest)
         run: |
           ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \

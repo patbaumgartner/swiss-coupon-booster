@@ -10,14 +10,5 @@
     <cve>CVE-2024-22243</cve>
   </suppress>
 
-  <!-- Suppress known issues with Playwright that are not exploitable in our context -->
-  <suppress>
-    <notes><![CDATA[
-    Playwright browser automation tool - CVEs related to browser engines not applicable to our use case
-    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.microsoft\.playwright/playwright@.*$</packageUrl>
-    <vulnerabilityName regex="true">.*browser.*</vulnerabilityName>
-  </suppress>
-
   <!-- Add more suppressions as needed based on your specific use case -->
 </suppressions>

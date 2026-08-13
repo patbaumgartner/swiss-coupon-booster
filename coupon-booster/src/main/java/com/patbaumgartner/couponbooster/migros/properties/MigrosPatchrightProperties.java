@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Configuration properties for the Patchright stealth login sidecar (Migros).
+ * Configuration properties for the Patchright login sidecar (Migros).
  *
  * @param url base URL of the Patchright sidecar (e.g.
  * {@code http://coupon-booster-patchright:8000})
