@@ -150,7 +150,7 @@ public abstract class AbstractStealthAuthenticationService implements Authentica
 			log.info("Sidecar login successful: {} cookies received in {}ms", cookies.size(), duration);
 			return AuthenticationResult.successful(cookies, duration, userAgent, language);
 		}
-		catch (Exception ex) {
+		catch (RuntimeException ex) {
 			var duration = System.currentTimeMillis() - startTime;
 			log.error("Failed to parse sidecar response: {}", ex.getMessage(), ex);
 			return AuthenticationResult.failed("Failed to parse sidecar response: " + ex.getMessage(), duration);
