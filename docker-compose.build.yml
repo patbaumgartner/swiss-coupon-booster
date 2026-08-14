@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile
     image: patbaumgartner/coupon-booster-patchright:${VERSION:-latest}
     container_name: patchright
+    init: true
     restart: "no"
     environment:
       COOP_LOGIN_URL: "${COOP_LOGIN_URL:-https://www.supercard.ch/content/supercard/de.html?sso-check=1}"

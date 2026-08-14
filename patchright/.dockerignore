@@ -1,0 +1,29 @@
+# The patchright build context is ./patchright, so paths here are relative to it.
+# Keeping it minimal matters: the whole context is uploaded to the Docker daemon,
+# and this directory can hold a passkey private key and browser profiles.
+
+# Secrets — must never enter a build context
+.env
+*passkey*.json
+cookies.txt
+
+# Virtualenv, caches and test artefacts
+.venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+test-results.xml
+
+# Persistent browser profiles and debug output
+coop-user-data/
+migros-user-data/
+screenshots/
+
+# Not needed in the image
+*.md
+Dockerfile
+.dockerignore

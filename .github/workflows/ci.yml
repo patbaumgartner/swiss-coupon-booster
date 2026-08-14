@@ -49,6 +49,7 @@ jobs:
         run: ./mvnw spring-javaformat:validate -ntp
 
       - name: Build, test & verify
+        # Quality gates (SpotBugs, JaCoCo thresholds) run as part of `verify`.
         # OWASP dependency-check is skipped here (it downloads the full NVD feed).
         # Run it from the release pipeline or a dedicated scheduled workflow instead.
         run: ./mvnw clean verify -ntp -Ddependency-check.skip=true
@@ -92,7 +93,14 @@ jobs:
       - name: Install dependencies (locked)
         run: uv sync --frozen --all-groups
 
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
       - name: Run tests
+        # pyproject enforces the coverage floor via addopts.
         run: uv run pytest -v --tb=short --junit-xml=test-results.xml
 
       - name: Publish test results
@@ -104,13 +112,27 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-  # ── Docker: publish native image as snapshot + latest (main pushes only) ────
+      - name: Upload coverage report
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        if: always()
+        with:
+          name: coverage-python
+          path: patchright/coverage.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ── Docker: publish the snapshot images (main pushes only) ─────────────────
   # Runs only on direct pushes to main / manual dispatch (never on PRs or forks,
   # where the Docker Hub secrets are unavailable). Publishes the GraalVM native
-  # application image, its run image and the patchright sidecar, each tagged with
-  # the current project version (e.g. 0.2.0-SNAPSHOT) and :latest.
+  # application image and the patchright sidecar tagged with the current project
+  # version (e.g. 0.2.0-SNAPSHOT).
+  #
+  # Deliberately does NOT move :latest. Snapshots are unreleased builds of main,
+  # and docker-compose.yml defaults to :latest, so publishing a snapshot there
+  # silently upgraded every user to an untagged build. :latest is moved only by
+  # the release workflow.
   docker:
-    name: Docker – Publish snapshot & latest
+    name: Docker – Publish snapshot
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: [java, python]
@@ -155,16 +177,12 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       # -Pnative + BP_NATIVE_IMAGE=true compile a GraalVM native image (x86-64-v2).
-      - name: Build & publish native image (snapshot & latest)
+      - name: Build & publish native image (snapshot)
         run: |
           ./mvnw -B -ntp -Pnative spring-boot:build-image -DskipTests \
             -Dspring-boot.build-image.publish=true \
             -Dspring-boot.build-image.imageName=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
-          docker buildx imagetools create \
-            --tag docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:latest \
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster:${{ steps.version.outputs.version }}
