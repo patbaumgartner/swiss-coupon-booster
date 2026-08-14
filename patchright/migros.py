@@ -294,8 +294,7 @@ async def _click_turnstile_checkbox(page: Page) -> bool:
     x = box["x"] + random.uniform(24, 34)
     y = box["y"] + box["height"] / 2 + random.uniform(-3, 3)
     log.info(
-        "Clicking Turnstile checkbox via trusted CDP click at (%.0f, %.0f) "
-        "[iframe box x=%.0f y=%.0f w=%.0f h=%.0f]",
+        "Clicking Turnstile checkbox via trusted CDP click at (%.0f, %.0f) [iframe box x=%.0f y=%.0f w=%.0f h=%.0f]",
         x,
         y,
         box["x"],

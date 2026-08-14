@@ -97,9 +97,7 @@ async def _login(
             result = await asyncio.wait_for(flow(request.email, request.password), timeout=LOGIN_TIMEOUT_S)
         except TimeoutError as exc:
             log.error("%s login timed out after %ss", provider, LOGIN_TIMEOUT_S)
-            raise HTTPException(
-                status_code=503, detail=f"{provider} login timed out after {LOGIN_TIMEOUT_S}s"
-            ) from exc
+            raise HTTPException(status_code=503, detail=f"{provider} login timed out after {LOGIN_TIMEOUT_S}s") from exc
         except RuntimeError as exc:
             log.error("%s login failed in %s: %s", provider, _elapsed(start), exc)
             raise HTTPException(status_code=503, detail=str(exc)) from exc

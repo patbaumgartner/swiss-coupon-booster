@@ -97,8 +97,7 @@ async def _navigate_to_login(page: Page) -> None:
             # challenge. Hand off to the caller instead of retrying the goto.
             if is_datadome_challenge(page):
                 log.info(
-                    "Navigation timed out on a DataDome interstitial (url=%s); "
-                    "proceeding to challenge handling",
+                    "Navigation timed out on a DataDome interstitial (url=%s); proceeding to challenge handling",
                     page.url,
                 )
                 return
@@ -119,6 +118,7 @@ async def _navigate_to_login(page: Page) -> None:
         f"attempts (last error: {last_exc}). The SSO redirect or DataDome challenge "
         "did not settle in time."
     )
+
 
 async def _handle_cookie_consent(page: Page) -> None:
     await random_delay(COOKIE_CONSENT_WAIT_MIN, COOKIE_CONSENT_WAIT_MAX)
