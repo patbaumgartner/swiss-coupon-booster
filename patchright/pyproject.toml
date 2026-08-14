@@ -20,6 +20,8 @@ dev = [
 	"httpx2>=2.9.1",
 	"pytest==9.1.1",
 	"pytest-asyncio==1.4.0",
+	"pytest-cov==7.0.0",
+	"ruff==0.14.6",
 ]
 
 [tool.uv]
@@ -31,3 +33,20 @@ testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# Ratchet, not an aspiration: the uncovered remainder is the async browser-driving
+# flow, which needs a real Chromium. Raise this whenever coverage rises.
+addopts = "--cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=28"
+
+[tool.coverage.run]
+omit = ["test_*.py", "conftest.py", "register_migros_passkey.py"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "S", "ASYNC", "SIM", "BLE", "RUF"]
+# S311: the random module drives human-behaviour timing jitter for bot evasion,
+# which is not a cryptographic use. Every other security rule stays on.
+ignore = ["S311"]
+per-file-ignores = { "test_*.py" = ["S101", "S105", "S106"] }

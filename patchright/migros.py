@@ -12,6 +12,7 @@ scope.  This forces the password field to appear instead of a passkey dialog.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -143,7 +144,8 @@ async def _find_first_visible(page: Page, selectors: tuple[str, ...], timeout_ms
             if await locator.is_visible():
                 log.debug("Using selector at index %d of %d", index, len(selectors))
                 return locator
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Selector %s not visible: %s", selector, exc)
             continue
     raise RuntimeError(f"No visible element found for selectors: {selectors}")
 
@@ -154,7 +156,8 @@ async def _is_password_field_visible(page: Page) -> bool:
         try:
             if await locator.is_visible():
                 return True
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Password selector %s not visible: %s", selector, exc)
             continue
     return False
 
@@ -204,7 +207,8 @@ async def _find_turnstile_frame(page: Page):
         try:
             if _is_cloudflare_challenge_url(frame.url or ""):
                 return frame
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Could not inspect frame URL: %s", exc)
             continue
     return None
 
@@ -321,16 +325,13 @@ async def _handle_cloudflare_turnstile(page: Page) -> bool:
     while time.monotonic() < deadline:
         if not await _is_cloudflare_challenge(page):
             log.info("Cloudflare challenge cleared ✓")
-            try:
+            with contextlib.suppress(Exception):
                 await page.wait_for_load_state("load")
-            except Exception:  # noqa: BLE001
-                pass
             return True
-        if MIGROS_CF_AUTO_CLICK and click_attempts < 3:
-            if await _click_turnstile_checkbox(page):
-                click_attempts += 1
-                await asyncio.sleep(3)
-                continue
+        if MIGROS_CF_AUTO_CLICK and click_attempts < 3 and await _click_turnstile_checkbox(page):
+            click_attempts += 1
+            await asyncio.sleep(3)
+            continue
         if MIGROS_CF_MANUAL_SOLVE:
             log.warning("Waiting for MANUAL Turnstile solve in the headed window…")
         await asyncio.sleep(2)
@@ -353,7 +354,8 @@ async def _switch_to_password_mode_if_available(page: Page) -> None:
                 await locator.click()
                 await page.wait_for_load_state("load")
                 return
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Password-mode link candidate failed: %s", exc)
             continue
 
 
@@ -390,10 +392,8 @@ async def _advance_from_email_to_password(page: Page, email: str) -> bool:
         await random_delay(SUBMIT_WAIT_MIN, SUBMIT_WAIT_MAX)
         submit_btn = await _find_first_visible(page, _MIGROS_SUBMIT_SELECTORS, TIMEOUT_MS)
         await submit_btn.click()
-        try:
+        with contextlib.suppress(Exception):
             await page.wait_for_load_state("load")
-        except Exception:  # noqa: BLE001
-            pass
         # Give Cloudflare / navigation a moment before the next check.
         await asyncio.sleep(2)
 
@@ -448,16 +448,15 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
         # tolerates Cloudflare challenges that bounce the form back to an empty
         # state — re-submitting once cf_clearance is set usually reaches the
         # password page.
-        if not await _is_password_field_visible(page):
-            if not await _advance_from_email_to_password(page, email):
-                log.warning(
-                    "Password field not reached after retries; navigating directly to %s",
-                    MIGROS_PASSWORD_URL,
-                )
-                await page.goto(MIGROS_PASSWORD_URL)
-                await page.wait_for_load_state("load")
-                await _handle_cloudflare_turnstile(page)
-                await _switch_to_password_mode_if_available(page)
+        if not await _is_password_field_visible(page) and not await _advance_from_email_to_password(page, email):
+            log.warning(
+                "Password field not reached after retries; navigating directly to %s",
+                MIGROS_PASSWORD_URL,
+            )
+            await page.goto(MIGROS_PASSWORD_URL)
+            await page.wait_for_load_state("load")
+            await _handle_cloudflare_turnstile(page)
+            await _switch_to_password_mode_if_available(page)
 
         try:
             await page.wait_for_url(f"{MIGROS_PASSWORD_URL}*", timeout=TIMEOUT_MS)
@@ -513,13 +512,16 @@ def load_passkey_credential() -> dict[str, Any] | None:
 
 
 def save_passkey_credential(credential: dict[str, Any]) -> None:
-    """Persist a passkey credential (contains a private key — treat as secret)."""
+    """Persist a passkey credential (contains a private key — treat as secret).
+
+    The file is created 0600 by ``os.open`` rather than written first and
+    chmod-ed after: the latter leaves the private key readable by every local
+    user for the width of that window.
+    """
     MIGROS_PASSKEY_FILE.parent.mkdir(parents=True, exist_ok=True)
-    MIGROS_PASSKEY_FILE.write_text(json.dumps(credential, indent=2), encoding="utf-8")
-    try:
-        os.chmod(MIGROS_PASSKEY_FILE, 0o600)
-    except OSError:  # pragma: no cover - best effort on non-POSIX
-        pass
+    descriptor = os.open(MIGROS_PASSKEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(json.dumps(credential, indent=2))
     log.info("Saved Migros passkey credential to %s", MIGROS_PASSKEY_FILE)
 
 
@@ -543,7 +545,8 @@ async def _looks_authenticated(page: Page) -> bool:
         try:
             if await page.locator(selector).first.is_visible():
                 return True
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Logout selector %s not visible: %s", selector, exc)
             continue
     return False
 
@@ -561,7 +564,8 @@ async def _trigger_passkey(page: Page) -> None:
                 log.debug("Triggering passkey via %s", selector)
                 await locator.click()
                 return
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Passkey trigger %s unavailable: %s", selector, exc)
             continue
     log.debug("No passkey trigger control found; relying on auto-invoked ceremony")
 
