@@ -2,6 +2,7 @@ package com.patbaumgartner.couponbooster.coop.runner;
 
 import com.patbaumgartner.couponbooster.coop.service.SupercardCouponService;
 import com.patbaumgartner.couponbooster.runner.AbstractCouponBoosterRunner;
+import com.patbaumgartner.couponbooster.runner.ActivationExitCode;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationRunner;
@@ -26,10 +27,11 @@ public class CoopCouponBoosterRunner extends AbstractCouponBoosterRunner {
 	 * Constructs a new {@code CoopCouponBoosterRunner}.
 	 * @param coopAuthenticationService the authentication service to use
 	 * @param supercardCouponService the coupon activation service
+	 * @param exitCode collects run outcomes for the process exit code
 	 */
 	public CoopCouponBoosterRunner(@Qualifier("coopAuth") AuthenticationService coopAuthenticationService,
-			SupercardCouponService supercardCouponService) {
-		super(coopAuthenticationService, supercardCouponService, "Coop");
+			SupercardCouponService supercardCouponService, ActivationExitCode exitCode) {
+		super(coopAuthenticationService, supercardCouponService, "Coop", exitCode);
 	}
 
 }

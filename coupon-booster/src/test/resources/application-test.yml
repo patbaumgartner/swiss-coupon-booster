@@ -33,4 +33,7 @@ supercard:
     coupons-activation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/activate"
     coupons-deactivation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/deactivate"
   coupon-filter:
+    max-active-coupons: 20
+    include-shop: "retail"
+    always-include-discount-marker: "5 Rappen"
     include-product-types: []

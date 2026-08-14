@@ -57,6 +57,13 @@ supercard:
     coupons-activation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/activate?language=de"
     coupons-deactivation-url: "https://webapi.supercard.ch/digital-coupons/api/v1/protected/dc/action/deactivate?language=de"
   coupon-filter:
+    # Supercard caps how many coupons may be active at once.
+    max-active-coupons: 20
+    # Only coupons redeemable in physical stores are activated.
+    include-shop: "retail"
+    # Coupons whose discount text contains this marker are activated regardless
+    # of product type. Blank disables the exemption.
+    always-include-discount-marker: "5 Rappen"
     include-product-types:
       - "39" # Aktuelles Bonheft
       - "01" # Bio, Nachhaltigkeit

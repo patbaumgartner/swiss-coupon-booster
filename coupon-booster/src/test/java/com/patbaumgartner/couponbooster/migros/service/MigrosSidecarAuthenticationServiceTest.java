@@ -128,4 +128,50 @@ class MigrosSidecarAuthenticationServiceTest {
 		server.verify();
 	}
 
+	@Test
+	void nullCredentialsAreReportedAsMissing() {
+		when(userCredentials.email()).thenReturn(null);
+		when(userCredentials.password()).thenReturn(null);
+
+		AuthenticationResult result = service.performAuthentication();
+
+		assertThat(result.isSuccessful()).isFalse();
+		assertThat(result.statusMessage()).contains("credentials missing");
+		server.verify();
+	}
+
+	@Test
+	void aBlankPasswordIsReportedAsMissing() {
+		when(userCredentials.password()).thenReturn("   ");
+
+		AuthenticationResult result = service.performAuthentication();
+
+		assertThat(result.isSuccessful()).isFalse();
+		assertThat(result.statusMessage()).contains("credentials missing");
+		server.verify();
+	}
+
+	@Test
+	void aMalformedSidecarResponseIsReportedAsAParseFailure() {
+		server.expect(requestTo("/login/migros"))
+			.andRespond(withSuccess("not json at all", MediaType.APPLICATION_JSON));
+
+		AuthenticationResult result = service.performAuthentication();
+
+		assertThat(result.isSuccessful()).isFalse();
+		assertThat(result.statusMessage()).contains("Failed to parse sidecar response");
+	}
+
+	@Test
+	void aResponseWithoutACookieArrayYieldsNoCookies() {
+		server.expect(requestTo("/login/migros"))
+			.andRespond(withSuccess("{\"userAgent\":\"UA\"}", MediaType.APPLICATION_JSON));
+
+		AuthenticationResult result = service.performAuthentication();
+
+		assertThat(result.isSuccessful()).isTrue();
+		assertThat(result.sessionCookies()).isEmpty();
+		assertThat(result.browserLanguage()).isNull();
+	}
+
 }
