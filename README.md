@@ -31,6 +31,8 @@
 - [Configuration reference](#configuration-reference)
 - [Debug artifacts](#debug-artifacts)
 - [FAQ](#faq)
+- [Docker Hub images](#docker-hub-images)
+- [Upgrading](#upgrading)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -85,8 +87,7 @@ swiss-coupon-booster/
 │   ├── src/
 │   │   ├── main/java/       # Application sources
 │   │   └── test/java/       # Unit + integration tests
-│   ├── pom.xml
-│   └── Dockerfile           # Build context: repo root (needs .git for git info)
+│   └── pom.xml              # Image built by the Spring Boot Maven plugin (buildpacks)
 ├── patchright/         # Patchright login sidecar (Python 3.14 / FastAPI)
 │   ├── main.py              # FastAPI app — POST /login/coop, POST /login/migros, GET /health
 │   ├── test_*.py            # pytest test suite
@@ -233,10 +234,16 @@ For containerized one-shot runs, keep using host cron.
 0 7 * * 1 cd /path/to/swiss-coupon-booster && docker compose pull -q && docker compose up --no-color >> /var/log/coupon-booster.log 2>&1
 ```
 
-### Docker restart policy note
+### Exit codes
 
-The one-shot app exits with code `0` when done. Using `restart: on-failure` will not cause it
-to loop. For one-shot container mode, a cron job calling `docker compose up` is the
+The one-shot run reports its outcome so cron and `restart: on-failure` can act on it:
+
+| Code | Meaning |
+|---|---|
+| `0` | Every enabled provider authenticated. Individual coupons may still have failed to activate — coupons expire and are withdrawn between runs — see the run summary in the log. |
+| `1` | At least one provider could not authenticate: wrong credentials, sidecar unreachable, or a bot challenge. |
+
+For one-shot container mode, a cron job calling `docker compose up` remains the
 recommended approach.
 
 ---
@@ -271,15 +278,10 @@ uv run pytest -v --tb=short
 ```sh
 cd coupon-booster
 
-# First-time: install Playwright Chromium (used by the browser auth fallback)
-./mvnw exec:java -e \
-  -Dexec.mainClass="com.microsoft.playwright.CLI" \
-  -Dexec.args="install --with-deps"
-
 # Run the application
 # The ../.env file at the repo root is loaded automatically via spring.config.import
-# When COOP_AUTH_MODE=sidecar and/or MIGROS_AUTH_MODE=sidecar, Spring Boot
-# auto-starts docker-compose.sidecar.yml (patchright only).
+# Spring Boot auto-starts docker-compose.sidecar.yml (patchright only), so the
+# sidecar is available for login.
 ./mvnw spring-boot:run
 
 # Unit tests only
@@ -295,7 +297,10 @@ cd coupon-booster
 
 Copy `.env.example` to `.env` and fill in the required values.
 
-### Required
+### Credentials
+
+Supply the credentials for each retailer you want to use. A retailer you leave
+unconfigured is reported as a failed login for that provider; the other still runs.
 
 | Variable | Description |
 |---|---|
@@ -304,17 +309,18 @@ Copy `.env.example` to `.env` and fill in the required values.
 | `COOP_USER_EMAIL` | Coop / Supercard e-mail |
 | `COOP_USER_PASSWORD` | Coop / Supercard password |
 
-### Auth modes
+### Sidecar endpoint
+
+Login is always delegated to the `patchright` sidecar — see
+[Why a sidecar?](#how-it-works). Both Docker Compose files wire this up, and
+`mvn spring-boot:run` auto-starts `docker-compose.sidecar.yml`.
 
 | Variable | Default | Description |
 |---|---|---|
-| `COOP_AUTH_MODE` | `sidecar` | `sidecar` (Docker/prod) or `browser` (local dev) |
-| `MIGROS_AUTH_MODE` | `sidecar` | `sidecar` (Docker/prod) or `browser` (local dev) |
-
-| Mode | When to use |
-|---|---|
-| `sidecar` **(Docker / production default)** | Login delegated to `patchright`. Uses Patchright + Xvfb to bypass DataDome. Both Docker Compose files default to this. Also used with `mvn spring-boot:run` — Spring Boot auto-starts `docker-compose.sidecar.yml`. |
-| `browser` **(local dev fallback)** | Login via Java Playwright directly. No sidecar required. Suitable for `mvn spring-boot:run` on a developer machine. May be challenged by DataDome on non-residential IPs. |
+| `COOP_PATCHRIGHT_URL` | `http://localhost:8000` | Sidecar base URL used for Coop login |
+| `MIGROS_PATCHRIGHT_URL` | `http://localhost:8000` | Sidecar base URL used for Migros login |
+| `COUPONBOOSTER_SIDECAR_CONNECT_TIMEOUT` | `10s` | Connect timeout for sidecar calls |
+| `COUPONBOOSTER_SIDECAR_READ_TIMEOUT` | `300s` | Read timeout — a cold login with a DataDome challenge is slow |
 
 ### Feature toggles
 
@@ -322,6 +328,9 @@ Copy `.env.example` to `.env` and fill in the required values.
 |---|---|---|
 | `COOP_STARTUP_RUN_ENABLED` | `true` | Run Coop once at application startup |
 | `MIGROS_STARTUP_RUN_ENABLED` | `true` | Run Migros once at application startup |
+
+Credentials are optional: leave one retailer's variables unset and disable its
+runner to use the other on its own.
 
 ### Scheduler (server profile only)
 
@@ -352,12 +361,14 @@ Activate with `SPRING_PROFILES_ACTIVE=server` to run as a long-lived Spring app 
 | `COOP_LOGIN_URL` | _(Supercard SSO URL)_ | Override the Coop login URL |
 | `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
 
-### Playwright settings (browser mode only)
+### Coop coupon selection
 
-| Variable | Default | Description |
+| Variable / property | Default | Description |
 |---|---|---|
-| `PLAYWRIGHT_HEADLESS` | `true` | Run browser headless (set `false` for debugging) |
-| `COOP_PLAYWRIGHT_USER_DATA_DIR` | _(none)_ | Persist browser session data across runs |
+| `supercard.coupon-filter.max-active-coupons` | `20` | Upper bound per run — Supercard caps how many coupons may be active at once |
+| `supercard.coupon-filter.include-shop` | `retail` | Only coupons redeemable in this channel are activated |
+| `supercard.coupon-filter.always-include-discount-marker` | `5 Rappen` | Coupons whose discount text contains this marker bypass the product-type filter; blank disables it |
+| `supercard.coupon-filter.include-product-types` | _(see `application.yml`)_ | A coupon qualifies only when all of its product types are listed |
 
 ---
 
@@ -406,10 +417,44 @@ proxy via the `PROXY_URL` variable.
 | Image | Description |
 |---|---|
 | [`patbaumgartner/coupon-booster-patchright`](https://hub.docker.com/r/patbaumgartner/coupon-booster-patchright) | Python 3.14 / Patchright sidecar |
-| [`patbaumgartner/coupon-booster`](https://hub.docker.com/r/patbaumgartner/coupon-booster) | Java 25 / Spring Boot application |
+| [`patbaumgartner/coupon-booster`](https://hub.docker.com/r/patbaumgartner/coupon-booster) | Java 25 / Spring Boot application (GraalVM native image) |
 
-Images are built and pushed to Docker Hub automatically on every GitHub release via the
-[release workflow](.github/workflows/release.yml).
+Both images are built and pushed on every GitHub release via the
+[release workflow](.github/workflows/release.yml). `:latest` always points at the most
+recent final release — pushes to `main` publish only a version-tagged snapshot, so
+`docker compose pull` never moves you onto an unreleased build.
+
+---
+
+## Upgrading
+
+### 0.2.0 — sidecar is the only login path
+
+`COOP_AUTH_MODE` and `MIGROS_AUTH_MODE` were removed along with the in-process
+Java Playwright login (`browser` mode). Login is always delegated to the
+`patchright` sidecar, which is what production already used and the only mode
+that reliably clears DataDome.
+
+If you ran `AUTH_MODE=browser`:
+
+- **Docker users** — nothing to do beyond deleting the variables from `.env`.
+  Unknown variables are ignored, so an outdated `.env` will not break startup.
+- **Local `mvn spring-boot:run`** — also nothing to do: Spring Boot auto-starts
+  `docker-compose.sidecar.yml`.
+- **Local without Docker** — run the sidecar yourself and tell Spring Boot not to
+  manage Compose:
+
+  ```sh
+  cd patchright && uv run uvicorn main:app --port 8000 &
+  cd coupon-booster && SPRING_DOCKER_COMPOSE_ENABLED=false ./mvnw spring-boot:run
+  ```
+
+These variables were removed and are now ignored: `COOP_AUTH_MODE`,
+`MIGROS_AUTH_MODE`, `PLAYWRIGHT_HEADLESS`, `COOP_PLAYWRIGHT_USER_DATA_DIR`.
+
+The `patbaumgartner/coupon-booster-run` image is no longer built or published: it
+existed only to ship Chromium libraries for `browser` mode. The application image
+now uses the buildpack's default run image.
 
 ---
 
