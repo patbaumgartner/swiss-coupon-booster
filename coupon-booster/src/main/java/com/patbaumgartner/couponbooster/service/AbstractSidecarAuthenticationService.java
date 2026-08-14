@@ -1,7 +1,7 @@
 package com.patbaumgartner.couponbooster.service;
 
-import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -123,26 +123,12 @@ public abstract class AbstractSidecarAuthenticationService implements Authentica
 			String userAgent = root.path("userAgent").asString(null);
 			String language = root.path("language").asString(null);
 
-			List<Cookie> cookies = new ArrayList<>();
+			List<SessionCookie> cookies = new ArrayList<>();
 			JsonNode cookieArray = root.path("cookies");
 			if (cookieArray.isArray()) {
 				for (JsonNode node : cookieArray) {
-					Cookie cookie = new Cookie(node.path("name").asString(""), node.path("value").asString(""));
-					String domain = node.path("domain").asString(null);
-					if (domain != null) {
-						cookie.setDomain(domain);
-					}
-					String path = node.path("path").asString(null);
-					if (path != null) {
-						cookie.setPath(path);
-					}
-					double expires = node.path("expires").asDouble(-1);
-					if (expires > 0) {
-						cookie.setExpires(expires);
-					}
-					cookie.setHttpOnly(node.path("httpOnly").asBoolean(false));
-					cookie.setSecure(node.path("secure").asBoolean(false));
-					cookies.add(cookie);
+					cookies.add(new SessionCookie(node.path("name").asString(""), node.path("value").asString(""),
+							node.path("domain").asString("")));
 				}
 			}
 

@@ -1,8 +1,8 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ class SupercardCouponServiceTest {
 	@Test
 	void activateAllAvailableCoupons_withNoCookies_shouldReturnEmptyResult() {
 		// Given
-		List<Cookie> sessionCookies = Collections.emptyList();
+		List<SessionCookie> sessionCookies = Collections.emptyList();
 
 		// When
 		CouponActivationResult result = supercardCouponService.activateAllAvailableCoupons(sessionCookies, "userAgent",
@@ -57,7 +57,7 @@ class SupercardCouponServiceTest {
 	@Test
 	void activateAllAvailableCoupons_withValidCookies_shouldActivateCoupons() throws Exception {
 		// Given
-		List<Cookie> sessionCookies = List.of(new Cookie("test-cookie", "test-value").setDomain(".coop.ch"));
+		List<SessionCookie> sessionCookies = List.of(new SessionCookie("test-cookie", "test-value", ".supercard.ch"));
 
 		when(supercardProperties.couponFilter())
 			.thenReturn(new SupercardProperties.CouponFilter(Collections.emptyList()));
@@ -107,7 +107,7 @@ class SupercardCouponServiceTest {
 	@Test
 	void activateAllAvailableCoupons_withIncludeFilter_onlyActivatesMatchingCoupons() throws Exception {
 		// Given: include filter restricts to "retail" only
-		List<Cookie> sessionCookies = List.of(new Cookie("test-cookie", "test-value").setDomain(".coop.ch"));
+		List<SessionCookie> sessionCookies = List.of(new SessionCookie("test-cookie", "test-value", ".supercard.ch"));
 
 		when(supercardProperties.couponFilter()).thenReturn(new SupercardProperties.CouponFilter(List.of("retail")));
 		when(supercardProperties.urls()).thenReturn(urls);

@@ -1,6 +1,6 @@
 package com.patbaumgartner.couponbooster.service;
 
-import com.microsoft.playwright.options.Cookie;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,22 +21,26 @@ public abstract class AbstractCouponService implements CouponService {
 	 * @param sessionCookies the list of cookies
 	 * @return the cookie header string
 	 */
-	protected String buildCookieHeader(final List<Cookie> sessionCookies) {
+	protected String buildCookieHeader(final List<SessionCookie> sessionCookies) {
 		return sessionCookies.stream()
-			.map(cookie -> cookie.name + "=" + cookie.value)
+			.map(cookie -> cookie.name() + "=" + cookie.value())
 			.collect(Collectors.joining("; "));
 	}
 
 	/**
-	 * Filters a list of cookies to retain only those relevant for the target domain.
-	 * @param allCookies the list of all cookies
-	 * @param targetDomain the target domain to filter by
-	 * @return the filtered list of cookies
+	 * Retains only the cookies that RFC 6265 permits to be sent to {@code targetHost}.
+	 * <p>
+	 * Both providers are authenticated in the same sidecar, so a single response can
+	 * carry cookies for either retailer. Matching on the host keeps one retailer's
+	 * session out of the other retailer's API requests.
+	 * @param allCookies every cookie returned by the sidecar
+	 * @param targetHost the host the request will be sent to, e.g.
+	 * {@code www.supercard.ch}
+	 * @return the cookies belonging to {@code targetHost}
 	 */
-	protected List<Cookie> filterDomainSpecificCookies(final List<Cookie> allCookies, final String targetDomain) {
-		return allCookies.stream()
-			.filter(cookie -> cookie.domain.startsWith(".") || cookie.domain.startsWith(targetDomain))
-			.toList();
+	protected List<SessionCookie> filterDomainSpecificCookies(final List<SessionCookie> allCookies,
+			final String targetHost) {
+		return allCookies.stream().filter(cookie -> cookie.matchesHost(targetHost)).toList();
 	}
 
 	/**
@@ -46,7 +50,7 @@ public abstract class AbstractCouponService implements CouponService {
 	 * @param totalAttempts the total number of activation attempts
 	 */
 	protected void logActivationSummary(int successCount, int failureCount, int totalAttempts) {
-		if (successCount > 0) {
+		if (successCount > 0 && totalAttempts > 0) {
 			int successRate = (successCount * 100) / totalAttempts;
 			log.info("Successfully activated {} of {} coupons ({}% success rate)", successCount, totalAttempts,
 					successRate);
