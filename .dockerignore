@@ -1,0 +1,43 @@
+# Keep the build context minimal: it is uploaded to the Docker daemon in full,
+# so anything listed here is never at risk of being copied into an image.
+
+# Secrets — must never enter a build context
+.env
+*.env
+migros-passkey.json
+*passkey*.json
+cookies.txt
+*-cookies.txt
+
+# VCS and CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# Python: virtualenvs, caches and browser profiles
+patchright/.venv/
+patchright/__pycache__/
+patchright/**/__pycache__/
+patchright/.pytest_cache/
+patchright/.ruff_cache/
+patchright/.coverage
+patchright/coverage.xml
+patchright/htmlcov/
+patchright/coop-user-data/
+patchright/migros-user-data/
+patchright/screenshots/
+
+# Java build output
+coupon-booster/target/
+coupon-booster/.mvn/wrapper/maven-wrapper.jar
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.iml
+.DS_Store
+
+# Docs and compose files are not needed inside any image
+*.md
+docker-compose*.yml

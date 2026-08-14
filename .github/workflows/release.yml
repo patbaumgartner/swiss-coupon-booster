@@ -82,9 +82,12 @@ jobs:
           context: ./patchright
           file: ./patchright/Dockerfile
           push: true
+          # :latest is moved only for a final release, matching the native image
+          # below. Tagging it for a prerelease would leave the two images that
+          # docker-compose pulls together on mismatched versions.
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/coupon-booster-patchright:latest
+            ${{ steps.version.outputs.prerelease == 'false' && format('{0}/coupon-booster-patchright:latest', secrets.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
