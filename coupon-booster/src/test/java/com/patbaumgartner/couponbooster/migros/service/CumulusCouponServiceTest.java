@@ -1,88 +1,234 @@
 package com.patbaumgartner.couponbooster.migros.service;
 
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
-import com.patbaumgartner.couponbooster.model.SessionCookie;
+import com.patbaumgartner.couponbooster.migros.model.CouponDetail;
 import com.patbaumgartner.couponbooster.migros.properties.CumulusProperties;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.restclient.test.autoconfigure.RestClientTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.client.MockRestServiceServer;
 
-import java.util.Collections;
+import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-@ExtendWith(MockitoExtension.class)
+@RestClientTest(CumulusCouponService.class)
 class CumulusCouponServiceTest {
 
-	@Mock
-	private RestClient.Builder restClientBuilder;
+	private static final String COUPONS_URL = "https://account.migros.ch/ma/api/user/cumulus/coupon";
 
-	@Mock
-	private RestClient restClient;
+	private static final String ACTIVATION_URL = COUPONS_URL + "/activation";
 
-	@SuppressWarnings("rawtypes")
-	@Mock
-	private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+	private static final List<SessionCookie> COOKIES = List.of(new SessionCookie("CSRF", "csrf-token", ".migros.ch"),
+			new SessionCookie("session", "abc", "account.migros.ch"));
 
-	@Mock
-	private CumulusProperties cumulusProperties;
-
-	@Mock
-	private CumulusProperties.Urls urls;
-
+	@Autowired
 	private CumulusCouponService cumulusCouponService;
 
-	@SuppressWarnings("unchecked")
+	@Autowired
+	private MockRestServiceServer server;
+
+	@MockitoBean
+	private CumulusProperties cumulusProperties;
+
+	@MockitoBean
+	private CumulusProperties.Urls urls;
+
+	@MockitoBean
+	private CumulusProperties.Api api;
+
 	@BeforeEach
 	void setUp() {
-		lenient().when(cumulusProperties.urls()).thenReturn(urls);
-		lenient().when(urls.baseUrl()).thenReturn("https://api.migros.ch");
-		lenient().when(urls.couponsEndpoint()).thenReturn("https://api.migros.ch/coupons");
-		lenient().when(urls.couponsReferer()).thenReturn("https://api.migros.ch/dashboard");
-		lenient().when(restClientBuilder.baseUrl("https://api.migros.ch")).thenReturn(restClientBuilder);
-		lenient().when(restClientBuilder.build()).thenReturn(restClient);
-		lenient().when(restClient.get()).thenReturn(requestHeadersUriSpec);
+		when(cumulusProperties.urls()).thenReturn(urls);
+		when(urls.couponsEndpoint()).thenReturn(COUPONS_URL);
+		when(urls.couponsReferer()).thenReturn("https://account.migros.ch/cumulus/dashboard");
+		when(urls.activationEndpoint()).thenReturn(ACTIVATION_URL);
+		when(cumulusProperties.api()).thenReturn(api);
+		when(api.requestDelay()).thenReturn(Duration.ZERO);
+	}
 
-		cumulusCouponService = new CumulusCouponService(restClientBuilder, cumulusProperties);
+	private void expectCoupons(String body) {
+		server.expect(requestTo(COUPONS_URL))
+			.andExpect(header("X-CSRF-TOKEN", "csrf-token"))
+			.andExpect(header("Cookie", "CSRF=csrf-token; session=abc"))
+			.andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
 	}
 
 	@Test
-	void activateAllAvailableCoupons_withNoCookies_shouldReturnEmptyResult() {
-		// Given
-		List<SessionCookie> sessionCookies = Collections.emptyList();
+	void withoutCookies_doesNotCallTheApi() {
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(List.of(), "ua", "de");
 
-		// When
-		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(sessionCookies, "userAgent",
-				"en");
+		assertThat(result.successCount()).isZero();
+		assertThat(result.failureCount()).isZero();
+		server.verify();
+	}
 
-		// Then
+	@Test
+	void cookiesForAnotherRetailerAreNotSentToTheCumulusApi() {
+		var coopCookies = List.of(new SessionCookie("datadome", "x", ".supercard.ch"));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(coopCookies, "ua", "de");
+
+		assertThat(result.successCount()).isZero();
+		server.verify();
+	}
+
+	@Test
+	void activatesEveryCouponThatIsNotYetActivated() {
+		expectCoupons("""
+				{"available":[{"id":"c1","name":"One","subtitle":"s1","validTo":"2026-01-01","status":"AVAILABLE"},
+				              {"id":"c2","name":"Two","subtitle":"s2","validTo":"2026-01-01","status":"AVAILABLE"}],
+				 "activated":[{"id":"c3","name":"Three","subtitle":"s3","validTo":"2026-01-01","status":"ACTIVATED"}]}
+				""");
+		server.expect(requestTo(ACTIVATION_URL))
+			.andExpect(header("X-CSRF-TOKEN", "csrf-token"))
+			.andExpect(content().json("{\"id\":\"c1\"}"))
+			.andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+		server.expect(requestTo(ACTIVATION_URL))
+			.andExpect(content().json("{\"id\":\"c2\"}"))
+			.andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
+		assertThat(result.successCount()).isEqualTo(2);
+		assertThat(result.failureCount()).isZero();
+		assertThat(result.details()).extracting(CouponDetail::couponId).containsExactly("c1", "c2");
+		server.verify();
+	}
+
+	@Test
+	void alreadyActivatedCouponsAreNotReactivated() {
+		expectCoupons("""
+				{"activated":[{"id":"c1","name":"One","validTo":"2026-01-01","status":"ACTIVATED"}]}""");
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
 		assertThat(result.successCount()).isZero();
 		assertThat(result.failureCount()).isZero();
 		assertThat(result.details()).isEmpty();
+		server.verify();
 	}
 
 	@Test
-	void activateAllAvailableCoupons_withValidCookies_shouldReturnErrorResult() {
-		// Given - cookies without CSRF token will cause the service to fail
-		List<SessionCookie> sessionCookies = List.of(new SessionCookie("test-cookie", "test-value", ".migros.ch"));
+	void oneFailingCouponDoesNotAbortTheRestOfTheBatch() {
+		expectCoupons("""
+				{"available":[{"id":"bad","name":"Bad","validTo":"2026-01-01","status":"AVAILABLE"},
+				              {"id":"good","name":"Good","validTo":"2026-01-01","status":"AVAILABLE"}]}""");
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withStatus(HttpStatus.BAD_REQUEST));
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-		// When - The service will try to extract CSRF token and fail, causing exception
-		// handling
-		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(sessionCookies, "userAgent",
-				"en");
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
 
-		// Then - Should return error result due to missing CSRF token
+		assertThat(result.successCount()).isEqualTo(1);
+		assertThat(result.failureCount()).isEqualTo(1);
+		assertThat(result.details()).extracting(CouponDetail::couponId).containsExactly("bad", "good");
+		server.verify();
+	}
+
+	@Test
+	void missingCsrfCookieIsReportedInsteadOfThrowing() {
+		var noCsrf = List.of(new SessionCookie("session", "abc", ".migros.ch"));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(noCsrf, "ua", "de");
+
+		assertThat(result.failureCount()).isEqualTo(1);
+		assertThat(result.details()).singleElement().satisfies(detail -> {
+			assertThat(detail.couponName()).isEqualTo("System Error");
+			assertThat(detail.message()).contains("Process failed");
+		});
+	}
+
+	@Test
+	void aFailedCouponFetchIsReportedInsteadOfThrowing() {
+		server.expect(requestTo(COUPONS_URL)).andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
 		assertThat(result.successCount()).isZero();
 		assertThat(result.failureCount()).isEqualTo(1);
-		assertThat(result.details()).hasSize(1);
-		assertThat(result.details().get(0).couponId()).isEqualTo("unknown");
-		assertThat(result.details().get(0).success()).isFalse();
-		assertThat(result.details().get(0).message()).contains("Process failed");
+		server.verify();
+	}
+
+	@Test
+	void anEmptyCouponResponseYieldsNoActivations() {
+		expectCoupons("{}");
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
+		assertThat(result.successCount()).isZero();
+		assertThat(result.details()).isEmpty();
+		server.verify();
+	}
+
+	@Test
+	void couponDescriptionFallsBackToTheDisclaimerWhenNoSubtitleIsGiven() {
+		expectCoupons("""
+				{"available":[{"id":"c1","name":"One","disclaimer":"legal text","validTo":"2026-01-01",
+				               "status":"AVAILABLE"}]}""");
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
+		assertThat(result.successCount()).isEqualTo(1);
+		server.verify();
+	}
+
+	@Test
+	void nullCookieListIsTreatedAsNoCookies() {
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(null, "ua", "de");
+
+		assertThat(result.successCount()).isZero();
+		assertThat(result.failureCount()).isZero();
+		server.verify();
+	}
+
+	@Test
+	void aConfiguredDelayIsAppliedBetweenActivations() {
+		when(api.requestDelay()).thenReturn(Duration.ofMillis(5));
+		expectCoupons("""
+				{"available":[{"id":"c1","name":"One","validTo":"2026-01-01","status":"AVAILABLE"}]}""");
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
+		assertThat(result.successCount()).isEqualTo(1);
+		server.verify();
+	}
+
+	@Test
+	void aBlankCsrfCookieIsTreatedAsMissing() {
+		var blankCsrf = List.of(new SessionCookie("CSRF", "  ", ".migros.ch"));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(blankCsrf, "ua", "de");
+
+		assertThat(result.failureCount()).isEqualTo(1);
+	}
+
+	@Test
+	void aServerErrorDuringActivationIsRecordedForThatCouponOnly() {
+		expectCoupons("""
+				{"available":[{"id":"c1","name":"One","validTo":"2026-01-01","status":"AVAILABLE"},
+				              {"id":"c2","name":"Two","validTo":"2026-01-01","status":"AVAILABLE"}]}""");
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+		server.expect(requestTo(ACTIVATION_URL)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(COOKIES, "ua", "de");
+
+		assertThat(result.successCount()).isEqualTo(1);
+		assertThat(result.failureCount()).isEqualTo(1);
+		server.verify();
 	}
 
 }

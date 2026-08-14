@@ -61,7 +61,8 @@ public final class CumulusCouponService extends AbstractCouponService {
 	 */
 	public CumulusCouponService(final RestClient.Builder restClientBuilder, final CumulusProperties configuration) {
 		this.configuration = configuration;
-		this.apiClient = restClientBuilder.baseUrl(configuration.urls().baseUrl()).build();
+		// No base URL: every Cumulus endpoint is configured as an absolute URL.
+		this.apiClient = restClientBuilder.build();
 	}
 
 	/**
@@ -166,8 +167,11 @@ public final class CumulusCouponService extends AbstractCouponService {
 			return new CouponActivationResult(0, 0, List.of());
 		}
 
+		String cookieHeader = buildCookieHeader(sessionCookies);
+		String csrfToken = extractCsrfToken(sessionCookies);
+
 		var activationResults = inactiveCoupons.stream().map(coupon -> {
-			CouponDetail result = activateSingleCoupon(coupon.id(), sessionCookies, userAgent, language);
+			CouponDetail result = activateSingleCoupon(coupon.id(), cookieHeader, csrfToken, userAgent, language);
 			applyInterRequestDelay();
 			return result;
 		}).toList();
@@ -180,7 +184,7 @@ public final class CumulusCouponService extends AbstractCouponService {
 		return new CouponActivationResult(successfulActivations, failedActivations, activationResults);
 	}
 
-	private CouponDetail activateSingleCoupon(final String couponId, final List<SessionCookie> sessionCookies,
+	private CouponDetail activateSingleCoupon(final String couponId, final String cookieHeader, final String csrfToken,
 			String userAgent, String language) {
 		try {
 			if (couponId == null || couponId.isBlank()) {
@@ -189,9 +193,6 @@ public final class CumulusCouponService extends AbstractCouponService {
 			}
 
 			log.debug("Attempting to activate coupon: {}", couponId);
-
-			String cookieHeader = buildCookieHeader(sessionCookies);
-			String csrfToken = extractCsrfToken(sessionCookies);
 
 			var activationRequest = this.apiClient.post()
 				.uri(configuration.urls().activationEndpoint())

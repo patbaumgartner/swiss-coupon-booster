@@ -1,6 +1,9 @@
 spring:
   main:
     web-application-type: servlet
+  mvc:
+    problemdetails:
+      enabled: true
 
 # Disable one-shot startup runners in server mode.
 coop:

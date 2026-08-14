@@ -1,6 +1,8 @@
 package com.patbaumgartner.couponbooster.coop.properties;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.URL;
@@ -49,9 +51,16 @@ public record SupercardProperties(@Valid @NotNull Urls urls, @Valid @NotNull Cou
 	}
 
 	/**
-	 * Configuration for filtering coupons.
+	 * Configuration for selecting which coupons to activate.
 	 *
-	 * @param includeProductTypes list of product types to include.
+	 * @param maxActiveCoupons upper bound on coupons activated in one run; Supercard caps
+	 * how many may be active at once
+	 * @param includeShop only coupons redeemable in this shop channel are activated (e.g.
+	 * {@code retail} for physical stores)
+	 * @param alwaysIncludeDiscountMarker coupons whose discount text contains this marker
+	 * are activated regardless of product type; blank disables the exemption
+	 * @param includeProductTypes product types eligible for activation. A coupon
+	 * qualifies only when every one of its product types appears in this list.
 	 * <p>
 	 * Available product types:
 	 * <ul>
@@ -84,7 +93,16 @@ public record SupercardProperties(@Valid @NotNull Urls urls, @Valid @NotNull Cou
 	 * <li>"36" - Vorräte</li>
 	 * </ul>
 	 */
-	public record CouponFilter(List<String> includeProductTypes) {
+	public record CouponFilter(
+
+			@Min(value = 1, message = "At least one coupon must be activatable") @Max(value = 200,
+					message = "Activating more than 200 coupons in one run is not supported") int maxActiveCoupons,
+
+			@NotBlank(message = "Include shop is required") String includeShop,
+
+			String alwaysIncludeDiscountMarker,
+
+			List<String> includeProductTypes) {
 
 		/**
 		 * Compact constructor that creates a defensive copy of the includeProductTypes
@@ -92,6 +110,7 @@ public record SupercardProperties(@Valid @NotNull Urls urls, @Valid @NotNull Cou
 		 */
 		public CouponFilter {
 			includeProductTypes = includeProductTypes == null ? List.of() : List.copyOf(includeProductTypes);
+			alwaysIncludeDiscountMarker = alwaysIncludeDiscountMarker == null ? "" : alwaysIncludeDiscountMarker;
 		}
 
 	}

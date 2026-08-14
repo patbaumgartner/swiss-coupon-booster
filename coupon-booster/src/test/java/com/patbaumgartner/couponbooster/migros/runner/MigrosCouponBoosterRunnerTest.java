@@ -1,8 +1,9 @@
 package com.patbaumgartner.couponbooster.migros.runner;
 
-import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.migros.service.CumulusCouponService;
+import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
+import com.patbaumgartner.couponbooster.runner.ActivationExitCode;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,10 +12,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.ApplicationArguments;
 
-import java.util.Collections;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MigrosCouponBoosterRunnerTest {
@@ -28,43 +32,51 @@ class MigrosCouponBoosterRunnerTest {
 	@Mock
 	private ApplicationArguments applicationArguments;
 
-	private MigrosCouponBoosterRunner migrosCouponBoosterRunner;
+	private ActivationExitCode exitCode;
+
+	private MigrosCouponBoosterRunner runner;
 
 	@BeforeEach
 	void setUp() {
-		migrosCouponBoosterRunner = new MigrosCouponBoosterRunner(migrosAuthenticationService, cumulusCouponService);
+		exitCode = new ActivationExitCode();
+		runner = new MigrosCouponBoosterRunner(migrosAuthenticationService, cumulusCouponService, exitCode);
 	}
 
 	@Test
-	void run_withSuccessfulAuthentication_shouldActivateCoupons() throws Exception {
-		// Given
-		var authenticationResult = AuthenticationResult.successful(Collections.emptyList(), 100L, "userAgent", "en");
-		when(migrosAuthenticationService.performAuthentication()).thenReturn(authenticationResult);
+	void successfulAuthentication_activatesCouponsAndExitsZero() throws Exception {
+		var authentication = AuthenticationResult.successful(List.of(), 100L, "userAgent", "en");
+		when(migrosAuthenticationService.performAuthentication()).thenReturn(authentication);
+		when(cumulusCouponService.activateAllAvailableCoupons(any(), any(), any()))
+			.thenReturn(new CouponActivationResult(10, 0, List.of()));
 
-		var couponActivationResult = new CouponActivationResult(10, 0, Collections.emptyList());
-		when(cumulusCouponService.activateAllAvailableCoupons(any(), any(), any())).thenReturn(couponActivationResult);
+		runner.run(applicationArguments);
 
-		// When
-		migrosCouponBoosterRunner.run(applicationArguments);
-
-		// Then
-		verify(migrosAuthenticationService).performAuthentication();
-		verify(cumulusCouponService).activateAllAvailableCoupons(authenticationResult.sessionCookies(),
-				authenticationResult.userAgent(), authenticationResult.browserLanguage());
+		verify(cumulusCouponService).activateAllAvailableCoupons(authentication.sessionCookies(),
+				authentication.userAgent(), authentication.browserLanguage());
+		assertThat(exitCode.getExitCode()).isZero();
 	}
 
 	@Test
-	void run_withFailedAuthentication_shouldNotActivateCoupons() throws Exception {
-		// Given
-		var authenticationResult = AuthenticationResult.failed("Failure", 100L);
-		when(migrosAuthenticationService.performAuthentication()).thenReturn(authenticationResult);
+	void failedAuthentication_skipsActivationAndExitsNonZero() throws Exception {
+		when(migrosAuthenticationService.performAuthentication())
+			.thenReturn(AuthenticationResult.failed("Credentials missing", 100L));
 
-		// When
-		migrosCouponBoosterRunner.run(applicationArguments);
+		runner.run(applicationArguments);
 
-		// Then
-		verify(migrosAuthenticationService).performAuthentication();
 		verify(cumulusCouponService, never()).activateAllAvailableCoupons(any(), any(), any());
+		assertThat(exitCode.getExitCode()).isEqualTo(1);
+	}
+
+	@Test
+	void couponLevelFailuresDoNotFailTheProcess() throws Exception {
+		when(migrosAuthenticationService.performAuthentication())
+			.thenReturn(AuthenticationResult.successful(List.of(), 100L, "ua", "en"));
+		when(cumulusCouponService.activateAllAvailableCoupons(any(), any(), any()))
+			.thenReturn(new CouponActivationResult(0, 3, List.of()));
+
+		runner.run(applicationArguments);
+
+		assertThat(exitCode.getExitCode()).isZero();
 	}
 
 }

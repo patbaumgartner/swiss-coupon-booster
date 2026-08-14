@@ -10,7 +10,6 @@ import com.patbaumgartner.couponbooster.service.CouponService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,8 +17,6 @@ import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -120,15 +117,7 @@ public class SupercardCouponService extends AbstractCouponService {
 
 			// Fetch updated list after deactivation
 			digitalCoupons = fetchDigitalCoupons(webapiBearerToken, userAgent, language);
-			List<DigitalCoupon> inactiveCoupons = Stream
-				.concat(digitalCoupons.stream().filter(item -> item.textDiscountAmount().contains("5 Rappen")),
-						digitalCoupons.stream()
-							.filter(item -> "OPEN".equals(item.status()))
-							.filter(this::filterProductTypes)
-							.filter(item -> "retail".equals(item.shop())))
-				.distinct()
-				.limit(20)
-				.toList();
+			List<DigitalCoupon> inactiveCoupons = selectCouponsToActivate(digitalCoupons);
 
 			int intended = inactiveCoupons.size();
 			log.info("Attempting to activate {} eligible coupons", intended);
@@ -185,12 +174,10 @@ public class SupercardCouponService extends AbstractCouponService {
 			.retrieve()
 			.toEntity(String.class);
 
+		// A non-2xx status is already raised by RestClient's default status handler,
+		// so only the "200 OK but not JSON" case needs handling here: DataDome answers
+		// a blocked session with a challenge page and an OK status.
 		MediaType contentType = configResponse.getHeaders().getContentType();
-		if (configResponse.getStatusCode() != HttpStatus.OK) {
-			throw new CouponBoosterException(
-					"JWT extraction failed: config endpoint returned HTTP " + configResponse.getStatusCode()
-							+ ". The login session may have expired or the sidecar login did not complete.");
-		}
 		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
 			throw new CouponBoosterException("JWT extraction failed: config endpoint returned HTML instead of JSON. "
 					+ "This usually means the session is not authenticated or DataDome is still active. "
@@ -200,9 +187,11 @@ public class SupercardCouponService extends AbstractCouponService {
 		JsonNode rootNode = objectMapper.readTree(configResponse.getBody());
 		String token = rootNode.path("jwtToken").asString(null);
 		if (token == null || token.isBlank()) {
+			// The body is logged rather than thrown: the response carries session
+			// material and the message reaches the REST API and the run summary.
+			log.error("Config response contained no 'jwtToken' field. Body: {}", configResponse.getBody());
 			throw new CouponBoosterException(
-					"JWT extraction failed: 'jwtToken' field is missing or empty in config response. "
-							+ "Response body: " + configResponse.getBody());
+					"JWT extraction failed: 'jwtToken' field is missing or empty in config response.");
 		}
 		log.debug("JWT token extracted successfully");
 		return token;
@@ -223,9 +212,6 @@ public class SupercardCouponService extends AbstractCouponService {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (collectionResponse.getStatusCode() != HttpStatus.OK) {
-			throw new CouponBoosterException("Digital bons retrieval failed.");
-		}
 		MediaType contentType = collectionResponse.getHeaders().getContentType();
 		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
 			throw new CouponBoosterException("Digital bons retrieval failed: received HTML instead of JSON. "
@@ -246,10 +232,6 @@ public class SupercardCouponService extends AbstractCouponService {
 				String textDescription = coupon.path("textDescription").asString();
 				String textDiscountAmount = coupon.path("textDiscountAmount").asString();
 
-				boolean isNew = coupon.path("isNew").asBoolean();
-				boolean isRecommendation = coupon.path("isRecommendation").asBoolean();
-				boolean hasLogoProduct = !"none".equals(coupon.path("logoProduct").asString("none"));
-
 				List<String> productTypes = new ArrayList<>();
 				JsonNode productTypeArray = coupon.path("productTypes");
 				if (productTypeArray.isArray()) {
@@ -258,11 +240,8 @@ public class SupercardCouponService extends AbstractCouponService {
 					}
 				}
 
-				LocalDateTime endDate = LocalDateTime.parse(coupon.path("endDate").asString(),
-						DateTimeFormatter.ISO_DATE_TIME);
-
-				digitalCouponCollection.add(new DigitalCoupon(code, status, shop, isNew, isRecommendation,
-						hasLogoProduct, productTypes, endDate, textDescription, textDiscountAmount));
+				digitalCouponCollection
+					.add(new DigitalCoupon(code, status, shop, productTypes, textDescription, textDiscountAmount));
 				log.debug("Found digital coupon: {} - {}", code, status);
 			}
 		}
@@ -270,16 +249,37 @@ public class SupercardCouponService extends AbstractCouponService {
 		return digitalCouponCollection;
 	}
 
-	// Package-private to allow direct testing without exposing to the public API.
-	boolean filterProductTypes(DigitalCoupon coupon) {
-		List<String> includeList = supercardProperties.couponFilter().includeProductTypes();
+	/**
+	 * Chooses which coupons to activate, capped at the provider's active-coupon limit.
+	 * <p>
+	 * Coupons carrying the configured discount marker are always eligible; everything
+	 * else must be open, redeemable in the configured shop channel, and limited to
+	 * permitted product types.
+	 * @param digitalCoupons every coupon currently offered
+	 * @return the coupons to activate, at most {@code maxActiveCoupons}
+	 */
+	private List<DigitalCoupon> selectCouponsToActivate(List<DigitalCoupon> digitalCoupons) {
+		var filter = supercardProperties.couponFilter();
+		return Stream
+			.concat(digitalCoupons.stream().filter(item -> matchesAlwaysIncludeMarker(item, filter)),
+					digitalCoupons.stream()
+						.filter(item -> "OPEN".equals(item.status()))
+						.filter(this::hasOnlyPermittedProductTypes)
+						.filter(item -> filter.includeShop().equals(item.shop())))
+			.distinct()
+			.limit(filter.maxActiveCoupons())
+			.toList();
+	}
 
-		for (String productType : coupon.productTypes()) {
-			if (!includeList.contains(productType)) {
-				return false;
-			}
-		}
-		return true;
+	private static boolean matchesAlwaysIncludeMarker(DigitalCoupon coupon, SupercardProperties.CouponFilter filter) {
+		String marker = filter.alwaysIncludeDiscountMarker();
+		return !marker.isBlank() && coupon.textDiscountAmount().contains(marker);
+	}
+
+	// Package-private to allow direct testing without exposing to the public API.
+	boolean hasOnlyPermittedProductTypes(DigitalCoupon coupon) {
+		List<String> includeList = supercardProperties.couponFilter().includeProductTypes();
+		return includeList.containsAll(coupon.productTypes());
 	}
 
 	private void deactivateDigitalCoupons(List<DigitalCoupon> activeCoupons, String webapiBearerToken, String userAgent,
@@ -306,12 +306,6 @@ public class SupercardCouponService extends AbstractCouponService {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (deactivationResponse.getStatusCode() != HttpStatus.OK) {
-			log.error("Deactivation returned HTTP {} with body: {}", deactivationResponse.getStatusCode(),
-					deactivationResponse.getBody());
-			throw new CouponBoosterException(
-					"Digital coupon deactivation failed with status: " + deactivationResponse.getStatusCode());
-		}
 		MediaType contentType = deactivationResponse.getHeaders().getContentType();
 		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
 			log.error("Deactivation returned HTML (possible DataDome/session expiry). Body: {}",
@@ -345,12 +339,6 @@ public class SupercardCouponService extends AbstractCouponService {
 			.retrieve()
 			.toEntity(String.class);
 
-		if (activationResponse.getStatusCode() != HttpStatus.OK) {
-			log.error("Activation returned HTTP {} with body: {}", activationResponse.getStatusCode(),
-					activationResponse.getBody());
-			throw new CouponBoosterException(
-					"Digital coupon activation failed with status: " + activationResponse.getStatusCode());
-		}
 		MediaType contentType = activationResponse.getHeaders().getContentType();
 		if (contentType != null && contentType.isCompatibleWith(MediaType.TEXT_HTML)) {
 			log.error("Activation returned HTML (possible DataDome/session expiry). Body: {}",
@@ -370,9 +358,8 @@ public class SupercardCouponService extends AbstractCouponService {
 	/**
 	 * Represents a single digital coupon (bon) from the Supercard API.
 	 */
-	private record DigitalCoupon(String code, String status, String shop, boolean isNew, boolean isRecommendation,
-			boolean hasLogoProduct, List<String> productTypes, LocalDateTime endDate, String textDescription,
-			String textDiscountAmount) {
+	private record DigitalCoupon(String code, String status, String shop, List<String> productTypes,
+			String textDescription, String textDiscountAmount) {
 	}
 
 }

@@ -3,6 +3,7 @@ package com.patbaumgartner.couponbooster.coop.runner;
 import com.patbaumgartner.couponbooster.coop.service.SupercardCouponService;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.model.AuthenticationResult;
+import com.patbaumgartner.couponbooster.runner.ActivationExitCode;
 import com.patbaumgartner.couponbooster.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.ApplicationArguments;
 
-import java.util.Collections;
+import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CoopCouponBoosterRunnerTest {
@@ -27,44 +32,51 @@ class CoopCouponBoosterRunnerTest {
 	@Mock
 	private ApplicationArguments applicationArguments;
 
-	private CoopCouponBoosterRunner coopCouponBoosterRunner;
+	private ActivationExitCode exitCode;
+
+	private CoopCouponBoosterRunner runner;
 
 	@BeforeEach
 	void setUp() {
-		coopCouponBoosterRunner = new CoopCouponBoosterRunner(coopAuthenticationService, supercardCouponService);
+		exitCode = new ActivationExitCode();
+		runner = new CoopCouponBoosterRunner(coopAuthenticationService, supercardCouponService, exitCode);
 	}
 
 	@Test
-	void run_withSuccessfulAuthentication_shouldActivateCoupons() throws Exception {
-		// Given
-		var authenticationResult = AuthenticationResult.successful(Collections.emptyList(), 100L, "userAgent", "en");
-		when(coopAuthenticationService.performAuthentication()).thenReturn(authenticationResult);
-
-		var couponActivationResult = new CouponActivationResult(10, 0, Collections.emptyList());
+	void successfulAuthentication_activatesCouponsAndExitsZero() throws Exception {
+		var authentication = AuthenticationResult.successful(List.of(), 100L, "userAgent", "en");
+		when(coopAuthenticationService.performAuthentication()).thenReturn(authentication);
 		when(supercardCouponService.activateAllAvailableCoupons(any(), any(), any()))
-			.thenReturn(couponActivationResult);
+			.thenReturn(new CouponActivationResult(10, 0, List.of()));
 
-		// When
-		coopCouponBoosterRunner.run(applicationArguments);
+		runner.run(applicationArguments);
 
-		// Then
-		verify(coopAuthenticationService).performAuthentication();
-		verify(supercardCouponService).activateAllAvailableCoupons(authenticationResult.sessionCookies(),
-				authenticationResult.userAgent(), authenticationResult.browserLanguage());
+		verify(supercardCouponService).activateAllAvailableCoupons(authentication.sessionCookies(),
+				authentication.userAgent(), authentication.browserLanguage());
+		assertThat(exitCode.getExitCode()).isZero();
 	}
 
 	@Test
-	void run_withFailedAuthentication_shouldNotActivateCoupons() throws Exception {
-		// Given
-		var authenticationResult = AuthenticationResult.failed("Failure", 100L);
-		when(coopAuthenticationService.performAuthentication()).thenReturn(authenticationResult);
+	void failedAuthentication_skipsActivationAndExitsNonZero() throws Exception {
+		when(coopAuthenticationService.performAuthentication())
+			.thenReturn(AuthenticationResult.failed("Credentials missing", 100L));
 
-		// When
-		coopCouponBoosterRunner.run(applicationArguments);
+		runner.run(applicationArguments);
 
-		// Then
-		verify(coopAuthenticationService).performAuthentication();
 		verify(supercardCouponService, never()).activateAllAvailableCoupons(any(), any(), any());
+		assertThat(exitCode.getExitCode()).isEqualTo(1);
+	}
+
+	@Test
+	void couponLevelFailuresDoNotFailTheProcess() throws Exception {
+		when(coopAuthenticationService.performAuthentication())
+			.thenReturn(AuthenticationResult.successful(List.of(), 100L, "ua", "en"));
+		when(supercardCouponService.activateAllAvailableCoupons(any(), any(), any()))
+			.thenReturn(new CouponActivationResult(0, 3, List.of()));
+
+		runner.run(applicationArguments);
+
+		assertThat(exitCode.getExitCode()).isZero();
 	}
 
 }

@@ -29,19 +29,23 @@ public abstract class AbstractCouponBoosterRunner implements ApplicationRunner {
 
 	private final String providerName;
 
+	private final ActivationExitCode exitCode;
+
 	/**
 	 * Constructs a new coupon booster runner.
 	 * @param authenticationService the authentication service for this provider
 	 * @param couponService the coupon activation service for this provider
 	 * @param providerName human-readable provider label used in log messages (e.g.
 	 * {@code "Coop"} or {@code "Migros"})
+	 * @param exitCode collects run outcomes so the process exit code reflects them
 	 */
 	protected AbstractCouponBoosterRunner(AuthenticationService authenticationService, CouponService couponService,
-			String providerName) {
+			String providerName, ActivationExitCode exitCode) {
 		this.authenticationService = Objects.requireNonNull(authenticationService,
 				"AuthenticationService cannot be null");
 		this.couponService = Objects.requireNonNull(couponService, "CouponService cannot be null");
 		this.providerName = Objects.requireNonNull(providerName, "providerName cannot be null");
+		this.exitCode = Objects.requireNonNull(exitCode, "ActivationExitCode cannot be null");
 	}
 
 	/**
@@ -72,6 +76,7 @@ public abstract class AbstractCouponBoosterRunner implements ApplicationRunner {
 		else {
 			log.error("Authentication failed: {} ({}ms)", authenticationResult.statusMessage(),
 					authenticationResult.executionDurationMs());
+			exitCode.recordAuthenticationFailure();
 		}
 	}
 
