@@ -51,6 +51,10 @@ patchright/.venv/
 patchright/__pycache__/
 patchright/**/__pycache__/
 patchright/.pytest_cache/
+patchright/.ruff_cache/
+patchright/.coverage
+patchright/coverage.xml
+patchright/htmlcov/
 patchright/*.egg-info/
 patchright/dist/
 patchright/build/

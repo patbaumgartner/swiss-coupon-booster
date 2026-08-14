@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
@@ -22,6 +23,30 @@ TYPING_DELAY_MS: int = int(os.getenv("TYPING_DELAY_MS", "80"))
 # ── Network ───────────────────────────────────────────────────────────────────
 # Format: "http://user:pass@host:port" or "socks5://user:pass@host:port"
 PROXY_URL: str | None = os.getenv("PROXY_URL")
+
+
+def redacted_proxy_url() -> str:
+    """Return PROXY_URL with any embedded credentials replaced by ``***``.
+
+    PROXY_URL routinely carries ``user:pass@`` and must never reach the logs
+    verbatim.
+    """
+    if not PROXY_URL:
+        return "<none>"
+    parsed = urlsplit(PROXY_URL)
+    if not parsed.hostname:
+        return "<set>"
+    host = parsed.hostname
+    if parsed.port:
+        host = f"{host}:{parsed.port}"
+    credentials = "***@" if (parsed.username or parsed.password) else ""
+    return f"{parsed.scheme}://{credentials}{host}"
+
+
+# A wedged browser must not hold a provider's login slot forever. Kept below the
+# Java client's read timeout (couponbooster.sidecar.read-timeout, default 300s)
+# so the caller sees a 503 rather than its own timeout.
+LOGIN_TIMEOUT_S: int = int(os.getenv("LOGIN_TIMEOUT_S", "240"))
 
 # ── Storage ───────────────────────────────────────────────────────────────────
 SCREENSHOT_DIR: Path = Path(os.getenv("SCREENSHOT_DIR", "/data/screenshots"))

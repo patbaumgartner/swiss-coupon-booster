@@ -21,7 +21,7 @@ from config import (
     PROXY_URL,
     SCREENSHOT_DIR,
     SLOW_MO_MS,
-    TIMEOUT_MS,
+    redacted_proxy_url,
 )
 
 log = logging.getLogger("patchright.browser")
@@ -84,7 +84,8 @@ async def is_datadome_hard_block(page: Page) -> bool:
             continue
         try:
             text = await frame.locator("body").inner_text(timeout=1500)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Could not read DataDome frame body: %s", exc)
             continue
         if any(marker in text for marker in _HARD_BLOCK_MARKERS):
             return True
@@ -231,7 +232,8 @@ async def _find_slider_handle(page: Page) -> dict[str, float] | None:
             if box and box["width"] > 0:
                 log.debug("Slider handle found via %s: %s", sel, box)
                 return box
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Slider handle selector %s did not match: %s", sel, exc)
             continue
     return None
 
@@ -245,7 +247,8 @@ async def _find_slider_travel(page: Page, handle: dict[str, float]) -> float:
             box = await loc.bounding_box()
             if box and box["width"] > 0:
                 return box["x"] + box["width"] - handle["width"] / 2
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log.debug("Slider container selector %s did not match: %s", sel, exc)
             continue
     # Fallback: slide a fixed generous distance to the right.
     return handle["x"] + 260
@@ -335,7 +338,7 @@ def build_launch_options() -> dict[str, Any]:
     }
     if PROXY_URL:
         opts["proxy"] = {"server": PROXY_URL}
-        log.info("Using proxy: %s", PROXY_URL)
+        log.info("Using proxy: %s", redacted_proxy_url())
     return opts
 
 
@@ -452,8 +455,8 @@ def serialize_cookies(cookies_raw: list[Any]) -> list[dict[str, Any]]:
         {
             "name": c["name"],
             "value": c["value"],
-            "domain": c.get("domain") or None,
-            "path": c.get("path") or None,
+            "domain": c.get("domain") or "",
+            "path": c.get("path") or "",
             "expires": c.get("expires", -1),
             "httpOnly": c.get("httpOnly", False),
             "secure": c.get("secure", False),
