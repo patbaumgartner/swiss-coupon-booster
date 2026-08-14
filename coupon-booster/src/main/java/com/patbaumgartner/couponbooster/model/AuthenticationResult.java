@@ -1,7 +1,5 @@
 package com.patbaumgartner.couponbooster.model;
 
-import com.microsoft.playwright.options.Cookie;
-
 import java.time.Instant;
 import java.util.List;
 
@@ -11,7 +9,7 @@ import java.util.List;
  * Use the static factory methods {@link #successful} and {@link #failed} rather than
  * calling the canonical constructor directly.
  */
-public record AuthenticationResult(boolean isSuccessful, String statusMessage, List<Cookie> sessionCookies,
+public record AuthenticationResult(boolean isSuccessful, String statusMessage, List<SessionCookie> sessionCookies,
 		Instant completionTimestamp, long executionDurationMs, String userAgent, String browserLanguage) {
 
 	public AuthenticationResult {
@@ -26,8 +24,8 @@ public record AuthenticationResult(boolean isSuccessful, String statusMessage, L
 	 * @param browserLanguage the browser language (e.g. {@code de-CH})
 	 * @return a new successful {@code AuthenticationResult}
 	 */
-	public static AuthenticationResult successful(List<Cookie> retrievedCookies, long executionTimeMs, String userAgent,
-			String browserLanguage) {
+	public static AuthenticationResult successful(List<SessionCookie> retrievedCookies, long executionTimeMs,
+			String userAgent, String browserLanguage) {
 		return new AuthenticationResult(true, "Authentication completed successfully", retrievedCookies, Instant.now(),
 				executionTimeMs, userAgent, browserLanguage);
 	}

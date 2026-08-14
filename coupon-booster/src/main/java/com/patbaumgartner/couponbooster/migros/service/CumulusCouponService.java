@@ -2,13 +2,13 @@ package com.patbaumgartner.couponbooster.migros.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.migros.config.MigrosConstants;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.migros.model.CouponDetail;
 import com.patbaumgartner.couponbooster.migros.model.CouponInfo;
 import com.patbaumgartner.couponbooster.migros.properties.CumulusProperties;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import com.patbaumgartner.couponbooster.service.AbstractCouponService;
 import com.patbaumgartner.couponbooster.service.CouponService;
 import org.slf4j.Logger;
@@ -80,8 +80,8 @@ public final class CumulusCouponService extends AbstractCouponService {
 	 * coupon details
 	 */
 	@Override
-	public CouponActivationResult activateAllAvailableCoupons(final List<Cookie> sessionCookies, String userAgent,
-			String language) {
+	public CouponActivationResult activateAllAvailableCoupons(final List<SessionCookie> sessionCookies,
+			String userAgent, String language) {
 		if (sessionCookies == null || sessionCookies.isEmpty()) {
 			log.warn("No session cookies provided for coupon activation");
 			return new CouponActivationResult(0, 0, List.of());
@@ -108,7 +108,7 @@ public final class CumulusCouponService extends AbstractCouponService {
 		}
 	}
 
-	private List<CouponInfo> fetchAvailableCoupons(final List<Cookie> sessionCookies, String userAgent,
+	private List<CouponInfo> fetchAvailableCoupons(final List<SessionCookie> sessionCookies, String userAgent,
 			String language) {
 		String cookieHeader = buildCookieHeader(sessionCookies);
 
@@ -150,7 +150,7 @@ public final class CumulusCouponService extends AbstractCouponService {
 	}
 
 	private CouponActivationResult processCouponActivations(final List<CouponInfo> allCoupons,
-			final List<Cookie> sessionCookies, String userAgent, String language) {
+			final List<SessionCookie> sessionCookies, String userAgent, String language) {
 
 		var inactiveCoupons = allCoupons.stream().filter(coupon -> !coupon.activated()).toList();
 
@@ -180,7 +180,7 @@ public final class CumulusCouponService extends AbstractCouponService {
 		return new CouponActivationResult(successfulActivations, failedActivations, activationResults);
 	}
 
-	private CouponDetail activateSingleCoupon(final String couponId, final List<Cookie> sessionCookies,
+	private CouponDetail activateSingleCoupon(final String couponId, final List<SessionCookie> sessionCookies,
 			String userAgent, String language) {
 		try {
 			if (couponId == null || couponId.isBlank()) {
@@ -246,10 +246,10 @@ public final class CumulusCouponService extends AbstractCouponService {
 		}
 	}
 
-	private String extractCsrfToken(final List<Cookie> sessionCookies) {
+	private String extractCsrfToken(final List<SessionCookie> sessionCookies) {
 		return sessionCookies.stream()
-			.filter(cookie -> CSRF_COOKIE_NAME.equals(cookie.name))
-			.map(cookie -> cookie.value)
+			.filter(cookie -> CSRF_COOKIE_NAME.equals(cookie.name()))
+			.map(SessionCookie::value)
 			.filter(value -> value != null && !value.isBlank())
 			.findFirst()
 			.orElseThrow(() -> new CouponBoosterException(

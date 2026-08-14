@@ -1,7 +1,7 @@
 package com.patbaumgartner.couponbooster.migros.service;
 
-import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import com.patbaumgartner.couponbooster.migros.properties.CumulusProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ class CumulusCouponServiceTest {
 	@Test
 	void activateAllAvailableCoupons_withNoCookies_shouldReturnEmptyResult() {
 		// Given
-		List<Cookie> sessionCookies = Collections.emptyList();
+		List<SessionCookie> sessionCookies = Collections.emptyList();
 
 		// When
 		CouponActivationResult result = cumulusCouponService.activateAllAvailableCoupons(sessionCookies, "userAgent",
@@ -69,7 +69,7 @@ class CumulusCouponServiceTest {
 	@Test
 	void activateAllAvailableCoupons_withValidCookies_shouldReturnErrorResult() {
 		// Given - cookies without CSRF token will cause the service to fail
-		List<Cookie> sessionCookies = List.of(new Cookie("test-cookie", "test-value").setDomain(".migros.ch"));
+		List<SessionCookie> sessionCookies = List.of(new SessionCookie("test-cookie", "test-value", ".migros.ch"));
 
 		// When - The service will try to extract CSRF token and fail, causing exception
 		// handling

@@ -80,8 +80,8 @@ class MigrosSidecarAuthenticationServiceTest {
 
 		assertThat(result.isSuccessful()).isTrue();
 		assertThat(result.sessionCookies()).hasSize(2);
-		assertThat(result.sessionCookies().get(0).name).isEqualTo("m-session");
-		assertThat(result.sessionCookies().get(1).name).isEqualTo("cumulus-id");
+		assertThat(result.sessionCookies().get(0).name()).isEqualTo("m-session");
+		assertThat(result.sessionCookies().get(1).name()).isEqualTo("cumulus-id");
 		assertThat(result.userAgent()).isEqualTo("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120");
 		assertThat(result.browserLanguage()).isEqualTo("de-CH");
 		server.verify();

@@ -1,10 +1,10 @@
 package com.patbaumgartner.couponbooster.coop.service;
 
-import com.microsoft.playwright.options.Cookie;
 import com.patbaumgartner.couponbooster.coop.properties.SupercardProperties;
 import com.patbaumgartner.couponbooster.exception.CouponBoosterException;
 import com.patbaumgartner.couponbooster.migros.model.CouponActivationResult;
 import com.patbaumgartner.couponbooster.migros.model.CouponDetail;
+import com.patbaumgartner.couponbooster.model.SessionCookie;
 import com.patbaumgartner.couponbooster.service.AbstractCouponService;
 import com.patbaumgartner.couponbooster.service.CouponService;
 import org.slf4j.Logger;
@@ -89,7 +89,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	 * @return result containing activation statistics and coupon details
 	 */
 	@Override
-	public CouponActivationResult activateAllAvailableCoupons(List<Cookie> sessionCookies, String userAgent,
+	public CouponActivationResult activateAllAvailableCoupons(List<SessionCookie> sessionCookies, String userAgent,
 			String language) {
 
 		if (sessionCookies == null || sessionCookies.isEmpty()) {
@@ -172,7 +172,7 @@ public class SupercardCouponService extends AbstractCouponService {
 	 * @throws CouponBoosterException if the API call fails, returns HTML (DataDome
 	 * challenge still active), or the token is missing.
 	 */
-	public String extractJwtToken(List<Cookie> sessionCookies, String userAgent, String language) {
+	public String extractJwtToken(List<SessionCookie> sessionCookies, String userAgent, String language) {
 		String cookieHeader = buildCookieHeader(sessionCookies);
 
 		ResponseEntity<String> configResponse = apiClient.get()
