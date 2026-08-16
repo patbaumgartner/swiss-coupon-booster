@@ -7,7 +7,7 @@
 [![CI](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/ci.yml)
 [![Release](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/release.yml/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/release.yml)
 [![CodeQL](https://github.com/patbaumgartner/swiss-coupon-booster/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/patbaumgartner/swiss-coupon-booster/security/code-scanning)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-yellow.svg)](LICENSE)
 [![Java 25](https://img.shields.io/badge/Java-25-blue?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/downloads/release/python-3140/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
@@ -88,7 +88,7 @@ swiss-coupon-booster/
 │   │   ├── main/java/       # Application sources
 │   │   └── test/java/       # Unit + integration tests
 │   └── pom.xml              # Image built by the Spring Boot Maven plugin (buildpacks)
-├── patchright/         # Patchright login sidecar (Python 3.14 / FastAPI)
+├── patchright/              # Patchright login sidecar (Python 3.14 / FastAPI)
 │   ├── main.py              # FastAPI app — POST /login/coop, POST /login/migros, GET /health
 │   ├── test_*.py            # pytest test suite
 │   ├── entrypoint.sh        # Starts Xvfb and uvicorn
@@ -99,11 +99,12 @@ swiss-coupon-booster/
 ├── docker-compose.build.yml  # Development — builds images from source
 ├── docker-compose.sidecar.yml # Local dev — Spring Boot auto-starts patchright only
 ├── .env.example              # Configuration template — copy to .env
+├── passkeys/                 # Optional, git-ignored — drop migros-passkey.json here
 └── .github/
     ├── workflows/
-    │   ├── ci.yml           # On push / PR: test Java + Python, validate Docker builds
-    │   └── release.yml      # On tag: build, test, push to Docker Hub, publish release
-    └── dependabot.yml       # Automated dependency updates (Maven, pip, Actions)
+    │   ├── ci.yml           # On push / PR: test Java + Python; on main: publish snapshot images
+    │   └── release.yml      # On tag: build, push to Docker Hub, publish release
+    └── dependabot.yml       # Automated dependency updates (Maven, uv, Actions)
 ```
 
 ---
@@ -170,11 +171,21 @@ You have two options for automatic activation.
 Run coupon-booster as a long-running Spring app with profile `server`.
 
 ```sh
+# Docker (the usual case): set it in .env, then start the stack
+echo 'SPRING_PROFILES_ACTIVE=server' >> .env
+docker compose up -d
+```
+
+```sh
+# Or locally, without Docker
 cd coupon-booster
 
 # Profile enables Spring MVC mode + @Scheduled jobs
 SPRING_PROFILES_ACTIVE=server ./mvnw spring-boot:run
 ```
+
+Under Docker you will also want `restart: unless-stopped` for `coupon-booster`
+instead of the default `restart: "no"`, which is tuned for the one-shot run.
 
 Default schedule (server profile):
 
@@ -360,6 +371,22 @@ Activate with `SPRING_PROFILES_ACTIVE=server` to run as a long-lived Spring app 
 | `PATCHRIGHT_LOG_LEVEL` | `info` | Sidecar log level (`debug` for verbose output) |
 | `COOP_LOGIN_URL` | _(Supercard SSO URL)_ | Override the Coop login URL |
 | `PROXY_URL` | _(none)_ | Optional HTTP or SOCKS5 residential proxy URL |
+| `MIGROS_PASSKEY_DIR` | `./passkeys` | Host directory mounted read-only at `/data/passkeys` |
+
+### Migros passkey login (optional)
+
+The Migros account can be passkey-primary. If you register a passkey, the sidecar
+signs the WebAuthn challenge itself — no password and no SMS 2FA prompt.
+
+```sh
+cd patchright
+HEADLESS=false MIGROS_PASSKEY_FILE=../passkeys/migros-passkey.json \
+  uv run python register_migros_passkey.py
+```
+
+The resulting `passkeys/migros-passkey.json` contains a **private key**. It is
+git-ignored, written `0600`, and mounted read-only into the sidecar. Without it
+the sidecar simply falls back to password login, so the directory may stay empty.
 
 ### Coop coupon selection
 
@@ -473,4 +500,4 @@ Quick checklist:
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+Distributed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

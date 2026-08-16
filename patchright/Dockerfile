@@ -9,7 +9,7 @@ FROM python:3.14-slim
 LABEL org.opencontainers.image.title="coupon-booster-patchright" \
       org.opencontainers.image.description="Patchright stealth login sidecar for Swiss Coupon Booster" \
       org.opencontainers.image.source="https://github.com/patbaumgartner/swiss-coupon-booster" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="Apache-2.0"
 
 # Install Chromium system deps required by Patchright
 RUN apt-get update && apt-get install -y --no-install-recommends \

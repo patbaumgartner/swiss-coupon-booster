@@ -17,7 +17,7 @@ small but real:
 | Asset | Where it lives | Handling |
 |---|---|---|
 | Retailer e-mail / password | `.env`, passed to the sidecar over the internal Docker network | Git-ignored; never logged |
-| Migros passkey private key | `migros-passkey.json`, bind-mounted read-only | Git-ignored; written `0600` via `os.open`, never chmod-ed after the fact |
+| Migros passkey private key | `passkeys/migros-passkey.json`, bind-mounted read-only | Git-ignored; written `0600` via `os.open`, never chmod-ed after the fact |
 | Session cookies | In memory, and in the sidecar's browser profile volumes | Matched to a host per RFC 6265 so one retailer's cookies are never sent to the other |
 | Proxy URL | `PROXY_URL` | Redacted to `scheme://***@host:port` before logging, since the documented format embeds credentials |
 
@@ -34,15 +34,15 @@ drop-in change:
 - Existing deployments have `/data/*` named volumes owned by root. Docker only
   applies image ownership when a volume is first created, so a non-root container
   could not write the browser profiles it already has.
-- `migros-passkey.json` is bind-mounted from the host at `0600`. A container user
-  whose UID does not match the host owner cannot read it, which would silently
-  disable passkey login.
+- `passkeys/migros-passkey.json` is bind-mounted from the host at `0600`. A
+  container user whose UID does not match the host owner cannot read it, which
+  would silently disable passkey login.
 - Chromium's sandbox behaviour differs between root and non-root, and this project
   deliberately does not pass `--no-sandbox`.
 
 Anyone hardening a deployment should pick a UID matching the host owner of
-`migros-passkey.json`, recreate the `/data` volumes, and confirm Chromium still
-launches before relying on it.
+`passkeys/migros-passkey.json`, recreate the `/data` volumes, and confirm Chromium
+still launches before relying on it.
 
 **The manual activation endpoint is unauthenticated.** It only exists in the
 `server` profile and the container publishes no port by default, so it is

@@ -69,16 +69,19 @@ cp .env.example .env
 # Create a feature branch from main
 git checkout -b feature/my-feature   # or fix/my-fix, docs/my-docs
 
-# Make your changes, then run the tests:
+# Make your changes, then run the same gates CI runs:
 
 # Java
 cd coupon-booster
-mvn spring-javaformat:apply   # auto-format before committing
-mvn verify                    # format check + tests + SpotBugs + JaCoCo
+./mvnw spring-javaformat:apply   # auto-format before committing
+./mvnw verify                    # format check + tests + SpotBugs + JaCoCo
 
 # Python
 cd patchright
-uv run pytest -v --tb=short
+uv sync --frozen --all-groups
+uv run ruff check .              # lint            — CI fails on any finding
+uv run ruff format --check .     # formatting      — run `ruff format .` to fix
+uv run pytest -v --tb=short      # tests + coverage floor (see pyproject.toml)
 
 # Commit and push
 git commit -m "feat: add support for ..."
@@ -86,6 +89,9 @@ git push origin feature/my-feature
 
 # Open a Pull Request on GitHub
 ```
+
+Use the Maven wrapper (`./mvnw`), not a system `mvn`: it pins the Maven version
+the project is built and tested with.
 
 ---
 
@@ -130,8 +136,9 @@ ci: add concurrency cancellation to CI workflow
 1. **One PR per concern** — keep PRs small and focused.
 2. **Tests required** — new features and bug fixes must include tests. Aim to
    keep coverage high.
-3. **All CI checks must pass** — the PR will not be merged if tests fail,
-   formatting is wrong, or Docker builds break.
+3. **All CI checks must pass** — the PR will not be merged if the Java build,
+   Java formatting, the Python tests, or `ruff check` / `ruff format --check`
+   fail.
 4. **Update documentation** — if your change affects user-facing behaviour,
    update `README.md` and `.env.example`.
 5. **Describe what and why** — fill in the PR template so reviewers have context.
@@ -155,14 +162,19 @@ ci: add concurrency cancellation to CI workflow
 | Convention | Tool |
 |---|---|
 | Package management | `uv` with `pyproject.toml` + `uv.lock` |
+| Lint + formatting | `ruff` — `uv run ruff check .` and `uv run ruff format .` |
 | Testing | pytest with strict asyncio mode (`pyproject.toml`) |
+| Coverage floor | Enforced via `--cov-fail-under` in `pyproject.toml` `addopts` |
 | Test files | `test_*.py` split by area (`test_coop.py`, `test_migros.py`, etc.) |
 
 ### Docker
 
-- `docker-compose.yml` — **production only**, pulls from Docker Hub.
-- `docker-compose.build.yml` — **development/CI**, builds from source.
+- `docker-compose.yml` — **production**, pulls images from Docker Hub.
+- `docker-compose.build.yml` — **local development**, builds the sidecar from source.
 - `docker-compose.sidecar.yml` — **local dev**, Spring Boot Docker Compose integration auto-starts patchright only.
+- Compose reads `.env` for *variable substitution only*. A variable a user is
+  told to set in `.env` must also be listed under the service's `environment:`
+  key, or it never reaches the container.
 - Never add credentials or secrets to Dockerfiles or Compose files.
 
 ### Branch naming

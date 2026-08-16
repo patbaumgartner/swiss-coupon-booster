@@ -54,6 +54,7 @@ patchright/.pytest_cache/
 patchright/.ruff_cache/
 patchright/.coverage
 patchright/coverage.xml
+patchright/test-results.xml
 patchright/htmlcov/
 patchright/*.egg-info/
 patchright/dist/
@@ -77,6 +78,8 @@ screenshots/
 # Passkey credentials contain a private key — never commit them
 migros-passkey.json
 *passkey*.json
+# Directory bind-mounted read-only into the sidecar at /data/passkeys
+passkeys/
 
 # ── Misc ─────────────────────────────────────────────────────────────────────
 cookies.txt

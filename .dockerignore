@@ -6,6 +6,7 @@
 *.env
 migros-passkey.json
 *passkey*.json
+passkeys/
 cookies.txt
 *-cookies.txt
 
