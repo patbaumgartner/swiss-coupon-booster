@@ -16,7 +16,7 @@ LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 # ── Browser behaviour ─────────────────────────────────────────────────────────
 # HEADLESS is always False inside the container (Xvfb virtual display).
 HEADLESS: bool = os.getenv("HEADLESS", "true").lower() == "true"
-SLOW_MO_MS: int = int(os.getenv("SLOW_MO_MS", "800"))
+SLOW_MO_MS: int = int(os.getenv("SLOW_MO_MS", "500"))
 TIMEOUT_MS: int = int(os.getenv("TIMEOUT_MS", "25000"))
 TYPING_DELAY_MS: int = int(os.getenv("TYPING_DELAY_MS", "80"))
 

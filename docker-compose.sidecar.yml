@@ -23,17 +23,20 @@ services:
       TIMEOUT_MS: "${PATCHRIGHT_TIMEOUT_MS:-25000}"
       TYPING_DELAY_MS: "${PATCHRIGHT_TYPING_DELAY_MS:-80}"
       LOG_LEVEL: "${PATCHRIGHT_LOG_LEVEL:-info}"
-      # Migros passkey credential (WebAuthn). Mounted from the repo root below so
-      # local development uses passkey login instead of the password fallback.
+      # Migros passkey credential (WebAuthn). Read from the directory mounted
+      # below; when the file is absent the sidecar falls back to password login.
       MIGROS_PASSKEY_FILE: /data/passkeys/migros-passkey.json
       # Optional: route through a residential proxy when needed.
-      # PROXY_URL: "${PROXY_URL}"
+      PROXY_URL: "${PROXY_URL:-}"
     volumes:
       - coop-user-data:/data/coop-user-data
       - migros-user-data:/data/migros-user-data
       - screenshots:/data/screenshots
-      # Read-only bind mount of the passkey secret from the repo root.
-      - ./migros-passkey.json:/data/passkeys/migros-passkey.json:ro
+      # Read-only mount of the directory holding the passkey secret. A DIRECTORY
+      # is mounted rather than the file itself: Docker silently creates a
+      # directory in its place when a bind-mounted host FILE does not exist, and
+      # migros-passkey.json is git-ignored, so a fresh clone never has one.
+      - ${MIGROS_PASSKEY_DIR:-./passkeys}:/data/passkeys:ro
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

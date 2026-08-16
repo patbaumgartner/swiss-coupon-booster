@@ -5,7 +5,13 @@
 # Secrets — must never enter a build context
 .env
 *passkey*.json
+passkeys/
 cookies.txt
+
+# Test-only sources: the image installs production deps (`uv sync --no-dev`),
+# so pytest is absent and these can never run inside it.
+test_*.py
+conftest.py
 
 # Virtualenv, caches and test artefacts
 .venv/

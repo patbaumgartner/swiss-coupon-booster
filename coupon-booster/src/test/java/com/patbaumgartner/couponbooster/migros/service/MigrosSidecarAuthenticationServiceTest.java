@@ -40,7 +40,7 @@ class MigrosSidecarAuthenticationServiceTest {
 	void setUp() {
 		when(userCredentials.email()).thenReturn("user@example.com");
 		when(userCredentials.password()).thenReturn("secret");
-		when(patchrightProperties.url()).thenReturn("http://coupon-booster-patchright:8000");
+		when(patchrightProperties.url()).thenReturn("http://patchright:8000");
 	}
 
 	@Test
