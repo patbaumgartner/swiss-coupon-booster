@@ -9,7 +9,7 @@ requires-python = ">=3.14"
 description = "Patchright stealth login sidecar for Swiss Coupon Booster"
 dependencies = [
 	"fastapi==0.141.1",
-	"patchright==1.61.2",
+	"patchright==1.62.1",
 	"uvicorn[standard]==0.52.3",
 	"pydantic[email]==2.13.4",
 ]
