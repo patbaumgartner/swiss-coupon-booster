@@ -50,7 +50,7 @@
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <spotbugs.version>4.10.3.0</spotbugs.version>
     <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
-    <spring-javaformat.version>0.0.47</spring-javaformat.version>
+    <spring-javaformat.version>0.0.48</spring-javaformat.version>
 
     <!-- Security & Dependency Management Plugins -->
     <dependency-check.version>13.0.0</dependency-check.version>
