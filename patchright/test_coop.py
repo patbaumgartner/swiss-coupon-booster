@@ -1,6 +1,6 @@
 """Tests for POST /login/coop (Coop Supercard)."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -96,3 +96,46 @@ async def test_coop_login_unexpected_error_returns_500(client):
 
     assert response.status_code == 500
     assert "Internal error" in response.json()["detail"]
+
+
+# ── Login flow ────────────────────────────────────────────────────────────────
+
+
+def _fake_page(url: str = "https://www.supercard.ch/de.html?sso-check=1") -> MagicMock:
+    """A page whose locators never resolve (no login link, no consent banner)."""
+    page = MagicMock()
+    page.url = url
+    page.frames = []
+    page.evaluate = AsyncMock(side_effect=["Mozilla/5.0 (Test)", "de-CH"])
+    page.goto = AsyncMock()
+    page.close = AsyncMock()
+    page.screenshot = AsyncMock()
+    page.content = AsyncMock(return_value="<html></html>")
+    locator = MagicMock()
+    locator.first = locator
+    locator.wait_for = AsyncMock(side_effect=TimeoutError("not found"))
+    locator.is_visible = AsyncMock(return_value=False)
+    page.locator.return_value = locator
+    return page
+
+
+@pytest.mark.anyio
+async def test_login_flow_fails_closed_when_login_link_is_missing(monkeypatch, tmp_path):
+    """Cookies are cleared before navigating, so a missing login link must raise, not
+    silently return the anonymous cookies (supercard.ch redesign, 2026-09-10)."""
+    import coop
+
+    page = _fake_page()
+    context = MagicMock()
+    context.new_page = AsyncMock(return_value=page)
+    context.cookies = AsyncMock(return_value=[{"name": "datadome", "value": "x"}])
+    context.clear_cookies = AsyncMock()
+    context.add_cookies = AsyncMock()
+    monkeypatch.setattr(coop, "random_delay", AsyncMock())
+    monkeypatch.setattr("browser.SCREENSHOT_DIR", tmp_path)
+
+    with pytest.raises(RuntimeError, match="login link not found"):
+        await coop._run_login_flow(context, "user@example.com", "pass")
+
+    assert any(p.name.startswith("coop_login_link_missing_") for p in tmp_path.iterdir())
+    page.close.assert_awaited_once()

@@ -81,7 +81,10 @@ COOP_NAV_MAX_ATTEMPTS: int = int(os.getenv("COOP_NAV_MAX_ATTEMPTS", "3"))
 COOP_NAV_RETRY_BACKOFF_MS: int = int(os.getenv("COOP_NAV_RETRY_BACKOFF_MS", "3000"))
 
 # Selectors — must match CoopSelectorsProperties in the Java application.
-SEL_COOP_LOGIN_LINK: str = os.getenv("SEL_LOGIN_LINK", "#a-accountLogin-desktop")
+# supercard.ch was redesigned on 2026-09-10: the header login link lost its
+# `#a-accountLogin-desktop` id and is now an anonymous anchor to the CAS
+# authorize endpoint. Several hidden copies exist, hence `:visible`.
+SEL_COOP_LOGIN_LINK: str = os.getenv("SEL_LOGIN_LINK", "a[href*='login.supercard.ch/cas/oidc/authorize']:visible")
 SEL_COOP_USERNAME: str = os.getenv("SEL_USERNAME", "#username")
 SEL_COOP_PASSWORD: str = os.getenv("SEL_PASSWORD", "#password")
 SEL_COOP_SUBMIT: str = os.getenv("SEL_SUBMIT", "#btnSubmit")

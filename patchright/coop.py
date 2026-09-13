@@ -133,7 +133,7 @@ async def _handle_cookie_consent(page: Page) -> None:
         log.debug("Cookie consent not shown or already dismissed")
 
 
-async def _is_login_needed(page: Page) -> bool:
+async def _is_login_link_visible(page: Page) -> bool:
     try:
         btn = page.locator(SEL_COOP_LOGIN_LINK).first
         await btn.wait_for(timeout=5000)
@@ -228,10 +228,18 @@ async def _run_login_flow(context: BrowserContext, email: str, password: str) ->
 
         await _handle_cookie_consent(page)
 
-        if await _is_login_needed(page):
-            await _fill_login_form(page, email, password)
-        else:
-            log.info("Already logged in via persistent session")
+        # Session cookies were cleared above, so a login is always required. A
+        # missing login link therefore means the page layout changed (or an
+        # interstitial is still up) — fail loudly instead of returning the
+        # anonymous cookies, which the Java side would only detect later as an
+        # empty jwtToken (2026-09-10..13 outage).
+        if not await _is_login_link_visible(page):
+            await dump_debug_artifacts(page, "coop_login_link_missing")
+            raise RuntimeError(
+                f"Coop login link not found with selector {SEL_COOP_LOGIN_LINK!r} on {page.url}. "
+                "The supercard.ch layout may have changed. Debug artifacts saved."
+            )
+        await _fill_login_form(page, email, password)
 
         if is_datadome_challenge(page):
             resolved = await wait_for_datadome_resolution(page, timeout_ms=8000)
