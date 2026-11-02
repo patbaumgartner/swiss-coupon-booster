@@ -11,7 +11,7 @@ dependencies = [
 	"fastapi==0.161.1",
 	"patchright==1.64.2",
 	"uvicorn[standard]==0.54.0",
-	"pydantic[email]==2.14.1",
+	"pydantic[email]==2.14.2",
 ]
 
 [dependency-groups]
