@@ -144,8 +144,10 @@ async def _find_first_visible(page: Page, selectors: tuple[str, ...], timeout_ms
             if await locator.is_visible():
                 log.debug("Using selector at index %d of %d", index, len(selectors))
                 return locator
-        except Exception as exc:  # noqa: BLE001
-            log.debug("Selector %s not visible: %s", selector, exc)
+        except Exception:  # noqa: BLE001
+            # Do not log the exception: it may embed page content or selectors
+            # that reference sensitive fields.
+            log.debug("Selector at index %d not visible", index)
             continue
     raise RuntimeError(f"No visible element found for selectors: {selectors}")
 
@@ -156,8 +158,10 @@ async def _is_password_field_visible(page: Page) -> bool:
         try:
             if await locator.is_visible():
                 return True
-        except Exception as exc:  # noqa: BLE001
-            log.debug("Password selector %s not visible: %s", selector, exc)
+        except Exception:  # noqa: BLE001
+            # Do not log the exception: it may embed page content or the
+            # selector, which references the password field.
+            log.debug("Password selector not visible")
             continue
     return False
 
