@@ -54,7 +54,7 @@ updates:
   labels:
   - dependencies
   - github-actions
-groups:
-  multi-step-actions:
-    patterns:
-    - github/codeql-action/*
+  groups:
+    multi-step-actions:
+      patterns:
+      - github/codeql-action/*
