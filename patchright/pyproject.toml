@@ -16,7 +16,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-	"anyio==4.15.1",
+	"anyio==4.16.0",
 	"httpx2>=2.10.0",
 	"pytest==9.2.0",
 	"pytest-asyncio==1.4.1",
