@@ -4,14 +4,44 @@
 # Runs Patchright (hardened Chromium) + FastAPI to perform stealth login on
 # supercard.ch and return session cookies to the Java coupon-booster app.
 # ─────────────────────────────────────────────────────────────────────────────
-# Based on the official Playwright Python image (Ubuntu Resolute), which already
-# ships Python 3.14, all Chromium system dependencies and Xvfb.
-FROM mcr.microsoft.com/playwright/python:v1.65.1-resolute
+# Plain Python base: the patchright pin in pyproject.toml (mirrored in uv.lock)
+# is the single source of truth for the browser version. Do not switch to a
+# versioned Playwright base image — that would reintroduce a second pin that
+# Dependabot cannot keep in sync.
+FROM python:3.14-slim
 
 LABEL org.opencontainers.image.title="coupon-booster-patchright" \
       org.opencontainers.image.description="Patchright stealth login sidecar for Swiss Coupon Booster" \
       org.opencontainers.image.source="https://github.com/patbaumgartner/swiss-coupon-booster" \
       org.opencontainers.image.licenses="Apache-2.0"
+
+# Install Chromium system deps required by Patchright
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Chromium core dependencies
+    libglib2.0-0 \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxcb1 \
+    libxkbcommon0 \
+    libx11-6 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2t64 \
+    libatspi2.0-0 \
+    # Virtual display for headless with Xvfb fallback
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
