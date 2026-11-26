@@ -73,6 +73,12 @@ uses [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — a patc
 Chromium that removes all automation fingerprints at the C++ level — running inside a virtual
 Xvfb display. From DataDome's perspective this is indistinguishable from a real user.
 
+**Browser version ownership:** the Patchright version is declared once in
+`patchright/pyproject.toml` and locked in `patchright/uv.lock`. The sidecar image therefore uses
+a plain Python base with explicit system dependencies; do not add a versioned Playwright base
+image, which would create a second pin that Dependabot cannot keep in sync.
+`patchright/test_container_versioning.py` enforces this in CI.
+
 > **Home network beats everything.** Swiss residential IPs are treated very differently from
 > cloud or datacenter addresses. Running this on your home server or NAS means you will
 > virtually never see a DataDome challenge — no paid proxy needed.
